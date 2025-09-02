@@ -139,9 +139,6 @@
         /* פד מספרים */
         .number-pad {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             background: white;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
@@ -149,6 +146,36 @@
             z-index: 1000;
             display: none;
             direction: ltr;
+            border: 3px solid #4CAF50;
+            max-width: 280px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .number-pad.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .number-pad::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 10px solid #4CAF50;
+        }
+
+        .number-pad.above::before {
+            top: auto;
+            bottom: -10px;
+            border-bottom: none;
+            border-top: 10px solid #4CAF50;
         }
 
         .number-pad h3 {
@@ -291,6 +318,32 @@
         <button onclick="clearCanvas()">🗑️ נקה הכל</button>
     </div>
 
+    <!-- פד מספרים -->
+    <div class="overlay" id="overlay"></div>
+    <div class="number-pad" id="numberPad">
+        <h3>בחר מספר</h3>
+        <div class="number-display" id="numberDisplay">0</div>
+        <div class="number-grid">
+            <button class="number-btn" onclick="addNumber(1)">1</button>
+            <button class="number-btn" onclick="addNumber(2)">2</button>
+            <button class="number-btn" onclick="addNumber(3)">3</button>
+            <button class="number-btn" onclick="addNumber(4)">4</button>
+            <button class="number-btn" onclick="addNumber(5)">5</button>
+            <button class="number-btn" onclick="addNumber(6)">6</button>
+            <button class="number-btn" onclick="addNumber(7)">7</button>
+            <button class="number-btn" onclick="addNumber(8)">8</button>
+            <button class="number-btn" onclick="addNumber(9)">9</button>
+            <button class="number-btn" onclick="deleteLast()">⌫</button>
+            <button class="number-btn" onclick="addNumber(0)">0</button>
+            <button class="number-btn" onclick="addNumber('.')">.</button>
+        </div>
+        <div class="pad-controls">
+            <button class="pad-control-btn pad-ok" onclick="confirmNumber()">אישור</button>
+            <button class="pad-control-btn pad-clear" onclick="clearNumber()">נקה</button>
+            <button class="pad-control-btn pad-cancel" onclick="closeNumberPad()">ביטול</button>
+        </div>
+    </div>
+
     <xml id="toolbox" style="display: none">
         <category name="🎨 ציור" colour="#FF6B6B">
             <block type="move_forward">
@@ -333,6 +386,8 @@
         let workspace;
         let turtle = { x: 240, y: 180, angle: 0, penDown: true, color: '#000000' };
         let canvas, ctx;
+        let currentNumberField = null;
+        let currentNumberValue = '0';
 
         // יצירת הבלוקים המותאמים אישית עם אייקונים
         Blockly.Blocks['move_forward'] = {
@@ -532,6 +587,9 @@
             // הוספת event listener לפד מספרים
             setupNumberPadListener();
 
+            // הוספת מאזין לסגירת פד בלחיצה על הרקע
+            document.getElementById('overlay').addEventListener('click', closeNumberPad);
+
             // הוספת בלוק התחלה
             const startBlock = workspace.newBlock('controls_repeat_ext');
             startBlock.initSvg();
@@ -539,36 +597,23 @@
             startBlock.moveBy(50, 50);
         }
 
-        // הגדרת listener לפד מספרים
+        // הגדרת listener לפד מספרים - גרסה מתוקנת
         function setupNumberPadListener() {
-            // מאזין לכל לחיצה באזור הבלוקים
-            document.getElementById('blocklyDiv').addEventListener('click', function(event) {
-                // מחפש אם לחצו על שדה מספר
-                const target = event.target;
-                if (target && target.classList.contains('blocklyEditableText')) {
-                    const fieldText = target.textContent;
-                    // בודק אם זה מספר
-                    if (!isNaN(fieldText) && fieldText.trim() !== '') {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        
-                        // מוצא את השדה המתאים
-                        const blocks = workspace.getAllBlocks();
-                        for (let block of blocks) {
-                            const fields = block.inputList;
-                            for (let input of fields) {
-                                for (let field of input.fieldRow) {
-                                    if (field instanceof Blockly.FieldNumber) {
-                                        const fieldElement = field.fieldGroup_?.querySelector('.blocklyEditableText');
-                                        if (fieldElement === target) {
-                                            setTimeout(() => openNumberPad(field), 100);
-                                            return;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+            console.log("מגדיר מאזין לפד מספרים...");
+            
+            document.addEventListener('click', function(event) {
+                const blocklyField = Blockly.FieldTextInput.htmlInput_;
+                if (blocklyField && blocklyField.field_ instanceof Blockly.FieldNumber) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    const field = blocklyField.field_;
+                    const rect = blocklyField.getBoundingClientRect();
+                    
+                    console.log("שדה מספר נמצא:", field.getValue());
+                    setTimeout(() => {
+                        openNumberPad(field, rect.left + rect.width/2, rect.top + rect.height);
+                    }, 100);
                 }
             }, true);
         }
@@ -689,18 +734,112 @@
         }
 
         // פונקציות פד המספרים
-        function openNumberPad(field) {
+        function openNumberPad(field, absoluteX, absoluteY) {
+            console.log("מנסה לפתוח פד...");
             currentNumberField = field;
             currentNumberValue = field.getValue() || '0';
+            
+            const pad = document.getElementById('numberPad');
+            const overlay = document.getElementById('overlay');
+            
+            if (!pad || !overlay) {
+                console.error("אלמנטים numberPad או overlay לא נמצאו!");
+                return;
+            }
+            
             document.getElementById('numberDisplay').textContent = currentNumberValue;
-            document.getElementById('overlay').style.display = 'block';
-            document.getElementById('numberPad').style.display = 'block';
+            overlay.style.display = 'block';
+            pad.style.display = 'block';
+            
+            console.log("מצב תצוגה של פד:", pad.style.display);
+            console.log("מצב תצוגה של overlay:", overlay.style.display);
+            
+            // מיקום הפד ביחס למיקום השדה
+            let padX = absoluteX - 140; // מרכז הפד מתחת לשדה
+            let padY = absoluteY + 20;  // מעט מתחת לשדה
+            let isAbove = false;
+            
+            // וודא שהפד לא יוצא מגבולות המסך
+            const padWidth = 280;  // רוחב הפד
+            const padHeight = 350; // גובה הפד בערך
+            
+            // בדיקת גבולות ימין
+            if (padX + padWidth > window.innerWidth - 20) {
+                padX = window.innerWidth - padWidth - 20;
+            }
+            
+            // בדיקת גבולות שמאל
+            if (padX < 20) {
+                padX = 20;
+            }
+            
+            // בדיקת גבולות תחתון
+            if (padY + padHeight > window.innerHeight - 20) {
+                padY = absoluteY - padHeight - 20; // מעל השדה במקום מתחת
+                isAbove = true;
+                
+                // אם עדיין יוצא מהגבול העליון
+                if (padY < 20) {
+                    padY = 20;
+                    isAbove = false;
+                }
+            }
+            
+            // הצבת המיקום
+            pad.style.left = padX + 'px';
+            pad.style.top = padY + 'px';
+            
+            // הוספה/הסרה של class לחץ
+            if (isAbove) {
+                pad.classList.add('above');
+            } else {
+                pad.classList.remove('above');
+            }
+            
+            // חישוב מיקום החץ ביחס לשדה
+            const arrowX = absoluteX - padX;
+            const arrowRelativeX = Math.max(30, Math.min(padWidth - 30, arrowX));
+            
+            // עדכון מיקום החץ
+            const existingStyle = document.querySelector('#arrow-style');
+            if (existingStyle) {
+                document.head.removeChild(existingStyle);
+            }
+            
+            const style = document.createElement('style');
+            style.id = 'arrow-style';
+            style.innerHTML = `
+                .number-pad::before {
+                    left: ${arrowRelativeX}px !important;
+                    transform: translateX(0) !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // הוספת אנימציה
+            setTimeout(() => {
+                pad.classList.add('show');
+            }, 10);
         }
 
         function closeNumberPad() {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('numberPad').style.display = 'none';
-            currentNumberField = null;
+            const pad = document.getElementById('numberPad');
+            const overlay = document.getElementById('overlay');
+            
+            pad.classList.remove('show');
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                pad.style.display = 'none';
+                pad.classList.remove('above');
+                currentNumberField = null;
+                
+                // הסרת סטייל החץ
+                const existingStyle = document.querySelector('#arrow-style');
+                if (existingStyle) {
+                    document.head.removeChild(existingStyle);
+                }
+            }, 300);
         }
 
         function addNumber(digit) {
