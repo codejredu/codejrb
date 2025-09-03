@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -38,6 +38,8 @@
             justify-content: center;
             overflow: hidden;
             border: 2px solid #ccc;
+            background-size: cover;
+            background-position: center;
         }
         @media (min-width: 1024px) {
             #stage-area {
@@ -128,6 +130,62 @@
             border: 1px solid #e2e8f0;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
+        /* גלריה */
+        .gallery-container {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f0f4f8;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: none; /* הסתרה כברירת מחדל */
+            transition: all 0.5s ease-in-out;
+        }
+        .gallery-container.visible {
+            display: block;
+        }
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        .thumbnail {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .thumbnail.selected {
+            border: 3px solid #4C97FF;
+        }
+        /* רקעים אחרונים שנבחרו */
+        #recent-backgrounds-container {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .recent-background {
+            width: 60px;
+            height: 45px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            object-fit: cover;
+            flex-shrink: 0;
+            transition: border-color 0.2s;
+        }
+        .recent-background.selected {
+            border-color: #4C97FF;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -145,6 +203,47 @@
                 </div>
                 <div id="console-output">
                     <b>פלט קונסול:</b>
+                </div>
+            </div>
+
+            <!-- תצוגה של הרקעים האחרונים שנבחרו -->
+            <div id="recent-backgrounds-container" class="recent-backgrounds-container">
+                <!-- כאן יוצגו הרקעים שנבחרו -->
+            </div>
+            
+            <!-- גלריית רקעים -->
+            <div id="background-gallery" class="gallery-container">
+                <h2 class="text-xl font-bold text-center mb-4">גלריית רקעים</h2>
+                <div id="thumbnails-grid" class="thumbnail-grid">
+                    <img src="https://codejredu.github.io/test/assets/bg/Amphitheater.svg" alt="Amphitheater" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/canyon.svg" alt="canyon" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/canyon1.svg" alt="canyon1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/castel.svg" alt="castel" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/castel1.svg" alt="castel1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/citynight.svg" alt="citynight" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/citynight2.svg" alt="citynight2" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/colorfulcity.svg" alt="colorfulcity" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/colorfulcity1.svg" alt="colorfulcity1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/desert.svg" alt="desert" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/desert1.svg" alt="desert1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/farm.svg" alt="farm" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/kidbadroom.svg" alt="kidbadroom" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/kidbadroom1.svg" alt="kidbadroom1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/moon.svg" alt="moon" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/road1.svg" alt="road1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/road2.svg" alt="road2" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/room1.svg" alt="room1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/room2.svg" alt="room2" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/savanna1.svg" alt="savanna1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/savanna2.svg" alt="savanna2" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/school1.svg" alt="school1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/slopes1.svg" alt="slopes1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/slopes2.svg" alt="slopes2" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/soccer1.svg" alt="soccer1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/soccer2.svg" alt="soccer2" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/winter1.svg" alt="winter1" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/winter2.svg" alt="winter2" class="thumbnail">
+                    <img src="https://codejredu.github.io/test/assets/bg/under.svg" alt="under" class="thumbnail">
                 </div>
             </div>
         </div>
@@ -170,6 +269,12 @@
                     <span class="ml-2">מסך מלא</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m0 0l-5 5m0 5v4m0 0h4m0 0l-5-5m-9 5v4m0 0h-4m0 0l5-5" />
+                    </svg>
+                </button>
+                <button id="toggle-gallery-button" class="px-6 py-3 bg-purple-500 text-white font-bold rounded-full shadow-md hover:bg-purple-600 transition-colors">
+                    <span class="ml-2"> רקעים</span>
+                    <svg id="gallery-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                 </button>
             </div>
@@ -321,11 +426,19 @@
                 const consoleOutput = document.getElementById('console-output');
                 const containerWrapper = document.getElementById('container-wrapper');
                 const fullscreenButton = document.getElementById('fullscreen-button');
+                const toggleGalleryButton = document.getElementById('toggle-gallery-button');
+                const backgroundGallery = document.getElementById('background-gallery');
+                const recentBackgroundsContainer = document.getElementById('recent-backgrounds-container');
+
+                const thumbnailsGrid = document.getElementById('thumbnails-grid');
+                const thumbnails = document.querySelectorAll('#thumbnails-grid .thumbnail');
 
                 let workspace;
                 let currentX = 0;
                 let currentY = 0;
                 let currentDirection = 90;
+                let recentBackgrounds = [];
+                const MAX_RECENT_BACKGROUNDS = 6;
                 
                 // משתנים עבור גרירה
                 let isDragging = false;
@@ -373,7 +486,7 @@
                         const deltaY = y - initialMouseY;
                         
                         currentX = initialCatX + deltaX;
-                        currentY = initialCatY + deltaY; // **תיקון: שינוי פעולת החיבור לחיסור**
+                        currentY = initialCatY + deltaY;
                         
                         updateCatPosition();
                     }
@@ -469,9 +582,9 @@
                     const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || '10';
                     const code = `
                         await new Promise(resolve => {
-                            const radians = (currentDirection) * Math.PI / 180;
+                            const radians = (currentDirection - 90) * Math.PI / 180;
                             currentX += (${steps} * Math.cos(radians));
-                            currentY += (${steps} * Math.sin(radians));
+                            currentY -= (${steps} * Math.sin(radians));
                             updateCatPosition();
                             logToConsole('החתול זז ' + ${steps} + ' צעדים.');
                             setTimeout(resolve, 500);
@@ -547,7 +660,7 @@
                     const code = `
                         await new Promise(resolve => {
                             currentX = ${x};
-                            currentY = ${y};
+                            currentY = -${y};
                             updateCatPosition();
                             logToConsole('קפץ ל-x: ' + ${x} + ' y: ' + ${y});
                             resolve();
@@ -581,7 +694,7 @@
                         await new Promise(resolve => {
                             catSprite.style.transition = 'transform ' + ${secs} + 's ease-in-out';
                             currentX = ${x};
-                            currentY = ${y};
+                            currentY = -${y};
                             updateCatPosition();
                             logToConsole('החתול מחליק ל-x: ' + ${x} + ' y: ' + ${y});
                             setTimeout(() => {
@@ -916,6 +1029,41 @@
                     logToConsole('הבמה אופסה. החתול נמצא במיקום (0,0), במרכז הבמה.');
                 };
 
+                const updateRecentBackgrounds = (newBackground) => {
+                    // בדוק אם הרקע כבר קיים ברשימה
+                    const existingIndex = recentBackgrounds.findIndex(bg => bg.src === newBackground.src);
+                    if (existingIndex !== -1) {
+                        // אם קיים, הסר אותו כדי להזיז אותו לראש הרשימה
+                        recentBackgrounds.splice(existingIndex, 1);
+                    }
+                    // הוסף את הרקע החדש לראש הרשימה
+                    recentBackgrounds.unshift(newBackground);
+                    // שמור רק על 6 הרקעים האחרונים
+                    if (recentBackgrounds.length > MAX_RECENT_BACKGROUNDS) {
+                        recentBackgrounds.pop();
+                    }
+                    renderRecentBackgrounds();
+                };
+
+                const renderRecentBackgrounds = () => {
+                    recentBackgroundsContainer.innerHTML = '';
+                    recentBackgrounds.forEach(bg => {
+                        const img = document.createElement('img');
+                        img.src = bg.src;
+                        img.alt = bg.alt;
+                        img.classList.add('recent-background');
+                        img.addEventListener('click', () => {
+                            stageArea.style.backgroundImage = `url(${bg.src})`;
+                            stageArea.style.backgroundColor = 'transparent';
+                            logToConsole(`רקע שונה ל-${bg.alt}`);
+                            // הסרת בחירה מכל התמונות והוספה לנוכחית
+                            document.querySelectorAll('.recent-background').forEach(i => i.classList.remove('selected'));
+                            img.classList.add('selected');
+                        });
+                        recentBackgroundsContainer.appendChild(img);
+                    });
+                };
+
                 workspace = Blockly.inject('blockly-area', {
                     toolbox: document.getElementById('toolbox'),
                     scrollbars: true,
@@ -995,6 +1143,32 @@
                         });
                     } else {
                         document.exitFullscreen();
+                    }
+                });
+
+                // מאזיני אירועים לגלריית הרקעים
+                thumbnails.forEach(thumbnail => {
+                    thumbnail.addEventListener('click', () => {
+                        stageArea.style.backgroundImage = `url(${thumbnail.src})`;
+                        stageArea.style.backgroundColor = 'transparent';
+                        logToConsole(`רקע שונה ל-${thumbnail.alt}`);
+                        // הוספת הרקע לרשימת הרקעים האחרונים
+                        updateRecentBackgrounds({ src: thumbnail.src, alt: thumbnail.alt });
+                        // סגור את הגלריה
+                        backgroundGallery.classList.remove('visible');
+                        document.getElementById('gallery-icon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />`;
+                    });
+                });
+
+                // מאזין אירועים לכפתור הפלוס
+                toggleGalleryButton.addEventListener('click', () => {
+                    const icon = document.getElementById('gallery-icon');
+                    if (backgroundGallery.classList.contains('visible')) {
+                        backgroundGallery.classList.remove('visible');
+                        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />`;
+                    } else {
+                        backgroundGallery.classList.add('visible');
+                        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />`;
                     }
                 });
             };
