@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>גוגל בלוקלי לחתול</title>
+    <title>בלוקלי: מיקום מרכזי</title>
+    <!-- הוספת תגית CSP כדי לאפשר טעינת סקריפטים חיצוניים -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.tailwindcss.com; img-src 'self' data: https:;"/>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/blockly@9.0.0/blockly.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -45,6 +46,8 @@
         }
         #cat-sprite {
             position: absolute;
+            top: 50%;
+            left: 50%;
             width: 80px;
             height: 80px;
             background-color: transparent;
@@ -53,7 +56,7 @@
             justify-content: center;
             align-items: center;
             font-size: 2rem;
-            transform: translate(0, 0);
+            transform: translate(calc(-50% + 0px), calc(-50% + 0px));
             transition: transform 0.1s ease-out; /* מהירות מעבר מהירה יותר לגרירה */
             z-index: 10;
             opacity: 1;
@@ -303,712 +306,698 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const catSprite = document.getElementById('cat-sprite');
-            const stageArea = document.getElementById('stage-area');
-            const speechBubble = document.getElementById('speech-bubble');
-            const consoleOutput = document.getElementById('console-output');
-            const containerWrapper = document.getElementById('container-wrapper');
-            const fullscreenButton = document.getElementById('fullscreen-button');
-
-            let workspace;
-            let currentX = 0;
-            let currentY = 0;
-            let currentDirection = 90;
-            let stageWidth = 0;
-            let stageHeight = 0;
-            
-            // משתנים עבור גרירה
-            let isDragging = false;
-            let initialMouseX;
-            let initialMouseY;
-
-            const logToConsole = (message) => {
-                const p = document.createElement('p');
-                p.textContent = message;
-                consoleOutput.appendChild(p);
-                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            // טעינת ספריית Blockly באופן דינמי
+            const script = document.createElement('script');
+            script.src = "https://unpkg.com/blockly@9.0.0/blockly.min.js";
+            script.onload = () => {
+                initializeBlockly();
             };
+            document.head.appendChild(script);
 
-            const setSprite = (content) => {
-                catSprite.innerHTML = content;
-                if (content === '🐈') {
-                    catSprite.style.backgroundColor = '#ff9900';
-                    catSprite.style.borderRadius = '50%';
-                } else {
-                    catSprite.style.backgroundColor = 'transparent';
-                    catSprite.style.borderRadius = '0';
-                }
-            };
+            const initializeBlockly = () => {
+                const catSprite = document.getElementById('cat-sprite');
+                const stageArea = document.getElementById('stage-area');
+                const speechBubble = document.getElementById('speech-bubble');
+                const consoleOutput = document.getElementById('console-output');
+                const containerWrapper = document.getElementById('container-wrapper');
+                const fullscreenButton = document.getElementById('fullscreen-button');
 
-            const updateStageSize = () => {
-                stageWidth = stageArea.clientWidth;
-                stageHeight = stageArea.clientHeight;
-                // עדכון מיקום החתול
-                updateCatPosition();
-            };
+                let workspace;
+                let currentX = 0;
+                let currentY = 0;
+                let currentDirection = 90;
+                
+                // משתנים עבור גרירה
+                let isDragging = false;
+                let initialMouseX;
+                let initialMouseY;
+                let initialCatX;
+                let initialCatY;
 
-            const updateCatPosition = () => {
-                const spriteWidth = catSprite.offsetWidth;
-                const spriteHeight = catSprite.offsetHeight;
-                const newX = (stageWidth / 2) + currentX - (spriteWidth / 2);
-                const newY = (stageHeight / 2) + currentY - (spriteHeight / 2);
-                catSprite.style.transform = `translate(${newX}px, ${newY}px) rotate(${currentDirection - 90}deg)`;
-            };
-
-            window.addEventListener('resize', updateStageSize);
-            updateStageSize();
-
-            // פונקציות גרירה - תמיכה בעכבר וטאץ'
-            const getPointerPosition = (e) => {
-                const isTouch = e.touches && e.touches.length > 0;
-                return {
-                    x: isTouch ? e.touches[0].clientX : e.clientX,
-                    y: isTouch ? e.touches[0].clientY : e.clientY
+                const logToConsole = (message) => {
+                    const p = document.createElement('p');
+                    p.textContent = message;
+                    consoleOutput.appendChild(p);
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
                 };
-            };
-            
-            const startDrag = (e) => {
-                e.preventDefault();
-                isDragging = true;
-                const { x, y } = getPointerPosition(e);
-                initialMouseX = x;
-                initialMouseY = y;
-                catSprite.style.transition = 'none';
-                logToConsole('החתול נתפס לגרירה.');
-            };
 
-            const drag = (e) => {
-                if (isDragging) {
+                const updateCatPosition = () => {
+                    catSprite.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px)) rotate(${currentDirection - 90}deg)`;
+                };
+
+                // פונקציות גרירה - תמיכה בעכבר וטאץ'
+                const getPointerPosition = (e) => {
+                    const isTouch = e.touches && e.touches.length > 0;
+                    return {
+                        x: isTouch ? e.touches[0].clientX : e.clientX,
+                        y: isTouch ? e.touches[0].clientY : e.clientY
+                    };
+                };
+                
+                const startDrag = (e) => {
+                    e.preventDefault();
+                    isDragging = true;
                     const { x, y } = getPointerPosition(e);
-                    const deltaX = x - initialMouseX;
-                    const deltaY = y - initialMouseY;
-                    
-                    currentX = currentX + deltaX;
-                    currentY = currentY + deltaY;
-                    
                     initialMouseX = x;
                     initialMouseY = y;
-                    
+                    initialCatX = currentX;
+                    initialCatY = currentY;
+                    catSprite.style.transition = 'none';
+                    logToConsole('החתול נתפס לגרירה.');
+                };
+
+                const drag = (e) => {
+                    if (isDragging) {
+                        const { x, y } = getPointerPosition(e);
+                        const deltaX = x - initialMouseX;
+                        const deltaY = y - initialMouseY;
+                        
+                        currentX = initialCatX + deltaX;
+                        currentY = initialCatY + deltaY; // **תיקון: שינוי פעולת החיבור לחיסור**
+                        
+                        updateCatPosition();
+                    }
+                };
+
+                const endDrag = () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        catSprite.style.transition = 'transform 0.5s ease-out';
+                        logToConsole(`החתול נגרר למיקום חדש (x: ${currentX.toFixed(0)}, y: ${currentY.toFixed(0)})`);
+                    }
+                };
+
+                // מאזיני אירועים לגרירה - עכבר וטאץ'
+                catSprite.addEventListener('mousedown', startDrag);
+                catSprite.addEventListener('touchstart', startDrag);
+
+                stageArea.addEventListener('mousemove', drag);
+                stageArea.addEventListener('touchmove', drag);
+
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchend', endDrag);
+                document.addEventListener('touchcancel', endDrag);
+                
+                // הגדרת בלוקים מותאמים אישית
+                Blockly.Blocks['event_when_flag_clicked'] = {
+                    init: function() {
+                        this.appendDummyInput()
+                            .appendField("כאשר");
+                        this.appendDummyInput()
+                            .appendField(new Blockly.FieldImage("https://www.gstatic.com/codesite/ph/images/play_button.gif", 15, 15, { alt: "דגל", flipRtl: "false" }));
+                        this.appendDummyInput()
+                            .appendField("נלחץ");
+                        this.setNextStatement(true, null);
+                        this.setColour("#FFD95A");
+                        this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
+                        this.setHelpUrl("");
+                    }
+                };
+                Blockly.JavaScript['event_when_flag_clicked'] = function(block) {
+                    return '';
+                };
+                Blockly.Blocks['event_when_key_pressed'] = {
+                    init: function() {
+                        this.appendDummyInput()
+                            .appendField("כאשר מקש")
+                            .appendField(new Blockly.FieldDropdown([
+                                ["רווח", "SPACE"],
+                                ["חץ למעלה", "UP"],
+                                ["חץ למטה", "DOWN"],
+                                ["חץ ימינה", "RIGHT"],
+                                ["חץ שמאלה", "LEFT"]
+                            ]), "KEY")
+                            .appendField("נלחץ");
+                        this.setNextStatement(true, null);
+                        this.setColour("#FFD95A");
+                        this.setTooltip("הפעל קוד כאשר מקש נלחץ. (פונקציונליות זו אינה נתמכת במלואה בדוגמה הנוכחית.)");
+                        this.setHelpUrl("");
+                    }
+                };
+                Blockly.JavaScript['event_when_key_pressed'] = function(block) {
+                    return '';
+                };
+                // בלוק חדש: כאשר לוחצים על הבמה
+                Blockly.Blocks['event_when_stage_clicked'] = {
+                    init: function() {
+                        this.appendDummyInput()
+                            .appendField("כאשר הבמה נלחצת");
+                        this.setNextStatement(true, null);
+                        this.setColour("#FFD95A");
+                        this.setTooltip("הפעל את התסריט כאשר לוחצים על אזור הבמה.");
+                        this.setHelpUrl("");
+                    }
+                };
+                Blockly.JavaScript['event_when_stage_clicked'] = function(block) {
+                    return '';
+                };
+
+                // תנועה
+                Blockly.Blocks['motion_move_steps'] = {
+                    init: function() {
+                        this.appendValueInput("STEPS")
+                            .setCheck("Number")
+                            .appendField("לך")
+                            .appendField("צעדים");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("הזז את הדמות בכיוון שהיא פונה.");
+                    }
+                };
+                Blockly.JavaScript['motion_move_steps'] = function(block) {
+                    const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || '10';
+                    const code = `
+                        await new Promise(resolve => {
+                            const radians = (currentDirection) * Math.PI / 180;
+                            currentX += (${steps} * Math.cos(radians));
+                            currentY += (${steps} * Math.sin(radians));
+                            updateCatPosition();
+                            logToConsole('החתול זז ' + ${steps} + ' צעדים.');
+                            setTimeout(resolve, 500);
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['motion_turn_right_degrees'] = {
+                    init: function() {
+                        this.appendValueInput("DEGREES")
+                            .setCheck("Number")
+                            .appendField("הסתובב ימינה")
+                            .appendField("מעלות");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("סובב את הדמות ימינה.");
+                    }
+                };
+                Blockly.JavaScript['motion_turn_right_degrees'] = function(block) {
+                    const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
+                    const code = `
+                        await new Promise(resolve => {
+                            currentDirection += ${degrees};
+                            updateCatPosition();
+                            logToConsole('החתול הסתובב ימינה ב-' + ${degrees} + ' מעלות.');
+                            setTimeout(resolve, 10);
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['motion_turn_left_degrees'] = {
+                    init: function() {
+                        this.appendValueInput("DEGREES")
+                            .setCheck("Number")
+                            .appendField("הסתובב שמאלה")
+                            .appendField("מעלות");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("סובב את הדמות שמאלה.");
+                    }
+                };
+                Blockly.JavaScript['motion_turn_left_degrees'] = function(block) {
+                    const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
+                    const code = `
+                        await new Promise(resolve => {
+                            currentDirection -= ${degrees};
+                            updateCatPosition();
+                            logToConsole('החתול הסתובב שמאלה ב-' + ${degrees} + ' מעלות.');
+                            setTimeout(resolve, 10);
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['motion_go_to_xy'] = {
+                    init: function() {
+                        this.appendValueInput("X")
+                            .setCheck("Number")
+                            .appendField("קפוץ ל-x:");
+                        this.appendValueInput("Y")
+                            .setCheck("Number")
+                            .appendField("y:");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("קפיצה למיקום מסוים על הבמה.");
+                    }
+                };
+                Blockly.JavaScript['motion_go_to_xy'] = function(block) {
+                    const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    const code = `
+                        await new Promise(resolve => {
+                            currentX = ${x};
+                            currentY = ${y};
+                            updateCatPosition();
+                            logToConsole('קפץ ל-x: ' + ${x} + ' y: ' + ${y});
+                            resolve();
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['motion_glide_to_xy'] = {
+                    init: function() {
+                        this.appendValueInput("SECS")
+                            .setCheck("Number")
+                            .appendField("החלק")
+                            .appendField("שניות");
+                        this.appendValueInput("X")
+                            .setCheck("Number")
+                            .appendField("ל-x:");
+                        this.appendValueInput("Y")
+                            .setCheck("Number")
+                            .appendField("y:");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("החלק את הדמות בצורה חלקה למיקום מסוים.");
+                    }
+                };
+                Blockly.JavaScript['motion_glide_to_xy'] = function(block) {
+                    const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                    const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    const code = `
+                        await new Promise(resolve => {
+                            catSprite.style.transition = 'transform ' + ${secs} + 's ease-in-out';
+                            currentX = ${x};
+                            currentY = ${y};
+                            updateCatPosition();
+                            logToConsole('החתול מחליק ל-x: ' + ${x} + ' y: ' + ${y});
+                            setTimeout(() => {
+                                catSprite.style.transition = 'transform 0.1s ease-out';
+                                resolve();
+                            }, ${secs} * 1000);
+                        });
+                    `;
+                    return code;
+                };
+
+                // מראה
+                Blockly.Blocks['looks_say_for_secs'] = {
+                    init: function() {
+                        this.appendValueInput("MESSAGE")
+                            .setCheck("String")
+                            .appendField("אמור");
+                        this.appendValueInput("SECS")
+                            .setCheck("Number")
+                            .appendField("למשך")
+                            .appendField("שניות");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הצג בועת דיבור.");
+                    }
+                };
+                Blockly.JavaScript['looks_say_for_secs'] = function(block) {
+                    const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
+                    const code = `
+                        await new Promise(resolve => {
+                            speechBubble.textContent = ${message.replace(/'/g, "")};
+                            speechBubble.classList.add('visible');
+                            logToConsole('אומר: ' + ${message});
+                            setTimeout(() => {
+                                speechBubble.classList.remove('visible');
+                                resolve();
+                            }, ${Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2'} * 1000);
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['looks_say'] = {
+                    init: function() {
+                        this.appendValueInput("MESSAGE")
+                            .setCheck("String")
+                            .appendField("אמור");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הצג בועת דיבור.");
+                    }
+                };
+                Blockly.JavaScript['looks_say'] = function(block) {
+                    const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
+                    const code = `
+                        await new Promise(resolve => {
+                            speechBubble.textContent = ${message.replace(/'/g, "")};
+                            speechBubble.classList.add('visible');
+                            logToConsole('אומר: ' + ${message});
+                            resolve();
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['looks_show'] = {
+                    init: function() {
+                        this.appendDummyInput()
+                            .appendField("הצג");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הצג את הדמות.");
+                    }
+                };
+                Blockly.JavaScript['looks_show'] = function(block) {
+                    const code = `
+                        await new Promise(resolve => {
+                            catSprite.style.display = 'flex';
+                            logToConsole('החתול מופיע.');
+                            resolve();
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['looks_hide'] = {
+                    init: function() {
+                        this.appendDummyInput()
+                            .appendField("הסתר");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הסתר את הדמות.");
+                    }
+                };
+                Blockly.JavaScript['looks_hide'] = function(block) {
+                    const code = `
+                        await new Promise(resolve => {
+                            catSprite.style.display = 'none';
+                            logToConsole('החתול הוסתר.');
+                            resolve();
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['looks_set_transparency'] = {
+                    init: function() {
+                        this.appendValueInput("TRANSPARENCY")
+                            .setCheck("Number")
+                            .appendField("שנה שקיפות ל-");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("שנה את שקיפות הדמות (0-100).");
+                    }
+                };
+                Blockly.JavaScript['looks_set_transparency'] = function(block) {
+                    const transparency = Blockly.JavaScript.valueToCode(block, 'TRANSPARENCY', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+                    const code = `
+                        await new Promise(resolve => {
+                            let opacityValue = Math.max(0, Math.min(1, ${transparency} / 100));
+                            catSprite.style.opacity = opacityValue;
+                            logToConsole('שקיפות החתול שונתה ל-' + ${transparency} + '%');
+                            resolve();
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['looks_set_sprite'] = {
+                    init: function() {
+                        this.appendValueInput("URL")
+                            .setCheck("String")
+                            .appendField("שנה דמות ל-SVG מקישור");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("שנה את מראה הדמות לקובץ SVG מקישור.");
+                    }
+                };
+                Blockly.JavaScript['looks_set_sprite'] = function(block) {
+                    const url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC) || '""';
+                    const code = `
+                        await new Promise(resolve => {
+                            const svgUrl = ${url};
+                            const imgElement = document.createElement('img');
+                            imgElement.src = svgUrl;
+                            imgElement.onload = () => {
+                                catSprite.innerHTML = '';
+                                catSprite.style.backgroundColor = 'transparent';
+                                catSprite.style.borderRadius = '0';
+                                catSprite.appendChild(imgElement);
+                                logToConsole('הדמות שונתה לקובץ SVG.');
+                                resolve();
+                            };
+                            imgElement.onerror = () => {
+                                logToConsole('שגיאה בטעינת קובץ SVG מהקישור.');
+                                resolve();
+                            };
+                        });
+                    `;
+                    return code;
+                };
+
+                // בקרה
+                Blockly.Blocks['control_wait_secs'] = {
+                    init: function() {
+                        this.appendValueInput("SECS")
+                            .setCheck("Number")
+                            .appendField("המתן")
+                            .appendField("שניות");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#FF6B1A");
+                        this.setTooltip("המתן מספר שניות.");
+                    }
+                };
+                Blockly.JavaScript['control_wait_secs'] = function(block) {
+                    const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                    const code = `
+                        await new Promise(resolve => {
+                            logToConsole('ממתין ' + ${secs} + ' שניות...');
+                            setTimeout(resolve, ${secs} * 1000);
+                        });
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['control_repeat_times'] = {
+                    init: function() {
+                        this.appendDummyInput()
+                            .appendField("חזור");
+                        this.appendValueInput("TIMES")
+                            .setCheck("Number");
+                        this.appendDummyInput()
+                            .appendField("פעמים");
+                        this.appendStatementInput("DO")
+                            .setCheck(null);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#FF6B1A");
+                        this.setTooltip("חזור על הבלוקים שבפנים מספר פעמים.");
+                    }
+                };
+                Blockly.JavaScript['control_repeat_times'] = function(block) {
+                    const times = Blockly.JavaScript.valueToCode(block, 'TIMES', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+                    const doCode = Blockly.JavaScript.statementToCode(block, 'DO');
+                    const code = `
+                        logToConsole('מתחיל חזרה על ' + ${times} + ' פעמים.');
+                        for (let i = 0; i < ${times}; i++) {
+                            await (async () => {
+                                ${doCode}
+                            })();
+                        }
+                    `;
+                    return code;
+                };
+                Blockly.Blocks['control_forever'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField("לעולמים");
+                        this.appendStatementInput("DO").setCheck(null);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#FF6B1A");
+                        this.setTooltip("חזור על הבלוקים ללא הפסקה. (עשוי להיתקע - יש להשתמש בזהירות)");
+                    }
+                };
+                Blockly.JavaScript['control_forever'] = function(block) {
+                    const doCode = Blockly.JavaScript.statementToCode(block, 'DO');
+                    const code = `
+                        logToConsole('מתחיל לולאת לנצח...');
+                        while(true) {
+                            await new Promise(resolve => setTimeout(resolve, 10));
+                            await (async () => {
+                                ${doCode}
+                            })();
+                        }
+                    `;
+                    return code;
+                };
+
+                // אופרטורים
+                Blockly.Blocks['operator_add'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("+");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("מחבר שני מספרים.");
+                    }
+                };
+                Blockly.JavaScript['operator_add'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_ADDITION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_ADDITION) || '0';
+                    const code = `(${num1} + ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_ADDITION];
+                };
+                Blockly.Blocks['operator_subtract'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("-");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("מחסר שני מספרים.");
+                    }
+                };
+                Blockly.JavaScript['operator_subtract'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
+                    const code = `(${num1} - ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_SUBTRACTION];
+                };
+                Blockly.Blocks['operator_multiply'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("×");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("מכפיל שני מספרים.");
+                    }
+                };
+                Blockly.JavaScript['operator_multiply'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
+                    const code = `(${num1} * ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_MULTIPLICATION];
+                };
+                Blockly.Blocks['operator_divide'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("÷");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("מחלק שני מספרים.");
+                    }
+                };
+                Blockly.JavaScript['operator_divide'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_DIVISION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_DIVISION) || '0';
+                    const code = `(${num1} / ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_DIVISION];
+                };
+                Blockly.Blocks['operator_random_number'] = {
+                    init: function() {
+                        this.appendDummyInput()
+                            .appendField("בחר מספר אקראי מ-")
+                            .appendField(new Blockly.FieldTextInput("1"), "FROM")
+                            .appendField("עד")
+                            .appendField(new Blockly.FieldTextInput("10"), "TO");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("בחר מספר אקראי בטווח שצוין.");
+                    }
+                };
+                Blockly.JavaScript['operator_random_number'] = function(block) {
+                    const from = block.getFieldValue('FROM');
+                    const to = block.getFieldValue('TO');
+                    const code = `Math.floor(Math.random() * (${to} - ${from} + 1)) + ${from}`;
+                    return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+                };
+
+                const resetCatPosition = () => {
+                    currentX = 0;
+                    currentY = 0;
+                    currentDirection = 90;
                     updateCatPosition();
-                }
-            };
+                    catSprite.style.opacity = 1;
+                    speechBubble.classList.remove('visible');
+                    consoleOutput.innerHTML = '<b>פלט קונסול:</b>';
+                    const imgElement = document.createElement('img');
+                    imgElement.src = 'https://codejredu.github.io/claudejr/GingerCat.svg';
+                    catSprite.innerHTML = '';
+                    catSprite.appendChild(imgElement);
+                    logToConsole('הבמה אופסה. החתול נמצא במיקום (0,0), במרכז הבמה.');
+                };
 
-            const endDrag = () => {
-                if (isDragging) {
-                    isDragging = false;
-                    catSprite.style.transition = 'transform 0.5s ease-out';
-                    logToConsole(`החתול נגרר למיקום חדש (x: ${currentX.toFixed(2)}, y: ${currentY.toFixed(2)})`);
-                }
-            };
+                workspace = Blockly.inject('blockly-area', {
+                    toolbox: document.getElementById('toolbox'),
+                    scrollbars: true,
+                    trashcan: true,
+                    rtl: true,
+                    zoom: {
+                        controls: true,
+                        wheel: true,
+                        startScale: 1.25,
+                        maxScale: 3,
+                        minScale: 0.3,
+                        scaleSpeed: 1.2
+                    },
+                    theme: Blockly.Themes.Zelos
+                });
 
-            // מאזיני אירועים לגרירה - עכבר וטאץ'
-            catSprite.addEventListener('mousedown', startDrag);
-            catSprite.addEventListener('touchstart', startDrag);
-
-            stageArea.addEventListener('mousemove', drag);
-            stageArea.addEventListener('touchmove', drag);
-
-            document.addEventListener('mouseup', endDrag);
-            document.addEventListener('touchend', endDrag);
-            document.addEventListener('touchcancel', endDrag);
-            
-            // הגדרת בלוקים מותאמים אישית
-            Blockly.Blocks['event_when_flag_clicked'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField("כאשר");
-                    this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://www.gstatic.com/codesite/ph/images/play_button.gif", 15, 15, { alt: "דגל", flipRtl: "false" }));
-                    this.appendDummyInput()
-                        .appendField("נלחץ");
-                    this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
-                    this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
-                    this.setHelpUrl("");
-                }
-            };
-            Blockly.JavaScript['event_when_flag_clicked'] = function(block) {
-                return '';
-            };
-            Blockly.Blocks['event_when_key_pressed'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField("כאשר מקש")
-                        .appendField(new Blockly.FieldDropdown([
-                            ["רווח", "SPACE"],
-                            ["חץ למעלה", "UP"],
-                            ["חץ למטה", "DOWN"],
-                            ["חץ ימינה", "RIGHT"],
-                            ["חץ שמאלה", "LEFT"]
-                        ]), "KEY")
-                        .appendField("נלחץ");
-                    this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
-                    this.setTooltip("הפעל קוד כאשר מקש נלחץ. (פונקציונליות זו אינה נתמכת במלואה בדוגמה הנוכחית.)");
-                    this.setHelpUrl("");
-                }
-            };
-            Blockly.JavaScript['event_when_key_pressed'] = function(block) {
-                return '';
-            };
-            // בלוק חדש: כאשר לוחצים על הבמה
-            Blockly.Blocks['event_when_stage_clicked'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField("כאשר הבמה נלחצת");
-                    this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
-                    this.setTooltip("הפעל את התסריט כאשר לוחצים על אזור הבמה.");
-                    this.setHelpUrl("");
-                }
-            };
-            Blockly.JavaScript['event_when_stage_clicked'] = function(block) {
-                return '';
-            };
-
-            // תנועה
-            Blockly.Blocks['motion_move_steps'] = {
-                init: function() {
-                    this.appendValueInput("STEPS")
-                        .setCheck("Number")
-                        .appendField("לך")
-                        .appendField("צעדים");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#4C97FF");
-                    this.setTooltip("הזז את הדמות בכיוון שהיא פונה.");
-                }
-            };
-            Blockly.JavaScript['motion_move_steps'] = function(block) {
-                const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || '10';
-                const code = `
-                    await new Promise(resolve => {
-                        const radians = (currentDirection - 90) * Math.PI / 180;
-                        const newX = currentX + (${steps} * Math.cos(radians));
-                        const newY = currentY + (${steps} * Math.sin(radians));
-                        currentX = newX;
-                        currentY = newY;
-                        updateCatPosition();
-                        logToConsole('החתול זז ' + ${steps} + ' צעדים.');
-                        setTimeout(resolve, 500);
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['motion_turn_right_degrees'] = {
-                init: function() {
-                    this.appendValueInput("DEGREES")
-                        .setCheck("Number")
-                        .appendField("הסתובב ימינה")
-                        .appendField("מעלות");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#4C97FF");
-                    this.setTooltip("סובב את הדמות ימינה.");
-                }
-            };
-            Blockly.JavaScript['motion_turn_right_degrees'] = function(block) {
-                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
-                const code = `
-                    await new Promise(resolve => {
-                        currentDirection += ${degrees};
-                        updateCatPosition();
-                        logToConsole('החתול הסתובב ימינה ב-' + ${degrees} + ' מעלות.');
-                        setTimeout(resolve, 10);
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['motion_turn_left_degrees'] = {
-                init: function() {
-                    this.appendValueInput("DEGREES")
-                        .setCheck("Number")
-                        .appendField("הסתובב שמאלה")
-                        .appendField("מעלות");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#4C97FF");
-                    this.setTooltip("סובב את הדמות שמאלה.");
-                }
-            };
-            Blockly.JavaScript['motion_turn_left_degrees'] = function(block) {
-                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
-                const code = `
-                    await new Promise(resolve => {
-                        currentDirection -= ${degrees};
-                        updateCatPosition();
-                        logToConsole('החתול הסתובב שמאלה ב-' + ${degrees} + ' מעלות.');
-                        setTimeout(resolve, 10);
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['motion_go_to_xy'] = {
-                init: function() {
-                    this.appendValueInput("X")
-                        .setCheck("Number")
-                        .appendField("קפוץ ל-x:");
-                    this.appendValueInput("Y")
-                        .setCheck("Number")
-                        .appendField("y:");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#4C97FF");
-                    this.setTooltip("קפיצה למיקום מסוים על הבמה.");
-                }
-            };
-            Blockly.JavaScript['motion_go_to_xy'] = function(block) {
-                const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-                const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-                const code = `
-                    await new Promise(resolve => {
-                        currentX = ${x};
-                        currentY = ${y};
-                        updateCatPosition();
-                        logToConsole('קפץ ל-x: ' + ${x} + ' y: ' + ${y});
-                        resolve();
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['motion_glide_to_xy'] = {
-                init: function() {
-                    this.appendValueInput("SECS")
-                        .setCheck("Number")
-                        .appendField("החלק")
-                        .appendField("שניות");
-                    this.appendValueInput("X")
-                        .setCheck("Number")
-                        .appendField("ל-x:");
-                    this.appendValueInput("Y")
-                        .setCheck("Number")
-                        .appendField("y:");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#4C97FF");
-                    this.setTooltip("החלק את הדמות בצורה חלקה למיקום מסוים.");
-                }
-            };
-            Blockly.JavaScript['motion_glide_to_xy'] = function(block) {
-                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
-                const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-                const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-                const code = `
-                    await new Promise(resolve => {
-                        catSprite.style.transition = 'transform ' + ${secs} + 's ease-in-out';
-                        currentX = ${x};
-                        currentY = ${y};
-                        updateCatPosition();
-                        logToConsole('החתול מחליק ל-x: ' + ${x} + ' y: ' + ${y});
-                        setTimeout(() => {
-                            catSprite.style.transition = 'transform 0.1s ease-out';
-                            resolve();
-                        }, ${secs} * 1000);
-                    });
-                `;
-                return code;
-            };
-
-            // מראה
-            Blockly.Blocks['looks_say_for_secs'] = {
-                init: function() {
-                    this.appendValueInput("MESSAGE")
-                        .setCheck("String")
-                        .appendField("אמור");
-                    this.appendValueInput("SECS")
-                        .setCheck("Number")
-                        .appendField("למשך")
-                        .appendField("שניות");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#9966FF");
-                    this.setTooltip("הצג בועת דיבור.");
-                }
-            };
-            Blockly.JavaScript['looks_say_for_secs'] = function(block) {
-                const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
-                const code = `
-                    await new Promise(resolve => {
-                        speechBubble.textContent = ${message.replace(/'/g, "")};
-                        speechBubble.classList.add('visible');
-                        logToConsole('אומר: ' + ${message});
-                        setTimeout(() => {
-                            speechBubble.classList.remove('visible');
-                            resolve();
-                        }, ${Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2'} * 1000);
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['looks_say'] = {
-                init: function() {
-                    this.appendValueInput("MESSAGE")
-                        .setCheck("String")
-                        .appendField("אמור");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#9966FF");
-                    this.setTooltip("הצג בועת דיבור.");
-                }
-            };
-            Blockly.JavaScript['looks_say'] = function(block) {
-                const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
-                const code = `
-                    await new Promise(resolve => {
-                        speechBubble.textContent = ${message.replace(/'/g, "")};
-                        speechBubble.classList.add('visible');
-                        logToConsole('אומר: ' + ${message});
-                        resolve();
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['looks_show'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField("הצג");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#9966FF");
-                    this.setTooltip("הצג את הדמות.");
-                }
-            };
-            Blockly.JavaScript['looks_show'] = function(block) {
-                const code = `
-                    await new Promise(resolve => {
-                        catSprite.style.display = 'flex';
-                        logToConsole('החתול מופיע.');
-                        resolve();
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['looks_hide'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField("הסתר");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#9966FF");
-                    this.setTooltip("הסתר את הדמות.");
-                }
-            };
-            Blockly.JavaScript['looks_hide'] = function(block) {
-                const code = `
-                    await new Promise(resolve => {
-                        catSprite.style.display = 'none';
-                        logToConsole('החתול הוסתר.');
-                        resolve();
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['looks_set_transparency'] = {
-                init: function() {
-                    this.appendValueInput("TRANSPARENCY")
-                        .setCheck("Number")
-                        .appendField("שנה שקיפות ל-");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#9966FF");
-                    this.setTooltip("שנה את שקיפות הדמות (0-100).");
-                }
-            };
-            Blockly.JavaScript['looks_set_transparency'] = function(block) {
-                const transparency = Blockly.JavaScript.valueToCode(block, 'TRANSPARENCY', Blockly.JavaScript.ORDER_ATOMIC) || '100';
-                const code = `
-                    await new Promise(resolve => {
-                        let opacityValue = Math.max(0, Math.min(1, ${transparency} / 100));
-                        catSprite.style.opacity = opacityValue;
-                        logToConsole('שקיפות החתול שונתה ל-' + ${transparency} + '%');
-                        resolve();
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['looks_set_sprite'] = {
-                init: function() {
-                    this.appendValueInput("URL")
-                        .setCheck("String")
-                        .appendField("שנה דמות ל-SVG מקישור");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#9966FF");
-                    this.setTooltip("שנה את מראה הדמות לקובץ SVG מקישור.");
-                }
-            };
-            Blockly.JavaScript['looks_set_sprite'] = function(block) {
-                const url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC) || '""';
-                const code = `
-                    await new Promise(resolve => {
-                        const svgUrl = ${url};
-                        const imgElement = document.createElement('img');
-                        imgElement.src = svgUrl;
-                        imgElement.onload = () => {
-                            catSprite.innerHTML = '';
-                            catSprite.style.backgroundColor = 'transparent';
-                            catSprite.style.borderRadius = '0';
-                            catSprite.appendChild(imgElement);
-                            logToConsole('הדמות שונתה לקובץ SVG.');
-                            resolve();
-                        };
-                        imgElement.onerror = () => {
-                            logToConsole('שגיאה בטעינת קובץ SVG מהקישור.');
-                            resolve();
-                        };
-                    });
-                `;
-                return code;
-            };
-
-            // בקרה
-            Blockly.Blocks['control_wait_secs'] = {
-                init: function() {
-                    this.appendValueInput("SECS")
-                        .setCheck("Number")
-                        .appendField("המתן")
-                        .appendField("שניות");
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#FF6B1A");
-                    this.setTooltip("המתן מספר שניות.");
-                }
-            };
-            Blockly.JavaScript['control_wait_secs'] = function(block) {
-                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
-                const code = `
-                    await new Promise(resolve => {
-                        logToConsole('ממתין ' + ${secs} + ' שניות...');
-                        setTimeout(resolve, ${secs} * 1000);
-                    });
-                `;
-                return code;
-            };
-            Blockly.Blocks['control_repeat_times'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField("חזור");
-                    this.appendValueInput("TIMES")
-                        .setCheck("Number");
-                    this.appendDummyInput()
-                        .appendField("פעמים");
-                    this.appendStatementInput("DO")
-                        .setCheck(null);
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#FF6B1A");
-                    this.setTooltip("חזור על הבלוקים שבפנים מספר פעמים.");
-                }
-            };
-            Blockly.JavaScript['control_repeat_times'] = function(block) {
-                const times = Blockly.JavaScript.valueToCode(block, 'TIMES', Blockly.JavaScript.ORDER_ATOMIC) || '10';
-                const doCode = Blockly.JavaScript.statementToCode(block, 'DO');
-                const code = `
-                    logToConsole('מתחיל חזרה על ' + ${times} + ' פעמים.');
-                    for (let i = 0; i < ${times}; i++) {
-                        await (async () => {
-                            ${doCode}
-                        })();
+                // מפת הבלוקים שהם פותחני תסריטים
+                const eventHandlers = {
+                    'event_when_flag_clicked': async () => {
+                        const code = Blockly.JavaScript.workspaceToCode(workspace);
+                        await runCode(code);
+                    },
+                    'event_when_stage_clicked': async () => {
+                        const code = Blockly.JavaScript.workspaceToCode(workspace);
+                        await runCode(code);
                     }
-                `;
-                return code;
-            };
-            Blockly.Blocks['control_forever'] = {
-                init: function() {
-                    this.appendDummyInput().appendField("לעולמים");
-                    this.appendStatementInput("DO").setCheck(null);
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#FF6B1A");
-                    this.setTooltip("חזור על הבלוקים ללא הפסקה. (עשוי להיתקע - יש להשתמש בזהירות)");
-                }
-            };
-            Blockly.JavaScript['control_forever'] = function(block) {
-                const doCode = Blockly.JavaScript.statementToCode(block, 'DO');
-                const code = `
-                    logToConsole('מתחיל לולאת לנצח...');
-                    while(true) {
-                        await new Promise(resolve => setTimeout(resolve, 10));
-                        await (async () => {
-                            ${doCode}
-                        })();
+                };
+
+                // הוספת בלוקים למרחב העבודה
+                const blocks = document.getElementById('toolbox').getElementsByTagName('block');
+                for (const block of blocks) {
+                    // בדיקת הגנה: ודא שהבלוק קיים ויש לו מאפיין type
+                    if (block && block.type && block.type.startsWith('event_')) {
+                        const topBlock = workspace.newBlock(block.type);
+                        topBlock.initSvg();
+                        topBlock.render();
+                        topBlock.moveBy(20, 20);
                     }
-                `;
-                return code;
-            };
+                }
 
-            // אופרטורים
-            Blockly.Blocks['operator_add'] = {
-                init: function() {
-                    this.appendValueInput("NUM1").setCheck("Number");
-                    this.appendValueInput("NUM2").setCheck("Number").appendField("+");
-                    this.setOutput(true, "Number");
-                    this.setColour("#40BF4A");
-                    this.setTooltip("מחבר שני מספרים.");
-                }
-            };
-            Blockly.JavaScript['operator_add'] = function(block) {
-                const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_ADDITION) || '0';
-                const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_ADDITION) || '0';
-                const code = `(${num1} + ${num2})`;
-                return [code, Blockly.JavaScript.ORDER_ADDITION];
-            };
-            Blockly.Blocks['operator_subtract'] = {
-                init: function() {
-                    this.appendValueInput("NUM1").setCheck("Number");
-                    this.appendValueInput("NUM2").setCheck("Number").appendField("-");
-                    this.setOutput(true, "Number");
-                    this.setColour("#40BF4A");
-                    this.setTooltip("מחסר שני מספרים.");
-                }
-            };
-            Blockly.JavaScript['operator_subtract'] = function(block) {
-                const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
-                const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
-                const code = `(${num1} - ${num2})`;
-                return [code, Blockly.JavaScript.ORDER_SUBTRACTION];
-            };
-            Blockly.Blocks['operator_multiply'] = {
-                init: function() {
-                    this.appendValueInput("NUM1").setCheck("Number");
-                    this.appendValueInput("NUM2").setCheck("Number").appendField("×");
-                    this.setOutput(true, "Number");
-                    this.setColour("#40BF4A");
-                    this.setTooltip("מכפיל שני מספרים.");
-                }
-            };
-            Blockly.JavaScript['operator_multiply'] = function(block) {
-                const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
-                const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
-                const code = `(${num1} * ${num2})`;
-                return [code, Blockly.JavaScript.ORDER_MULTIPLICATION];
-            };
-            Blockly.Blocks['operator_divide'] = {
-                init: function() {
-                    this.appendValueInput("NUM1").setCheck("Number");
-                    this.appendValueInput("NUM2").setCheck("Number").appendField("÷");
-                    this.setOutput(true, "Number");
-                    this.setColour("#40BF4A");
-                    this.setTooltip("מחלק שני מספרים.");
-                }
-            };
-            Blockly.JavaScript['operator_divide'] = function(block) {
-                const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_DIVISION) || '0';
-                const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_DIVISION) || '0';
-                const code = `(${num1} / ${num2})`;
-                return [code, Blockly.JavaScript.ORDER_DIVISION];
-            };
-            Blockly.Blocks['operator_random_number'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField("בחר מספר אקראי מ-")
-                        .appendField(new Blockly.FieldTextInput("1"), "FROM")
-                        .appendField("עד")
-                        .appendField(new Blockly.FieldTextInput("10"), "TO");
-                    this.setOutput(true, "Number");
-                    this.setColour("#40BF4A");
-                    this.setTooltip("בחר מספר אקראי בטווח שצוין.");
-                }
-            };
-            Blockly.JavaScript['operator_random_number'] = function(block) {
-                const from = block.getFieldValue('FROM');
-                const to = block.getFieldValue('TO');
-                const code = `Math.floor(Math.random() * (${to} - ${from} + 1)) + ${from}`;
-                return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
-            };
+                const runCode = async (code) => {
+                    // בדיקה אם הקוד ריק או מכיל רק רווחים
+                    if (!code.trim()) {
+                        logToConsole('אין בלוקים בתוכנית. גרור בלוקים כדי להתחיל!');
+                        return;
+                    }
+                    logToConsole('--- הפעלה חדשה ---');
+                    try {
+                        // הפעלת הקוד בתוך פונקציה אסינכרונית
+                        await eval('(async () => {' + code + '})()');
+                        logToConsole('הפעלה הסתיימה בהצלחה.');
+                    } catch (e) {
+                        logToConsole('שגיאה בהפעלת הקוד: ' + e + '. אנא ודא שהבלוקים מחוברים כראוי ושהקוד שלם.');
+                    }
+                };
 
-            workspace = Blockly.inject('blockly-area', {
-                toolbox: document.getElementById('toolbox'),
-                scrollbars: true,
-                trashcan: true,
-                rtl: true,
-                zoom: {
-                    controls: true,
-                    wheel: true,
-                    startScale: 1.25,
-                    maxScale: 3,
-                    minScale: 0.3,
-                    scaleSpeed: 1.2
-                },
-                theme: Blockly.Themes.Zelos
-            });
+                document.getElementById('run-button').addEventListener('click', () => {
+                    eventHandlers['event_when_flag_clicked']();
+                });
 
-            // מפת הבלוקים שהם פותחני תסריטים
-            const eventHandlers = {
-                'event_when_flag_clicked': async () => {
-                    const code = Blockly.JavaScript.workspaceToCode(workspace);
-                    await runCode(code);
-                },
-                'event_when_stage_clicked': async () => {
-                    const code = Blockly.JavaScript.workspaceToCode(workspace);
-                    await runCode(code);
-                }
+                stageArea.addEventListener('click', (event) => {
+                    // ודא שהקליק לא היה על הדמות עצמה
+                    if (event.target.id !== 'cat-sprite' && event.target.closest('#cat-sprite') === null) {
+                        eventHandlers['event_when_stage_clicked']();
+                    }
+                });
+
+                document.getElementById('reset-button').addEventListener('click', resetCatPosition);
+                
+                // אפס את מיקום החתול בעת טעינת הדף
+                resetCatPosition();
+
+                fullscreenButton.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        containerWrapper.requestFullscreen().catch(err => {
+                            logToConsole(`Error attempting to enable full-screen: ${err.message} (${err.name})`);
+                        });
+                    } else {
+                        document.exitFullscreen();
+                    }
+                });
             };
-
-            // הוספת בלוקים למרחב העבודה
-            const blocks = document.getElementById('toolbox').getElementsByTagName('block');
-            for (const block of blocks) {
-                // בדיקת הגנה: ודא שהבלוק קיים ויש לו מאפיין type
-                if (block && block.type && block.type.startsWith('event_')) {
-                    const topBlock = workspace.newBlock(block.type);
-                    topBlock.initSvg();
-                    topBlock.render();
-                    topBlock.moveBy(20, 20);
-                }
-            }
-
-            const runCode = async (code) => {
-                // בדיקה אם הקוד ריק או מכיל רק רווחים
-                if (!code.trim()) {
-                    logToConsole('אין בלוקים בתוכנית. גרור בלוקים כדי להתחיל!');
-                    return;
-                }
-                logToConsole('--- הפעלה חדשה ---');
-                try {
-                    // הפעלת הקוד בתוך פונקציה אסינכרונית
-                    await eval('(async () => {' + code + '})()');
-                    logToConsole('הפעלה הסתיימה בהצלחה.');
-                } catch (e) {
-                    logToConsole('שגיאה בהפעלת הקוד: ' + e + '. אנא ודא שהבלוקים מחוברים כראוי ושהקוד שלם.');
-                }
-            };
-
-            document.getElementById('run-button').addEventListener('click', () => {
-                eventHandlers['event_when_flag_clicked']();
-            });
-
-            stageArea.addEventListener('click', (event) => {
-                // ודא שהקליק לא היה על הדמות עצמה
-                if (event.target.id !== 'cat-sprite' && event.target.closest('#cat-sprite') === null) {
-                    eventHandlers['event_when_stage_clicked']();
-                }
-            });
-
-            document.getElementById('reset-button').addEventListener('click', () => {
-                currentX = 0;
-                currentY = 0;
-                currentDirection = 90;
-                updateCatPosition();
-                catSprite.style.opacity = 1;
-                speechBubble.classList.remove('visible');
-                consoleOutput.innerHTML = '<b>פלט קונסול:</b>';
-                const imgElement = document.createElement('img');
-                imgElement.src = 'https://codejredu.github.io/claudejr/GingerCat.svg';
-                catSprite.innerHTML = '';
-                catSprite.appendChild(imgElement);
-                logToConsole('הבמה אופסה.');
-            });
-
-            fullscreenButton.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    containerWrapper.requestFullscreen().catch(err => {
-                        logToConsole(`Error attempting to enable full-screen: ${err.message} (${err.name})`);
-                    });
-                } else {
-                    document.exitFullscreen();
-                }
-            });
-
         });
     </script>
 </body>
