@@ -13,13 +13,13 @@
         }
         .container-wrapper {
             display: flex;
-            flex-direction: column;
+            flex-direction: row-reverse; /* שינוי כיוון השורה כך שהבמה תהיה משמאל והבלוקלי מימין */
             height: 100vh;
             padding: 1rem;
         }
         @media (min-width: 1024px) {
             .container-wrapper {
-                flex-direction: row;
+                flex-direction: row-reverse;
             }
         }
         #stage-area {
@@ -27,7 +27,10 @@
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            flex-grow: 1;
+            width: 480px; /* גודל הבמה כפי שצוין */
+            height: 360px; /* גודל הבמה כפי שצוין */
+            flex-shrink: 0;
+            margin-right: 1rem;
             margin-bottom: 1rem;
             display: flex;
             justify-content: center;
@@ -37,9 +40,9 @@
         }
         @media (min-width: 1024px) {
             #stage-area {
-                width: 50vw;
-                margin-right: 1rem;
-                margin-bottom: 0;
+                margin-left: 1rem;
+                margin-right: 0;
+                order: -1; /* מוודא שהבמה תישאר משמאל */
             }
         }
         #cat-sprite {
@@ -93,7 +96,7 @@
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            height: 100%; /* שינוי לגובה מלא */
+            height: 100%;
         }
         @media (min-width: 1024px) {
             #blockly-area {
@@ -105,18 +108,6 @@
 <body class="bg-gray-100 text-gray-800">
 
     <div id="container-wrapper" class="container-wrapper">
-        <!-- אזור הבמה והדמות -->
-        <div id="stage-area" class="lg:w-1/2 p-4 flex flex-col items-center justify-center rounded-2xl">
-            <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
-            <div id="cat-sprite">
-                🐈
-                <div id="speech-bubble" class="speech-bubble"></div>
-            </div>
-            <div id="console-output" class="absolute bottom-4 left-4 p-2 bg-gray-200 text-gray-700 rounded-md text-sm max-h-32 overflow-y-auto w-full max-w-sm">
-                <b>פלט קונסול:</b>
-            </div>
-        </div>
-
         <!-- אזור הבלוקלי והפקדים -->
         <div class="lg:w-1/2 flex flex-col space-y-4">
             <div id="blockly-area" class="h-96 w-full lg:h-full rounded-2xl"></div>
@@ -140,6 +131,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m0 0l-5 5m0 5v4m0 0h4m0 0l-5-5m-9 5v4m0 0h-4m0 0l5-5" />
                     </svg>
                 </button>
+            </div>
+        </div>
+        <!-- אזור הבמה והדמות -->
+        <div id="stage-area" class="lg:w-1/2 p-4 flex flex-col items-center justify-center rounded-2xl">
+            <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
+            <div id="cat-sprite">
+                🐈
+                <div id="speech-bubble" class="speech-bubble"></div>
+            </div>
+            <div id="console-output" class="absolute bottom-4 right-4 p-2 bg-gray-200 text-gray-700 rounded-md text-sm max-h-32 overflow-y-auto w-full max-w-sm">
+                <b>פלט קונסול:</b>
             </div>
         </div>
     </div>
@@ -234,7 +236,7 @@
                 // עדכון מיקום החתול במרכז
                 catSprite.style.left = `${(stageWidth / 2) + currentX}px`;
                 catSprite.style.top = `${(stageHeight / 2) + currentY}px`;
-                catSprite.style.transform = `translate(${currentX}px, \${currentY}px) rotate(${currentDirection}deg)`;
+                catSprite.style.transform = `translate(\${currentX}px, \${currentY}px) rotate(${currentDirection}deg)`;
             };
 
             window.addEventListener('resize', updateStageSize);
@@ -680,7 +682,7 @@
                 toolbox: document.getElementById('toolbox'),
                 scrollbars: true,
                 trashcan: true,
-                rtl: true,
+                rtl: true, // שינוי כיוון הבלוקלי ל-RTL (מימין לשמאל)
                 zoom: {
                     controls: true,
                     wheel: true,
