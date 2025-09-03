@@ -154,41 +154,96 @@
         </category>
         <category name="תנועה" colour="#4C97FF">
             <block type="motion_move_steps">
-                <field name="STEPS">10</field>
+                <value name="STEPS">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
             </block>
             <block type="motion_turn_right_degrees">
-                <field name="DEGREES">15</field>
+                <value name="DEGREES">
+                    <shadow type="math_number">
+                        <field name="NUM">15</field>
+                    </shadow>
+                </value>
             </block>
             <block type="motion_turn_left_degrees">
-                <field name="DEGREES">15</field>
+                <value name="DEGREES">
+                    <shadow type="math_number">
+                        <field name="NUM">15</field>
+                    </shadow>
+                </value>
             </block>
             <block type="motion_go_to_xy">
-                <field name="X">0</field>
-                <field name="Y">0</field>
+                <value name="X">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="Y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
             </block>
             <block type="motion_glide_to_xy">
-                <field name="SECS">1</field>
-                <field name="X">0</field>
-                <field name="Y">0</field>
+                <value name="SECS">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="X">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="Y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
             </block>
         </category>
         <category name="מראה" colour="#9966FF">
             <block type="looks_say_for_secs">
-                <field name="MESSAGE">שלום!</field>
-                <field name="SECS">2</field>
+                <value name="MESSAGE">
+                    <shadow type="text">
+                        <field name="TEXT">שלום!</field>
+                    </shadow>
+                </value>
+                <value name="SECS">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
             </block>
             <block type="looks_say">
-                <field name="MESSAGE">שלום!</field>
+                <value name="MESSAGE">
+                    <shadow type="text">
+                        <field name="TEXT">שלום!</field>
+                    </shadow>
+                </value>
             </block>
             <block type="looks_hide"></block>
             <block type="looks_show"></block>
         </category>
         <category name="בקרה" colour="#FF6B1A">
             <block type="control_wait_secs">
-                <field name="SECS">1</field>
+                <value name="SECS">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
             </block>
             <block type="control_repeat_times">
-                <field name="TIMES">10</field>
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <statement name="DO">
+                    <!-- קלט פנימי -->
+                </statement>
             </block>
             <block type="control_forever"></block>
         </category>
@@ -289,7 +344,6 @@
                     this.appendValueInput("STEPS")
                         .setCheck("Number")
                         .appendField("לך")
-                        .appendField(new Blockly.FieldTextInput("10"), "STEPS_FIELD")
                         .appendField("צעדים");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -298,7 +352,7 @@
                 }
             };
             Blockly.JavaScript['motion_move_steps'] = function(block) {
-                const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || block.getFieldValue('STEPS_FIELD');
+                const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || '10';
                 const code = `
                     await new Promise(resolve => {
                         const radians = currentDirection * Math.PI / 180;
@@ -318,7 +372,6 @@
                     this.appendValueInput("DEGREES")
                         .setCheck("Number")
                         .appendField("הסתובב ימינה")
-                        .appendField(new Blockly.FieldTextInput("15"), "DEGREES_FIELD")
                         .appendField("מעלות");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -327,7 +380,7 @@
                 }
             };
             Blockly.JavaScript['motion_turn_right_degrees'] = function(block) {
-                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || block.getFieldValue('DEGREES_FIELD');
+                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
                 const code = `
                     await new Promise(resolve => {
                         currentDirection += ${degrees};
@@ -343,7 +396,6 @@
                     this.appendValueInput("DEGREES")
                         .setCheck("Number")
                         .appendField("הסתובב שמאלה")
-                        .appendField(new Blockly.FieldTextInput("15"), "DEGREES_FIELD")
                         .appendField("מעלות");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -352,7 +404,7 @@
                 }
             };
             Blockly.JavaScript['motion_turn_left_degrees'] = function(block) {
-                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || block.getFieldValue('DEGREES_FIELD');
+                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
                 const code = `
                     await new Promise(resolve => {
                         currentDirection -= ${degrees};
@@ -365,11 +417,12 @@
             };
             Blockly.Blocks['motion_go_to_xy'] = {
                 init: function() {
-                    this.appendDummyInput()
-                        .appendField("קפוץ ל-x:")
-                        .appendField(new Blockly.FieldTextInput("0"), "X")
-                        .appendField("y:")
-                        .appendField(new Blockly.FieldTextInput("0"), "Y");
+                    this.appendValueInput("X")
+                        .setCheck("Number")
+                        .appendField("קפוץ ל-x:");
+                    this.appendValueInput("Y")
+                        .setCheck("Number")
+                        .appendField("y:");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#4C97FF");
@@ -377,8 +430,8 @@
                 }
             };
             Blockly.JavaScript['motion_go_to_xy'] = function(block) {
-                const x = block.getFieldValue('X');
-                const y = block.getFieldValue('Y');
+                const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
                 const code = `
                     await new Promise(resolve => {
                         currentX = ${x};
@@ -396,11 +449,12 @@
                         .setCheck("Number")
                         .appendField("החלק")
                         .appendField("שניות");
-                    this.appendDummyInput()
-                        .appendField("ל-x:")
-                        .appendField(new Blockly.FieldTextInput("0"), "X")
-                        .appendField("y:")
-                        .appendField(new Blockly.FieldTextInput("0"), "Y");
+                    this.appendValueInput("X")
+                        .setCheck("Number")
+                        .appendField("ל-x:");
+                    this.appendValueInput("Y")
+                        .setCheck("Number")
+                        .appendField("y:");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#4C97FF");
@@ -408,9 +462,9 @@
                 }
             };
             Blockly.JavaScript['motion_glide_to_xy'] = function(block) {
-                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || 1;
-                const x = block.getFieldValue('X');
-                const y = block.getFieldValue('Y');
+                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
                 const code = `
                     await new Promise(resolve => {
                         catSprite.style.transition = \`transform ${secs}s ease\`;
@@ -445,7 +499,7 @@
             };
             Blockly.JavaScript['looks_say_for_secs'] = function(block) {
                 const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
-                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || 2;
+                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2';
                 const code = `
                     await new Promise(resolve => {
                         speechBubble.textContent = ${message.replace(/'/g, "")};
@@ -537,7 +591,7 @@
                 }
             };
             Blockly.JavaScript['control_wait_secs'] = function(block) {
-                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || 1;
+                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
                 const code = `
                     await new Promise(resolve => {
                         logToConsole('ממתין ' + ${secs} + ' שניות...');
@@ -548,9 +602,11 @@
             };
             Blockly.Blocks['control_repeat_times'] = {
                 init: function() {
+                    this.appendDummyInput()
+                        .appendField("חזור");
                     this.appendValueInput("TIMES")
-                        .setCheck("Number")
-                        .appendField("חזור")
+                        .setCheck("Number");
+                    this.appendDummyInput()
                         .appendField("פעמים");
                     this.appendStatementInput("DO")
                         .setCheck(null);
@@ -561,7 +617,7 @@
                 }
             };
             Blockly.JavaScript['control_repeat_times'] = function(block) {
-                const times = Blockly.JavaScript.valueToCode(block, 'TIMES', Blockly.JavaScript.ORDER_ATOMIC) || 10;
+                const times = Blockly.JavaScript.valueToCode(block, 'TIMES', Blockly.JavaScript.ORDER_ATOMIC) || '10';
                 const doCode = Blockly.JavaScript.statementToCode(block, 'DO');
                 const code = `
                     logToConsole('מתחיל חזרה על ' + ${times} + ' פעמים.');
