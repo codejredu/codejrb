@@ -93,6 +93,7 @@
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 100%; /* שינוי לגובה מלא */
         }
         @media (min-width: 1024px) {
             #blockly-area {
@@ -105,7 +106,7 @@
 
     <div id="container-wrapper" class="container-wrapper">
         <!-- אזור הבמה והדמות -->
-        <div id="stage-area" class="lg:w-1/2 p-4 flex flex-col items-center justify-center">
+        <div id="stage-area" class="lg:w-1/2 p-4 flex flex-col items-center justify-center rounded-2xl">
             <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
             <div id="cat-sprite">
                 🐈
@@ -118,7 +119,7 @@
 
         <!-- אזור הבלוקלי והפקדים -->
         <div class="lg:w-1/2 flex flex-col space-y-4">
-            <div id="blockly-area" class="h-96 w-full lg:h-full"></div>
+            <div id="blockly-area" class="h-96 w-full lg:h-full rounded-2xl"></div>
             <div class="flex flex-row space-x-2 space-x-reverse justify-center">
                 <button id="run-button" class="px-6 py-3 bg-green-500 text-white font-bold rounded-full shadow-md hover:bg-green-600 transition-colors">
                     <span class="ml-2">הפעל</span>
@@ -233,7 +234,7 @@
                 // עדכון מיקום החתול במרכז
                 catSprite.style.left = `${(stageWidth / 2) + currentX}px`;
                 catSprite.style.top = `${(stageHeight / 2) + currentY}px`;
-                catSprite.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentDirection}deg)`;
+                catSprite.style.transform = `translate(${currentX}px, \${currentY}px) rotate(${currentDirection}deg)`;
             };
 
             window.addEventListener('resize', updateStageSize);
@@ -273,7 +274,7 @@
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
                     this.setTooltip("הפעל קוד כאשר מקש נלחץ. (פונקציונליות זו אינה נתמכת במלואה בדוגמה הנוכחית.)");
-                    this.setHelpUrl("");
+                    this.setHelpUrl(""); // Corrected from this="setHelpUrl"("");
                 }
             };
             Blockly.JavaScript['event_when_key_pressed'] = function(block) {
@@ -679,7 +680,16 @@
                 toolbox: document.getElementById('toolbox'),
                 scrollbars: true,
                 trashcan: true,
-                rtl: true
+                rtl: true,
+                zoom: {
+                    controls: true,
+                    wheel: true,
+                    startScale: 1.25,
+                    maxScale: 3,
+                    minScale: 0.3,
+                    scaleSpeed: 1.2
+                },
+                theme: Blockly.Themes.Zelos
             });
 
             // פונקציית הפעלה
