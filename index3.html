@@ -13,7 +13,7 @@
         }
         .container-wrapper {
             display: flex;
-            flex-direction: row-reverse; /* שינוי כיוון השורה כך שהבמה תהיה משמאל והבלוקלי מימין */
+            flex-direction: column;
             height: 100vh;
             padding: 1rem;
         }
@@ -27,38 +27,46 @@
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 480px; /* גודל הבמה כפי שצוין */
-            height: 360px; /* גודל הבמה כפי שצוין */
+            width: 480px;
+            height: 360px;
             flex-shrink: 0;
-            margin-right: 1rem;
-            margin-bottom: 1rem;
+            margin: 0 auto 1rem;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             overflow: hidden;
             border: 2px solid #ccc;
         }
         @media (min-width: 1024px) {
             #stage-area {
-                margin-left: 1rem;
-                margin-right: 0;
-                order: -1; /* מוודא שהבמה תישאר משמאל */
+                margin: 0 1rem 0 0;
             }
         }
         #cat-sprite {
             position: absolute;
             width: 80px;
             height: 80px;
-            background-color: #ff9900;
-            border-radius: 50%;
+            background-color: transparent;
+            border-radius: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 2rem;
             transform: translate(0, 0);
-            transition: transform 0.5s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s ease-out; /* מהירות מעבר מהירה יותר לגרירה */
             z-index: 10;
+            opacity: 1;
+            cursor: grab; /* שינוי סמן העכבר לגרירה */
+        }
+        #cat-sprite:active {
+            cursor: grabbing;
+        }
+        #cat-sprite img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 0;
         }
         .speech-bubble {
             position: absolute;
@@ -98,20 +106,50 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             height: 100%;
         }
-        @media (min-width: 1024px) {
-            #blockly-area {
-                width: 50vw;
-            }
+        .controls-and-blockly {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        #console-output {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            right: 4px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.8rem;
+            max-height: 80px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div id="container-wrapper" class="container-wrapper">
+        <!-- אזור הבמה והדמות -->
+        <div class="flex-1 lg:w-1/2 flex flex-col items-center">
+            <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
+            <div id="stage-area" class="w-full lg:w-auto p-4 flex flex-col justify-center rounded-2xl">
+                <div class="relative w-full h-full flex items-center justify-center">
+                    <div id="cat-sprite">
+                        <img src="https://codejredu.github.io/claudejr/GingerCat.svg" alt="חתול ג'ינג'י">
+                        <div id="speech-bubble" class="speech-bubble"></div>
+                    </div>
+                </div>
+                <div id="console-output">
+                    <b>פלט קונסול:</b>
+                </div>
+            </div>
+        </div>
+
         <!-- אזור הבלוקלי והפקדים -->
-        <div class="lg:w-1/2 flex flex-col space-y-4">
-            <div id="blockly-area" class="h-96 w-full lg:h-full rounded-2xl"></div>
-            <div class="flex flex-row space-x-2 space-x-reverse justify-center">
+        <div class="controls-and-blockly w-full mt-4 lg:w-1/2 lg:mt-0">
+            <div id="blockly-area" class="h-[calc(100vh-16rem)] lg:h-[calc(100vh-2rem)] w-full rounded-2xl"></div>
+            <div class="flex flex-row space-x-2 space-x-reverse justify-center mt-4">
                 <button id="run-button" class="px-6 py-3 bg-green-500 text-white font-bold rounded-full shadow-md hover:bg-green-600 transition-colors">
                     <span class="ml-2">הפעל</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,17 +171,6 @@
                 </button>
             </div>
         </div>
-        <!-- אזור הבמה והדמות -->
-        <div id="stage-area" class="lg:w-1/2 p-4 flex flex-col items-center justify-center rounded-2xl">
-            <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
-            <div id="cat-sprite">
-                🐈
-                <div id="speech-bubble" class="speech-bubble"></div>
-            </div>
-            <div id="console-output" class="absolute bottom-4 right-4 p-2 bg-gray-200 text-gray-700 rounded-md text-sm max-h-32 overflow-y-auto w-full max-w-sm">
-                <b>פלט קונסול:</b>
-            </div>
-        </div>
     </div>
     
     <xml id="toolbox" style="display: none">
@@ -151,6 +178,7 @@
         <category name="אירועים" colour="#FFD95A">
             <block type="event_when_flag_clicked"></block>
             <block type="event_when_key_pressed"></block>
+            <block type="event_when_stage_clicked"></block>
         </category>
         <category name="תנועה" colour="#4C97FF">
             <block type="motion_move_steps">
@@ -224,8 +252,22 @@
                     </shadow>
                 </value>
             </block>
-            <block type="looks_hide"></block>
             <block type="looks_show"></block>
+            <block type="looks_hide"></block>
+            <block type="looks_set_transparency">
+                <value name="TRANSPARENCY">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_set_sprite">
+                <value name="URL">
+                    <shadow type="text">
+                        <field name="TEXT">https://codejredu.github.io/claudejr/GingerCat.svg</field>
+                    </shadow>
+                </value>
+            </block>
         </category>
         <category name="בקרה" colour="#FF6B1A">
             <block type="control_wait_secs">
@@ -261,7 +303,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // הגדרת משתנים גלובליים
             const catSprite = document.getElementById('cat-sprite');
             const stageArea = document.getElementById('stage-area');
             const speechBubble = document.getElementById('speech-bubble');
@@ -272,33 +313,106 @@
             let workspace;
             let currentX = 0;
             let currentY = 0;
-            let currentDirection = 90; // כיוון התחלתי (90 מעלות = ימינה)
+            let currentDirection = 90;
             let stageWidth = 0;
             let stageHeight = 0;
+            
+            // משתנים עבור גרירה
+            let isDragging = false;
+            let initialMouseX;
+            let initialMouseY;
 
-            // פונקציה להדפסה לקונסול
             const logToConsole = (message) => {
                 const p = document.createElement('p');
                 p.textContent = message;
                 consoleOutput.appendChild(p);
                 consoleOutput.scrollTop = consoleOutput.scrollHeight;
             };
-            
-            // עדכון גודל הבמה ומיקום החתול
+
+            const setSprite = (content) => {
+                catSprite.innerHTML = content;
+                if (content === '🐈') {
+                    catSprite.style.backgroundColor = '#ff9900';
+                    catSprite.style.borderRadius = '50%';
+                } else {
+                    catSprite.style.backgroundColor = 'transparent';
+                    catSprite.style.borderRadius = '0';
+                }
+            };
+
             const updateStageSize = () => {
                 stageWidth = stageArea.clientWidth;
                 stageHeight = stageArea.clientHeight;
-                // עדכון מיקום החתול במרכז
-                catSprite.style.left = `${(stageWidth / 2) + currentX}px`;
-                catSprite.style.top = `${(stageHeight / 2) + currentY}px`;
-                catSprite.style.transform = `translate(\${currentX}px, \${currentY}px) rotate(${currentDirection}deg)`;
+                // עדכון מיקום החתול
+                updateCatPosition();
+            };
+
+            const updateCatPosition = () => {
+                const spriteWidth = catSprite.offsetWidth;
+                const spriteHeight = catSprite.offsetHeight;
+                const newX = (stageWidth / 2) + currentX - (spriteWidth / 2);
+                const newY = (stageHeight / 2) + currentY - (spriteHeight / 2);
+                catSprite.style.transform = `translate(${newX}px, ${newY}px) rotate(${currentDirection - 90}deg)`;
             };
 
             window.addEventListener('resize', updateStageSize);
             updateStageSize();
 
-            // הגדרת בלוקים מותאמים אישית (חייב להיות לפני ה-Blockly.inject)
-            // אירועים
+            // פונקציות גרירה - תמיכה בעכבר וטאץ'
+            const getPointerPosition = (e) => {
+                const isTouch = e.touches && e.touches.length > 0;
+                return {
+                    x: isTouch ? e.touches[0].clientX : e.clientX,
+                    y: isTouch ? e.touches[0].clientY : e.clientY
+                };
+            };
+            
+            const startDrag = (e) => {
+                e.preventDefault();
+                isDragging = true;
+                const { x, y } = getPointerPosition(e);
+                initialMouseX = x;
+                initialMouseY = y;
+                catSprite.style.transition = 'none';
+                logToConsole('החתול נתפס לגרירה.');
+            };
+
+            const drag = (e) => {
+                if (isDragging) {
+                    const { x, y } = getPointerPosition(e);
+                    const deltaX = x - initialMouseX;
+                    const deltaY = y - initialMouseY;
+                    
+                    currentX = currentX + deltaX;
+                    currentY = currentY + deltaY;
+                    
+                    initialMouseX = x;
+                    initialMouseY = y;
+                    
+                    updateCatPosition();
+                }
+            };
+
+            const endDrag = () => {
+                if (isDragging) {
+                    isDragging = false;
+                    catSprite.style.transition = 'transform 0.5s ease-out';
+                    logToConsole(`החתול נגרר למיקום חדש (x: ${currentX.toFixed(2)}, y: ${currentY.toFixed(2)})`);
+                }
+            };
+
+            // מאזיני אירועים לגרירה - עכבר וטאץ'
+            catSprite.addEventListener('mousedown', startDrag);
+            catSprite.addEventListener('touchstart', startDrag);
+
+            stageArea.addEventListener('mousemove', drag);
+            stageArea.addEventListener('touchmove', drag);
+
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+            document.addEventListener('touchcancel', endDrag);
+            
+            // הגדרת בלוקים מותאמים אישית
             Blockly.Blocks['event_when_flag_clicked'] = {
                 init: function() {
                     this.appendDummyInput()
@@ -331,10 +445,24 @@
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
                     this.setTooltip("הפעל קוד כאשר מקש נלחץ. (פונקציונליות זו אינה נתמכת במלואה בדוגמה הנוכחית.)");
-                    this.setHelpUrl(""); // Corrected from this="setHelpUrl"("");
+                    this.setHelpUrl("");
                 }
             };
             Blockly.JavaScript['event_when_key_pressed'] = function(block) {
+                return '';
+            };
+            // בלוק חדש: כאשר לוחצים על הבמה
+            Blockly.Blocks['event_when_stage_clicked'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField("כאשר הבמה נלחצת");
+                    this.setNextStatement(true, null);
+                    this.setColour("#FFD95A");
+                    this.setTooltip("הפעל את התסריט כאשר לוחצים על אזור הבמה.");
+                    this.setHelpUrl("");
+                }
+            };
+            Blockly.JavaScript['event_when_stage_clicked'] = function(block) {
                 return '';
             };
 
@@ -355,12 +483,12 @@
                 const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || '10';
                 const code = `
                     await new Promise(resolve => {
-                        const radians = currentDirection * Math.PI / 180;
+                        const radians = (currentDirection - 90) * Math.PI / 180;
                         const newX = currentX + (${steps} * Math.cos(radians));
                         const newY = currentY + (${steps} * Math.sin(radians));
-                        catSprite.style.transform = \`translate(\${newX}px, \${newY}px) rotate(\${currentDirection}deg)\`;
                         currentX = newX;
                         currentY = newY;
+                        updateCatPosition();
                         logToConsole('החתול זז ' + ${steps} + ' צעדים.');
                         setTimeout(resolve, 500);
                     });
@@ -384,7 +512,7 @@
                 const code = `
                     await new Promise(resolve => {
                         currentDirection += ${degrees};
-                        catSprite.style.transform = \`translate(\${currentX}px, \${currentY}px) rotate(\${currentDirection}deg)\`;
+                        updateCatPosition();
                         logToConsole('החתול הסתובב ימינה ב-' + ${degrees} + ' מעלות.');
                         setTimeout(resolve, 10);
                     });
@@ -408,7 +536,7 @@
                 const code = `
                     await new Promise(resolve => {
                         currentDirection -= ${degrees};
-                        catSprite.style.transform = \`translate(\${currentX}px, \${currentY}px) rotate(\${currentDirection}deg)\`;
+                        updateCatPosition();
                         logToConsole('החתול הסתובב שמאלה ב-' + ${degrees} + ' מעלות.');
                         setTimeout(resolve, 10);
                     });
@@ -436,7 +564,7 @@
                     await new Promise(resolve => {
                         currentX = ${x};
                         currentY = ${y};
-                        catSprite.style.transform = \`translate(\${currentX}px, \${currentY}px) rotate(\${currentDirection}deg)\`;
+                        updateCatPosition();
                         logToConsole('קפץ ל-x: ' + ${x} + ' y: ' + ${y});
                         resolve();
                     });
@@ -467,13 +595,13 @@
                 const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
                 const code = `
                     await new Promise(resolve => {
-                        catSprite.style.transition = \`transform ${secs}s ease\`;
+                        catSprite.style.transition = 'transform ' + ${secs} + 's ease-in-out';
                         currentX = ${x};
                         currentY = ${y};
-                        catSprite.style.transform = \`translate(\${currentX}px, \${currentY}px) rotate(\${currentDirection}deg)\`;
+                        updateCatPosition();
                         logToConsole('החתול מחליק ל-x: ' + ${x} + ' y: ' + ${y});
                         setTimeout(() => {
-                            catSprite.style.transition = 'transform 0.5s ease';
+                            catSprite.style.transition = 'transform 0.1s ease-out';
                             resolve();
                         }, ${secs} * 1000);
                     });
@@ -499,7 +627,6 @@
             };
             Blockly.JavaScript['looks_say_for_secs'] = function(block) {
                 const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
-                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2';
                 const code = `
                     await new Promise(resolve => {
                         speechBubble.textContent = ${message.replace(/'/g, "")};
@@ -508,7 +635,7 @@
                         setTimeout(() => {
                             speechBubble.classList.remove('visible');
                             resolve();
-                        }, ${secs} * 1000);
+                        }, ${Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2'} * 1000);
                     });
                 `;
                 return code;
@@ -572,6 +699,63 @@
                         catSprite.style.display = 'none';
                         logToConsole('החתול הוסתר.');
                         resolve();
+                    });
+                `;
+                return code;
+            };
+            Blockly.Blocks['looks_set_transparency'] = {
+                init: function() {
+                    this.appendValueInput("TRANSPARENCY")
+                        .setCheck("Number")
+                        .appendField("שנה שקיפות ל-");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("שנה את שקיפות הדמות (0-100).");
+                }
+            };
+            Blockly.JavaScript['looks_set_transparency'] = function(block) {
+                const transparency = Blockly.JavaScript.valueToCode(block, 'TRANSPARENCY', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+                const code = `
+                    await new Promise(resolve => {
+                        let opacityValue = Math.max(0, Math.min(1, ${transparency} / 100));
+                        catSprite.style.opacity = opacityValue;
+                        logToConsole('שקיפות החתול שונתה ל-' + ${transparency} + '%');
+                        resolve();
+                    });
+                `;
+                return code;
+            };
+            Blockly.Blocks['looks_set_sprite'] = {
+                init: function() {
+                    this.appendValueInput("URL")
+                        .setCheck("String")
+                        .appendField("שנה דמות ל-SVG מקישור");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("שנה את מראה הדמות לקובץ SVG מקישור.");
+                }
+            };
+            Blockly.JavaScript['looks_set_sprite'] = function(block) {
+                const url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC) || '""';
+                const code = `
+                    await new Promise(resolve => {
+                        const svgUrl = ${url};
+                        const imgElement = document.createElement('img');
+                        imgElement.src = svgUrl;
+                        imgElement.onload = () => {
+                            catSprite.innerHTML = '';
+                            catSprite.style.backgroundColor = 'transparent';
+                            catSprite.style.borderRadius = '0';
+                            catSprite.appendChild(imgElement);
+                            logToConsole('הדמות שונתה לקובץ SVG.');
+                            resolve();
+                        };
+                        imgElement.onerror = () => {
+                            logToConsole('שגיאה בטעינת קובץ SVG מהקישור.');
+                            resolve();
+                        };
                     });
                 `;
                 return code;
@@ -644,7 +828,7 @@
                 const code = `
                     logToConsole('מתחיל לולאת לנצח...');
                     while(true) {
-                        await new Promise(resolve => setTimeout(resolve, 10)); // prevents browser from freezing
+                        await new Promise(resolve => setTimeout(resolve, 10));
                         await (async () => {
                             ${doCode}
                         })();
@@ -733,12 +917,11 @@
                 return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
             };
 
-            // הגדרת workspace והזרקת toolbox
             workspace = Blockly.inject('blockly-area', {
                 toolbox: document.getElementById('toolbox'),
                 scrollbars: true,
                 trashcan: true,
-                rtl: true, // שינוי כיוון הבלוקלי ל-RTL (מימין לשמאל)
+                rtl: true,
                 zoom: {
                     controls: true,
                     wheel: true,
@@ -750,31 +933,72 @@
                 theme: Blockly.Themes.Zelos
             });
 
-            // פונקציית הפעלה
-            document.getElementById('run-button').addEventListener('click', () => {
+            // מפת הבלוקים שהם פותחני תסריטים
+            const eventHandlers = {
+                'event_when_flag_clicked': async () => {
+                    const code = Blockly.JavaScript.workspaceToCode(workspace);
+                    await runCode(code);
+                },
+                'event_when_stage_clicked': async () => {
+                    const code = Blockly.JavaScript.workspaceToCode(workspace);
+                    await runCode(code);
+                }
+            };
+
+            // הוספת בלוקים למרחב העבודה
+            const blocks = document.getElementById('toolbox').getElementsByTagName('block');
+            for (const block of blocks) {
+                // בדיקת הגנה: ודא שהבלוק קיים ויש לו מאפיין type
+                if (block && block.type && block.type.startsWith('event_')) {
+                    const topBlock = workspace.newBlock(block.type);
+                    topBlock.initSvg();
+                    topBlock.render();
+                    topBlock.moveBy(20, 20);
+                }
+            }
+
+            const runCode = async (code) => {
+                // בדיקה אם הקוד ריק או מכיל רק רווחים
+                if (!code.trim()) {
+                    logToConsole('אין בלוקים בתוכנית. גרור בלוקים כדי להתחיל!');
+                    return;
+                }
                 logToConsole('--- הפעלה חדשה ---');
-                const code = Blockly.JavaScript.workspaceToCode(workspace);
                 try {
-                    // עוטף את הקוד בפונקציה אסינכרונית כדי לתמוך ב-await
-                    eval('(async () => {' + code + '})()');
+                    // הפעלת הקוד בתוך פונקציה אסינכרונית
+                    await eval('(async () => {' + code + '})()');
+                    logToConsole('הפעלה הסתיימה בהצלחה.');
                 } catch (e) {
-                    logToConsole('שגיאה: ' + e);
+                    logToConsole('שגיאה בהפעלת הקוד: ' + e + '. אנא ודא שהבלוקים מחוברים כראוי ושהקוד שלם.');
+                }
+            };
+
+            document.getElementById('run-button').addEventListener('click', () => {
+                eventHandlers['event_when_flag_clicked']();
+            });
+
+            stageArea.addEventListener('click', (event) => {
+                // ודא שהקליק לא היה על הדמות עצמה
+                if (event.target.id !== 'cat-sprite' && event.target.closest('#cat-sprite') === null) {
+                    eventHandlers['event_when_stage_clicked']();
                 }
             });
 
-            // פונקציית איפוס
             document.getElementById('reset-button').addEventListener('click', () => {
                 currentX = 0;
                 currentY = 0;
                 currentDirection = 90;
-                catSprite.style.transform = 'translate(0, 0) rotate(90deg)';
-                catSprite.style.display = 'flex';
+                updateCatPosition();
+                catSprite.style.opacity = 1;
                 speechBubble.classList.remove('visible');
                 consoleOutput.innerHTML = '<b>פלט קונסול:</b>';
+                const imgElement = document.createElement('img');
+                imgElement.src = 'https://codejredu.github.io/claudejr/GingerCat.svg';
+                catSprite.innerHTML = '';
+                catSprite.appendChild(imgElement);
                 logToConsole('הבמה אופסה.');
             });
 
-            // פונקציית מסך מלא
             fullscreenButton.addEventListener('click', () => {
                 if (!document.fullscreenElement) {
                     containerWrapper.requestFullscreen().catch(err => {
@@ -787,6 +1011,5 @@
 
         });
     </script>
-
 </body>
 </html>
