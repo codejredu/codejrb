@@ -439,8 +439,8 @@
         <!-- תפריט הבלוקים -->
         <category name="אירועים" colour="#FFD95A">
             <block type="event_when_flag_clicked"></block>
-            <block type="event_when_key_pressed"></block>
             <block type="event_when_stage_clicked"></block>
+            <block type="event_when_key_pressed"></block>
         </category>
         <category name="תנועה" colour="#4C97FF">
             <block type="motion_move_steps">
@@ -577,6 +577,9 @@
             const closeGalleryButton = document.getElementById('close-gallery-button');
             const thumbnailsGrid = document.getElementById('thumbnails-grid');
 
+            const STAGE_WIDTH = 480;
+            const STAGE_HEIGHT = 360;
+
             let workspace;
             let activeSprite = null; // דמות פעילה
             
@@ -584,6 +587,20 @@
                 console.log(message);
             };
 
+            const convertToStageCoords = (stageX, stageY) => {
+                const rect = stageArea.getBoundingClientRect();
+                const pixelX = stageX - rect.width / 2;
+                const pixelY = -1 * (stageY - rect.height / 2);
+                return { x: pixelX, y: pixelY };
+            };
+
+            const convertToPixelCoords = (spriteX, spriteY) => {
+                const rect = stageArea.getBoundingClientRect();
+                const pixelX = (spriteX + rect.width / 2) / rect.width * STAGE_WIDTH - STAGE_WIDTH / 2;
+                const pixelY = -1 * ((spriteY - rect.height / 2) / rect.height * STAGE_HEIGHT - STAGE_HEIGHT / 2);
+                return { x: pixelX, y: pixelY };
+            };
+            
             const createNewSprite = (name, imageUrl) => {
                 const id = `sprite-${Date.now()}`;
                 const spriteData = {
@@ -657,7 +674,10 @@
                 if (!activeSprite) return; // לוודא שיש דמות פעילה
                 const spriteEl = document.getElementById(activeSprite.id);
                 if (spriteEl) {
-                    spriteEl.style.transform = `translate(calc(-50% + ${activeSprite.x}px), calc(-50% + ${activeSprite.y}px)) rotate(${activeSprite.direction - 90}deg)`;
+                    const rect = stageArea.getBoundingClientRect();
+                    const stageX = activeSprite.x / (STAGE_WIDTH / rect.width);
+                    const stageY = -activeSprite.y / (STAGE_HEIGHT / rect.height);
+                    spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${activeSprite.direction - 90}deg)`;
                     spriteEl.style.opacity = activeSprite.opacity;
                 }
             };
@@ -689,8 +709,12 @@
                     const deltaX = x - initialMouseX;
                     const deltaY = y - initialMouseY;
                     
-                    activeSprite.x = initialSpriteX + deltaX;
-                    activeSprite.y = initialSpriteY + deltaY;
+                    const rect = stageArea.getBoundingClientRect();
+                    const scaleX = STAGE_WIDTH / rect.width;
+                    const scaleY = STAGE_HEIGHT / rect.height;
+
+                    activeSprite.x = initialSpriteX + deltaX * scaleX;
+                    activeSprite.y = initialSpriteY - deltaY * scaleY;
                     
                     updateSpritePosition();
                 }
@@ -727,7 +751,7 @@
 
             Blockly.Blocks['event_when_stage_clicked'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/6495ED/FFFFFF?text=B", 36, 36, { alt: "stage icon", flipRtl: "false" }));
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/6495ED/FFFFFF?text=במה", 36, 36, { alt: "stage icon", flipRtl: "false" }));
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
                     this.setTooltip("הפעל את התסריט כאשר לוחצים על אזור הבמה.");
@@ -738,7 +762,7 @@
 
             Blockly.Blocks['event_when_key_pressed'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/6495ED/FFFFFF?text=K", 36, 36, { alt: "keyboard icon", flipRtl: "false" })).appendField(new Blockly.FieldDropdown([
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/6495ED/FFFFFF?text=מקש", 36, 36, { alt: "keyboard icon", flipRtl: "false" })).appendField(new Blockly.FieldDropdown([
                         ["רווח", "SPACE"], ["חץ למעלה", "UP"], ["חץ למטה", "DOWN"], ["חץ ימינה", "RIGHT"], ["חץ שמאלה", "LEFT"]
                     ]), "KEY");
                     this.setNextStatement(true, null);
@@ -1363,8 +1387,8 @@
                 const code = Blockly.JavaScript.workspaceToCode(workspace);
                 try {
                     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                    const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', code);
-                    await f(activeSprite, updateSpritePosition, log);
+                    const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', code);
+                    await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT);
                 } catch (e) {
                     log('שגיאת ריצה: ' + e);
                 }
