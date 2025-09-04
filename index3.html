@@ -248,6 +248,12 @@
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 0.5rem;
         }
+        /* פריסה מעודכנת ל-5 עמודות בגלריה */
+        @media (min-width: 768px) {
+            .thumbnail-grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
         .thumbnail {
             width: 100%;
             height: auto;
@@ -465,7 +471,7 @@
                 </value>
             </block>
             <block type="motion_set_direction">
-                <field name="DEGREES">90</field>
+                <field name="DEGREES">0</field>
             </block>
             <block type="motion_go_to_xy">
                 <value name="X">
@@ -930,11 +936,13 @@
                     const rect = this.canvas.getBoundingClientRect();
                     const x = e.clientX - rect.left - this.centerX;
                     const y = e.clientY - rect.top - this.centerY;
-                    let angle = Math.atan2(-y, x) * 180 / Math.PI;
                     
-                    if (angle < 0) {
-                        angle += 360;
-                    }
+                    // תיקון לחישוב הזווית. עכשיו 0 מעלות הוא למעלה והזווית עולה עם כיוון השעון.
+                    let angle = (Math.atan2(x, -y) * 180 / Math.PI);
+                    
+                    // נרמול הזווית לטווח 0-360
+                    angle = (angle + 360) % 360;
+
                     angle = Math.round(angle);
                     this.setValue(String(angle));
                     this.drawProtractor(angle);
@@ -960,9 +968,9 @@
                     // קו כיוון
                     this.ctx.beginPath();
                     this.ctx.moveTo(this.centerX, this.centerY);
-                    const radians = (angle - 90) * Math.PI / 180;
-                    const x = this.centerX + (this.centerX - 10) * Math.cos(radians);
-                    const y = this.centerY - (this.centerY - 10) * Math.sin(radians);
+                    const radians = (angle) * Math.PI / 180;
+                    const x = this.centerX + (this.centerX - 10) * Math.sin(radians);
+                    const y = this.centerY - (this.centerY - 10) * Math.cos(radians);
                     this.ctx.lineTo(x, y);
                     this.ctx.strokeStyle = '#FF6B1A';
                     this.ctx.stroke();
@@ -982,7 +990,7 @@
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 36, 36, { alt: "compass icon", flipRtl: "false" }))
                         .appendField("קבע כיוון")
-                        .appendField(new FieldProtractor('90'), 'DEGREES');
+                        .appendField(new FieldProtractor('0'), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
