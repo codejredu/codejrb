@@ -423,6 +423,13 @@
                     </shadow>
                 </value>
             </block>
+            <block type="motion_set_direction">
+                <value name="DEGREES">
+                    <shadow type="math_number">
+                        <field name="NUM">90</field>
+                    </shadow>
+                </value>
+            </block>
             <block type="motion_go_to_xy">
                 <value name="X">
                     <shadow type="math_number">
@@ -769,7 +776,9 @@
                 };
                 Blockly.Blocks['motion_turn_left_degrees'] = {
                     init: function() {
-                        this.appendValueInput("DEGREES").setCheck("Number").appendField(new Blockly.FieldImage("https://www.flaticon.com/svg/static/icons/svg/25/25295.svg", 36, 36, { alt: "turn left icon", flipRtl: "false" }));
+                        this.appendValueInput("DEGREES").setCheck("Number")
+                            .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 36, 36, { alt: "turn left icon", flipRtl: "false" }));
+                        this.setInputsInline(true);
                         this.setPreviousStatement(true, null);
                         this.setNextStatement(true, null);
                         this.setColour("#4C97FF");
@@ -785,6 +794,30 @@
                                 updateSpritePosition();
                                 log('הדמות הסתובבה שמאלה ב-' + ${degrees} + ' מעלות.');
                                 setTimeout(resolve, 10);
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['motion_set_direction'] = {
+                    init: function() {
+                        this.appendValueInput("DEGREES").setCheck("Number")
+                            .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 36, 36, { alt: "compass icon", flipRtl: "false" }))
+                        this.setInputsInline(true);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("קבע את כיוון הדמות בדרגות (0 = למעלה, 90 = ימינה).");
+                    }
+                };
+                Blockly.JavaScript['motion_set_direction'] = function(block) {
+                    const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '90';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                activeSprite.direction = ${degrees};
+                                updateSpritePosition();
+                                log('כיוון הדמות נקבע ל-' + ${degrees} + ' מעלות.');
+                                resolve();
                             });
                         }
                     `;
