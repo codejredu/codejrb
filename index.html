@@ -1,792 +1,1268 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>תכנות לילדים</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.1.1/blockly.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/blockly/9.1.1/javascript.min.js"></script>
+    <title>בלוקלי: אזורים חדשים</title>
+    <!-- הוספת תגית CSP כדי לאפשר טעינת סקריפטים חיצוניים -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.tailwindcss.com; img-src 'self' data: https:;"/>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .container-wrapper {
+            display: flex;
+            flex-direction: column;
             height: 100vh;
+            padding: 1rem;
+        }
+        @media (min-width: 1024px) {
+            .container-wrapper {
+                flex-direction: row-reverse;
+            }
+        }
+        /* עטיפה חדשה לבמה, אזורים ולגלריה */
+        #stage-and-sections-wrapper {
             display: flex;
             flex-direction: column;
+            flex-grow: 1; /* מאפשר לו לגדול ולמלא את השטח */
+            margin: 0 auto 1rem;
+            max-height: 100vh;
         }
-
-        .header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            text-align: center;
-            color: white;
+        @media (min-width: 1024px) {
+            #stage-and-sections-wrapper {
+                margin: 0 1rem 0 0;
+            }
         }
-
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        /* עטיפה שתשמור על יחס הגובה-רוחב */
+        #stage-aspect-ratio-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 75%; /* יחס 4:3 (3/4 * 100%) */
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border: 2px solid #ccc;
+            margin-bottom: 1rem;
         }
-
-        .container {
-            display: flex;
-            flex: 1;
-            gap: 10px;
-            padding: 10px;
-            max-height: calc(100vh - 140px);
-        }
-
-        .blockly-panel {
-            flex: 2;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        .output-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .code-output, .canvas-output {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            font-family: 'Courier New', monospace;
-        }
-
-        .canvas-output {
-            flex: 1;
+        #stage-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(45deg, #f0f8ff, #e6f3ff);
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px;
+        }
+        .sprite-wrapper {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: transparent;
+            border-radius: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: translate(calc(-50% + 0px), calc(-50% + 0px));
+            transition: transform 0.1s ease-out; /* מהירות מעבר מהירה יותר לגרירה */
+            z-index: 10;
+            opacity: 1;
+            cursor: grab; /* שינוי סמן העכבר לגרירה */
+        }
+        .sprite-wrapper:active {
+            cursor: grabbing;
+        }
+        .sprite-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 0;
+        }
+        .speech-bubble {
+            position: absolute;
+            background: #fdfd96;
+            border-radius: 12px;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+            border-top-color: #fdfd96;
+            border-bottom: 0;
+            margin-left: -8px;
+            margin-top: -1px;
+        }
+        .speech-bubble.visible {
+            opacity: 1;
+        }
+        .controls-and-blockly {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        #blockly-area {
+            flex-grow: 1;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 100%;
+        }
+        /* אזורים חדשים */
+        .section {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #ccc;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .section-header h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .plus-button {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #4C97FF;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .section-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .sprite-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
             position: relative;
         }
-
-        .buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            padding: 10px;
+        .sprite-card.selected {
+            border-color: #4C97FF;
         }
-
-        button {
-            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
+        .sprite-card img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 8px;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        #turtle-canvas {
-            border: 2px solid #4CAF50;
-            border-radius: 10px;
-            background: white;
-        }
-
-        .turtle {
+        .delete-button {
             position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            visibility: hidden; /* נסתר כברירת מחדל */
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .sprite-card:hover .delete-button {
+            visibility: visible;
+            opacity: 1;
+        }
+        .backdrop-card {
+            width: 80px;
+            height: 60px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            transition: border-color 0.2s;
+        }
+        .backdrop-card.selected {
+            border-color: #4C97FF;
+        }
+        .gallery-container {
+            width: 100%;
+            padding: 1rem;
+            background-color: #f0f4f8;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: none; /* הסתרה כברירת מחדל */
+            transition: all 0.5s ease-in-out;
+            border: 2px solid #ccc; /* מסגרת אפורה */
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            height: 100%;
+            overflow-y: auto;
+        }
+        .gallery-container.visible {
+            display: block;
+        }
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.5rem;
+        }
+        .thumbnail {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .thumbnail.selected {
+            border: 3px solid #4C97FF;
+        }
+        .close-gallery-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #ccc;
+            color: #333;
+            border-radius: 50%;
             width: 30px;
             height: 30px;
-            font-size: 24px;
             display: flex;
+            justify-content: center;
             align-items: center;
-            justify-content: center;
-            transition: all 0.5s ease;
-            transform-origin: center;
-            z-index: 100;
-            pointer-events: none;
-        }
-        
-        .turtle::before {
-            content: "🐱";
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-
-        .code-output h3, .canvas-output h3 {
-            margin-top: 0;
-            color: #333;
-            text-align: center;
-        }
-
-        /* הגדלת אייקונים בבלוקים לילדים */
-        .blocklyText {
-            font-size: 18px !important;
-        }
-        
-        .blocklyDropdownText {
-            font-size: 16px !important;
-        }
-
-        /* פד מספרים ליד הבלוק - קטן יותר */
-        .number-pad {
-            position: absolute;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            padding: 15px;
-            z-index: 1000;
-            display: none;
-            direction: ltr;
-            border: 2px solid #4CAF50;
-        }
-
-        .number-pad h3 {
-            text-align: center;
-            color: #333;
-            margin-top: 0;
-            margin-bottom: 10px;
-            direction: rtl;
-            font-size: 16px;
-        }
-
-        .number-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-
-        .number-btn {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 1.5rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .number-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-        }
-
-        .pad-controls {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-
-        .pad-control-btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .pad-ok {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .pad-cancel {
-            background: #f44336;
-            color: white;
-        }
-
-        .pad-clear {
-            background: #ff9800;
-            color: white;
-        }
-
-        .number-display {
-            background: #f0f0f0;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            padding: 8px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            min-height: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body>
-    <div class="header">
-        <h1>🎨 תכנות לילדים - בואו נצייר! 🐱</h1>
-    </div>
+<body class="bg-gray-100 text-gray-800">
 
-    <div class="container">
-        <div class="blockly-panel">
-            <div id="blocklyDiv" style="height: 100%; width: 100%;"></div>
-        </div>
-
-        <div class="output-panel">
-            <div class="code-output">
-                <h3>📝 הקוד שיצרת</h3>
-                <pre id="codeOutput">לחץ על "הצג קוד" כדי לראות מה יצרת!</pre>
+    <div id="container-wrapper" class="container-wrapper">
+        <!-- אזור הבמה, הדמויות והרקעים -->
+        <div class="flex-1 lg:w-1/2 flex flex-col" id="stage-and-sections-wrapper">
+            <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
+            <div id="stage-aspect-ratio-wrapper" class="w-full relative">
+                <div id="stage-area">
+                </div>
+                <!-- גלריית רקעים נפתחת מעל הבמה -->
+                <div id="background-gallery" class="gallery-container">
+                    <button class="close-gallery-button" id="close-gallery-button">X</button>
+                    <h2 class="text-xl font-bold text-center mb-4">גלריית רקעים</h2>
+                    <div id="thumbnails-grid" class="thumbnail-grid">
+                        <img src="https://codejredu.github.io/test/assets/bg/Amphitheater.svg" alt="Amphitheater" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/canyon.svg" alt="canyon" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/canyon1.svg" alt="canyon1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/castel.svg" alt="castel" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/castel1.svg" alt="castel1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/citynight.svg" alt="citynight" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/citynight2.svg" alt="citynight2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/colorfulcity.svg" alt="colorfulcity" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/colorfulcity1.svg" alt="colorfulcity1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/desert.svg" alt="desert" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/desert1.svg" alt="desert1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/farm.svg" alt="farm" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/kidbadroom.svg" alt="kidbadroom" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/kidbadroom1.svg" alt="kidbadroom1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/moon.svg" alt="moon" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/road1.svg" alt="road1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/road2.svg" alt="road2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/room1.svg" alt="room1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/room2.svg" alt="room2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/savanna1.svg" alt="savanna1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/savanna2.svg" alt="savanna2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/school1.svg" alt="school1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/slopes1.svg" alt="slopes1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/slopes2.svg" alt="slopes2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/soccer1.svg" alt="soccer1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/soccer2.svg" alt="soccer2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/winter1.svg" alt="winter1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/winter2.svg" alt="winter2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/bg/under.svg" alt="under" class="thumbnail">
+                    </div>
+                </div>
             </div>
-            
-            <div class="canvas-output">
-                <h3>🎨 התוצאה שלך</h3>
-                <div style="position: relative; display: inline-block;">
-                    <canvas id="turtle-canvas" width="480" height="360"></canvas>
-                    <div id="turtle" class="turtle" style="left: 225px; top: 165px;"></div>
+
+            <!-- אזור הדמויות -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>דמויות</h2>
+                    <div id="add-sprite-button" class="plus-button">+</div>
+                </div>
+                <div id="sprites-list" class="section-content">
+                    <!-- כאן יוצגו הדמויות -->
+                </div>
+            </div>
+
+            <!-- אזור הצלילים -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>צלילים</h2>
+                    <div id="add-sound-button" class="plus-button">+</div>
+                </div>
+                <div id="sounds-list" class="section-content">
+                    <!-- כאן יוצגו הצלילים -->
+                    <div class="sound-card">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-gray-500">
+                            <path d="M13.5 4.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM12 18.75a7.5 7.5 0 00-4.721-6.766L7.5 12h-.779c-2.15 0-4.14-1.285-5.328-3.359.18-.553.77-.959 1.488-.959h11.15c.718 0 1.307.406 1.487.96-.282.525-.43 1.11-.429 1.704a4.496 4.496 0 01-1.298 3.163A6.096 6.096 0 0012 18.75z"/>
+                            <path fill-rule="evenodd" d="M19.303 7.643a.75.75 0 111.061 1.061l-3.385 3.384a.75.75 0 01-1.061-1.06l3.385-3.386zM15.918 2.628a.75.75 0 01.993 1.121C15.612 4.605 14.218 6 12.5 6a.75.75 0 010-1.5c1.474 0 2.806-1.139 3.593-2.628z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm mt-1">צליל ברירת מחדל</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- אזור הרקעים -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>רקעים</h2>
+                    <div id="add-backdrop-button" class="plus-button">+</div>
+                </div>
+                <div id="backdrops-list" class="section-content">
+                    <!-- כאן יוצגו הרקעים -->
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="buttons">
-        <button onclick="showCode()">📝 הצג קוד</button>
-        <button onclick="runCode()">🚩 הרץ תכנית</button>
-        <button onclick="clearCanvas()">🗑️ נקה הכל</button>
-    </div>
-
-    <!-- פד מספרים ליד הבלוק -->
-    <div class="number-pad" id="numberPad">
-        <h3>🔢 בחר מספר</h3>
-        <div class="number-display" id="numberDisplay">0</div>
-        <div class="number-grid">
-            <button class="number-btn" onclick="addNumber(1)">1</button>
-            <button class="number-btn" onclick="addNumber(2)">2</button>
-            <button class="number-btn" onclick="addNumber(3)">3</button>
-            <button class="number-btn" onclick="addNumber(4)">4</button>
-            <button class="number-btn" onclick="addNumber(5)">5</button>
-            <button class="number-btn" onclick="addNumber(6)">6</button>
-            <button class="number-btn" onclick="addNumber(7)">7</button>
-            <button class="number-btn" onclick="addNumber(8)">8</button>
-            <button class="number-btn" onclick="addNumber(9)">9</button>
-            <button class="number-btn" onclick="addNumber('.')">.</button>
-            <button class="number-btn" onclick="addNumber(0)">0</button>
-            <button class="number-btn" onclick="deleteLast()">⌫</button>
-        </div>
-        <div class="pad-controls">
-            <button class="pad-control-btn pad-clear" onclick="clearNumber()">🔄 נקה</button>
-            <button class="pad-control-btn pad-cancel" onclick="closeNumberPad()">❌ בטל</button>
-            <button class="pad-control-btn pad-ok" onclick="confirmNumber()">✅ אישור</button>
+        <!-- אזור הבלוקלי והפקדים -->
+        <div class="controls-and-blockly w-full mt-4 lg:w-1/2 lg:mt-0">
+            <div id="blockly-area" class="h-[calc(100vh-16rem)] lg:h-[calc(100vh-2rem)] w-full rounded-2xl"></div>
+            <div class="flex flex-row space-x-2 space-x-reverse justify-center mt-4">
+                <button id="run-button" class="px-6 py-3 bg-green-500 text-white font-bold rounded-full shadow-md hover:bg-green-600 transition-colors">
+                    <span class="ml-2">הפעל</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.127l-3.328 2.378a.999.999 0 01-1.424-.712V8.92c0-.525.53-.787 1.055-.443l3.328 2.378a.999.999 0 01-.031 1.094z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+                <button id="reset-button" class="px-6 py-3 bg-red-500 text-white font-bold rounded-full shadow-md hover:bg-red-600 transition-colors">
+                    <span class="ml-2">אפס</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m16.733 11.234A9.975 9.975 0 0112 21c-5.523 0-10-4.477-10-10S6.477 1 12 1s10 4.477 10 10c0 .487-.04.965-.118 1.432m-11.234 3.733l-4 4L4 16m9-13.885v3.424m-4.542 6.556l-3.79-3.79M17.458 12.062L13.668 15.852" />
+                    </svg>
+                </button>
+                <button id="fullscreen-button" class="px-6 py-3 bg-blue-500 text-white font-bold rounded-full shadow-md hover:bg-blue-600 transition-colors">
+                    <span class="ml-2">מסך מלא</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m0 0l-5 5m0 5v4m0 0h4m0 0l-5-5m-9 5v4m0 0h-4m0 0l5-5" />
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
-
+    
     <xml id="toolbox" style="display: none">
-        <category name="🎨 ציור" colour="#FF6B6B">
-            <block type="move_forward">
-                <field name="STEPS">50</field>
-            </block>
-            <block type="turn_right">
-                <field name="DEGREES">90</field>
-            </block>
-            <block type="turn_left">
-                <field name="DEGREES">90</field>
-            </block>
-            <block type="pen_up"></block>
-            <block type="pen_down"></block>
-            <block type="change_color"></block>
+        <!-- תפריט הבלוקים -->
+        <category name="אירועים" colour="#FFD95A">
+            <block type="event_when_flag_clicked"></block>
+            <block type="event_when_key_pressed"></block>
+            <block type="event_when_stage_clicked"></block>
         </category>
-        
-        <category name="🔄 בקרה" colour="#4CAF50">
-            <block type="controls_repeat_ext">
-                <value name="TIMES">
+        <category name="תנועה" colour="#4C97FF">
+            <block type="motion_move_steps">
+                <value name="STEPS">
                     <shadow type="math_number">
-                        <field name="NUM">4</field>
+                        <field name="NUM">10</field>
                     </shadow>
                 </value>
             </block>
-            <block type="controls_forever"></block>
-            <block type="wait_block">
-                <field name="SECONDS">1</field>
+            <block type="motion_turn_right_degrees">
+                <value name="DEGREES">
+                    <shadow type="math_number">
+                        <field name="NUM">15</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="motion_turn_left_degrees">
+                <value name="DEGREES">
+                    <shadow type="math_number">
+                        <field name="NUM">15</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="motion_go_to_xy">
+                <value name="X">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="Y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="motion_glide_to_xy">
+                <value name="SECS">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="X">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="Y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
             </block>
         </category>
-        
-        <category name="🔢 מספרים" colour="#2196F3">
-            <block type="math_number">
-                <field name="NUM">10</field>
+        <category name="מראה" colour="#9966FF">
+            <block type="looks_say_for_secs">
+                <value name="MESSAGE">
+                    <shadow type="text">
+                        <field name="TEXT">שלום!</field>
+                    </shadow>
+                </value>
+                <value name="SECS">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_say">
+                <value name="MESSAGE">
+                    <shadow type="text">
+                        <field name="TEXT">שלום!</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_show"></block>
+            <block type="looks_hide"></block>
+            <block type="looks_set_transparency">
+                <value name="TRANSPARENCY">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_set_sprite">
+                <value name="URL">
+                    <shadow type="text">
+                        <field name="TEXT">https://codejredu.github.io/claudejr/GingerCat.svg</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="בקרה" colour="#FF6B1A">
+            <block type="control_wait_secs">
+                <value name="SECS">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="control_repeat_times">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <statement name="DO">
+                    <!-- קלט פנימי -->
+                </statement>
+            </block>
+            <block type="control_forever"></block>
+        </category>
+        <category name="אופרטורים" colour="#40BF4A">
+            <block type="operator_add"></block>
+            <block type="operator_subtract"></block>
+            <block type="operator_multiply"></block>
+            <block type="operator_divide"></block>
+            <block type="operator_random_number">
+                <field name="FROM">1</field>
+                <field name="TO">10</field>
             </block>
         </category>
     </xml>
 
     <script>
-        // הגדרת המשתנים הגלובליים
-        let workspace;
-        let turtle = { x: 240, y: 180, angle: 0, penDown: true, color: '#000000' };
-        let canvas, ctx;
-        let currentNumberField = null;
-        let currentNumberValue = '0';
-
-        // יצירת הבלוקים המותאמים אישית עם אייקונים
-        Blockly.Blocks['move_forward'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("⬆️")
-                    .appendField(new Blockly.FieldNumber(50, 1, 200), "STEPS")
-                    .appendField("        "); // spacer לשמירת גודל
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#FF6B6B');
-                this.setTooltip("מזיז את החתול קדימה");
-            }
-        };
-
-        Blockly.Blocks['turn_right'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("↩️")
-                    .appendField(new Blockly.FieldNumber(90, 1, 360), "DEGREES")
-                    .appendField("        "); // spacer לשמירת גודל
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#FF6B6B');
-                this.setTooltip("מסובב את החתול ימינה");
-            }
-        };
-
-        Blockly.Blocks['turn_left'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("↪️")
-                    .appendField(new Blockly.FieldNumber(90, 1, 360), "DEGREES")
-                    .appendField("        "); // spacer לשמירת גודל
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#FF6B6B');
-                this.setTooltip("מסובב את החתول שמאלה");
-            }
-        };
-
-        Blockly.Blocks['pen_up'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("✏️⬆️")
-                    .appendField("                    "); // spacer לשמירת גודל
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#FF6B6B');
-                this.setTooltip("הרים את העט - לא יצייר");
-            }
-        };
-
-        Blockly.Blocks['pen_down'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("✏️⬇️")
-                    .appendField("                    "); // spacer לשמירת גודל
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#FF6B6B');
-                this.setTooltip("מוריד את העט - יצייר");
-            }
-        };
-
-        Blockly.Blocks['change_color'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("🎨")
-                    .appendField(new Blockly.FieldColour('#ff0000'), "COLOR")
-                    .appendField("        "); // spacer לשמירת גודל
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#FF6B6B');
-                this.setTooltip("משנה את צבע הציור");
-            }
-        };
-
-        // בלוק לעולמים מותאם לילדים
-        Blockly.Blocks['controls_forever'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("♾️ לעולמים")
-                    .appendField("        "); // spacer לשמירת גודל
-                this.appendStatementInput("DO")
-                    .setCheck(null);
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#4CAF50');
-                this.setTooltip("חוזר על הפעולות ללא הגבלה");
-            }
-        };
-
-        // בלוק חכה מותאם לילדים - גרסה פשוטה
-        Blockly.Blocks['wait_block'] = {
-            init: function() {
-                this.appendDummyInput()
-                    .appendField("⏱️")
-                    .appendField(new Blockly.FieldNumber(1, 0.1, 10), "SECONDS")
-                    .appendField("                "); // spacer לשמירת גודל
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour('#4CAF50');
-                this.setTooltip("ממתין מספר שניות (לא פעיל עדיין)");
-            }
-        };
-
-        // יצירת הקוד JavaScript
-        Blockly.JavaScript['move_forward'] = function(block) {
-            const steps = block.getFieldValue('STEPS');
-            return `moveForward(${steps});\n`;
-        };
-
-        Blockly.JavaScript['turn_right'] = function(block) {
-            const degrees = block.getFieldValue('DEGREES');
-            return `turnRight(${degrees});\n`;
-        };
-
-        Blockly.JavaScript['turn_left'] = function(block) {
-            const degrees = block.getFieldValue('DEGREES');
-            return `turnLeft(${degrees});\n`;
-        };
-
-        Blockly.JavaScript['pen_up'] = function(block) {
-            return 'penUp();\n';
-        };
-
-        Blockly.JavaScript['pen_down'] = function(block) {
-            return 'penDown();\n';
-        };
-
-        Blockly.JavaScript['change_color'] = function(block) {
-            const color = block.getFieldValue('COLOR');
-            return `changeColor('${color}');\n`;
-        };
-
-        // קוד JavaScript עבור בלוק לעולמים (עם הגבלה בטוחה)
-        Blockly.JavaScript['controls_forever'] = function(block) {
-            const statements = Blockly.JavaScript.statementToCode(block, 'DO');
-            const code = `
-                for (let foreverCounter = 0; foreverCounter < 1000; foreverCounter++) {
-                    ${statements}
-                }
-            `;
-            return code;
-        };
-
-        // קוד JavaScript עבור בלוק חכה - לעת עתה מחזיר הערה בלבד
-        Blockly.JavaScript['wait_block'] = function(block) {
-            const seconds = block.getFieldValue('SECONDS');
-            return `/* חכה ${seconds} שניות - יתווסף בשלב השני */\n`;
-        };
-
-        // פונקציות ביצוע
-        function moveForward(steps) {
-            console.log(`זז קדימה ${steps} צעדים`); // לבדיקה
-            const oldX = turtle.x;
-            const oldY = turtle.y;
-            
-            turtle.x += Math.cos(turtle.angle * Math.PI / 180) * steps;
-            turtle.y += Math.sin(turtle.angle * Math.PI / 180) * steps;
-            
-            if (turtle.penDown) {
-                ctx.strokeStyle = turtle.color;
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(oldX, oldY);
-                ctx.lineTo(turtle.x, turtle.y);
-                ctx.stroke();
-            }
-            
-            updateTurtlePosition();
-        }
-
-        function turnRight(degrees) {
-            console.log(`מסתובב ימינה ${degrees} מעלות`); // לבדיקה
-            turtle.angle += degrees;
-            updateTurtleRotation();
-        }
-
-        function turnLeft(degrees) {
-            console.log(`מסתובב שמאלה ${degrees} מעלות`); // לבדיקה
-            turtle.angle -= degrees;
-            updateTurtleRotation();
-        }
-
-        function penUp() {
-            console.log("הרמתי עט"); // לבדיקה
-            turtle.penDown = false;
-        }
-
-        function penDown() {
-            console.log("הורדתי עט"); // לבדיקה
-            turtle.penDown = true;
-        }
-
-        function changeColor(color) {
-            console.log(`שיניתי צבע ל-${color}`); // לבדיקה
-            turtle.color = color;
-        }
-
-        function updateTurtlePosition() {
-            const turtleElement = document.getElementById('turtle');
-            if (turtleElement) {
-                turtleElement.style.left = (turtle.x - 15) + 'px';
-                turtleElement.style.top = (turtle.y - 15) + 'px';
-                console.log(`עדכנתי מיקום החתול: (${turtle.x}, ${turtle.y})`); // לבדיקה
-            }
-        }
-
-        function updateTurtleRotation() {
-            const turtleElement = document.getElementById('turtle');
-            if (turtleElement) {
-                turtleElement.style.transform = `rotate(${turtle.angle}deg)`;
-                console.log(`עדכנתי זווית החתול: ${turtle.angle} מעלות`); // לבדיקה
-            }
-        }
-
-        // פונקציות הכפתורים
-        function showCode() {
-            const code = Blockly.JavaScript.workspaceToCode(workspace);
-            document.getElementById('codeOutput').textContent = code || 'אין קוד להצגה - צרו בלוקים!';
-        }
-
-        function runCode() {
-            console.log("התחלת הרצה..."); // לבדיקה
-            
-            // איפוס מיקום החתול
-            turtle = { x: 240, y: 180, angle: 0, penDown: true, color: '#000000' };
-            updateTurtlePosition();
-            updateTurtleRotation();
-            
-            // ניקוי הקנבס
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const code = Blockly.JavaScript.workspaceToCode(workspace);
-            console.log("קוד מקורי:", code);
-            
-            // הסרת כל קוד אסינכרוני שעדיין נשאר
-            const cleanCode = code
-                .replace(/await\s+sleep\([^)]*\);?/g, '') // מסיר await sleep
-                .replace(/await\s+[^;]+;?/g, '') // מסיר כל await אחר
-                .replace(/\n\s*\n/g, '\n'); // מנקה שורות ריקות
-            
-            console.log("קוד נקי:", cleanCode);
-            console.log("מתחיל להריץ..."); // לבדיקה
-            
-            try {
-                if (cleanCode.trim()) {
-                    eval(cleanCode);
-                    console.log("הרצה הושלמה בהצלחה!"); // לבדיקה
-                } else {
-                    console.log("אין קוד להרצה"); // לבדיקה
-                }
-            } catch (e) {
-                alert('שגיאה בהרצת הקוד: ' + e.message);
-                console.error('שגיאה:', e);
-            }
-        }
-
-        function clearCanvas() {
-            console.log("מנקה הכל..."); // לבדיקה
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            turtle = { x: 240, y: 180, angle: 0, penDown: true, color: '#000000' };
-            updateTurtlePosition();
-            updateTurtleRotation();
-            console.log("ניקיתי הכל!"); // לבדיקה
-        }
-
-        // פונקציית בדיקה לפד מספרים
-        function testNumberPad() {
-            console.log('בודק פד מספרים...');
-            const event = { 
-                clientX: window.innerWidth / 2, 
-                clientY: window.innerHeight / 2,
-                target: document.body
+        document.addEventListener('DOMContentLoaded', () => {
+            // טעינת ספריית Blockly באופן דינמי
+            const script = document.createElement('script');
+            script.src = "https://unpkg.com/blockly@9.0.0/blockly.min.js";
+            script.onload = () => {
+                initializeBlockly();
             };
-            openNumberPadDirect('', event);
-        }
+            document.head.appendChild(script);
 
-        // פונקציות פד המספרים
-        function openNumberPadDirect(currentValue, event) {
-            console.log('פותח פד עם הערך:', currentValue); // לבדיקה
-            currentNumberValue = currentValue || '0';
-            document.getElementById('numberDisplay').textContent = currentNumberValue;
-            
-            const pad = document.getElementById('numberPad');
-            pad.style.display = 'block';
-            
-            // מציב את הפד ליד המיקום שלחצו
-            if (event && event.clientX && event.clientY) {
-                pad.style.left = (event.clientX + 20) + 'px';
-                pad.style.top = (event.clientY - 100) + 'px';
-                pad.style.transform = 'none';
-            } else {
-                // fallback למרכז
-                pad.style.left = '50%';
-                pad.style.top = '50%';
-                pad.style.transform = 'translate(-50%, -50%)';
-            }
-            
-            // שמירת המיקום של הטקסט שנלחץ לעדכון מאוחר יותר
-            window.lastClickedElement = event.target;
-        }
+            const initializeBlockly = () => {
+                const stageArea = document.getElementById('stage-area');
+                const speechBubble = document.getElementById('speech-bubble');
+                const containerWrapper = document.getElementById('container-wrapper');
+                const fullscreenButton = document.getElementById('fullscreen-button');
+                const addSpriteButton = document.getElementById('add-sprite-button');
+                const spritesList = document.getElementById('sprites-list');
+                const addBackdropButton = document.getElementById('add-backdrop-button');
+                const backdropsList = document.getElementById('backdrops-list');
+                const backgroundGallery = document.getElementById('background-gallery');
+                const closeGalleryButton = document.getElementById('close-gallery-button');
+                const thumbnailsGrid = document.getElementById('thumbnails-grid');
 
-        function closeNumberPad() {
-            document.getElementById('numberPad').style.display = 'none';
-            currentNumberField = null;
-            window.lastClickedElement = null;
-        }
-
-        function addNumber(digit) {
-            if (currentNumberValue === '0' && digit !== '.') {
-                currentNumberValue = digit.toString();
-            } else if (digit === '.' && currentNumberValue.includes('.')) {
-                return;
-            } else {
-                currentNumberValue += digit.toString();
-            }
-            document.getElementById('numberDisplay').textContent = currentNumberValue;
-        }
-
-        function deleteLast() {
-            if (currentNumberValue.length > 1) {
-                currentNumberValue = currentNumberValue.slice(0, -1);
-            } else {
-                currentNumberValue = '0';
-            }
-            document.getElementById('numberDisplay').textContent = currentNumberValue;
-        }
-
-        function clearNumber() {
-            currentNumberValue = '0';
-            document.getElementById('numberDisplay').textContent = currentNumberValue;
-        }
-
-        function confirmNumber() {
-            console.log('מאשר מספר:', currentNumberValue); // לבדיקה
-            
-            // אם יש אלמנט שנלחץ, נעדכן אותו ישירות
-            if (window.lastClickedElement && currentNumberValue && !isNaN(parseFloat(currentNumberValue))) {
-                window.lastClickedElement.textContent = parseFloat(currentNumberValue).toString();
+                let workspace;
+                let activeSprite = null; // דמות פעילה
                 
-                // גם מחפש את השדה בבלוקלי ומעדכן
-                const allBlocks = workspace.getAllBlocks();
-                for (let block of allBlocks) {
-                    for (let input of block.inputList) {
-                        for (let field of input.fieldRow) {
-                            if (field instanceof Blockly.FieldNumber) {
-                                const fieldValue = field.getValue().toString();
-                                if (window.lastClickedElement.textContent.includes(fieldValue) ||
-                                    fieldValue.includes(window.lastClickedElement.textContent)) {
-                                    field.setValue(parseFloat(currentNumberValue));
-                                    break;
-                                }
-                            }
+                const log = (message) => {
+                    console.log(message);
+                };
+
+                const createNewSprite = (name, imageUrl) => {
+                    const id = `sprite-${Date.now()}`;
+                    const spriteData = {
+                        id,
+                        name,
+                        imageUrl,
+                        x: 0,
+                        y: 0,
+                        direction: 90,
+                        opacity: 1
+                    };
+                    
+                    const spriteCard = document.createElement('div');
+                    spriteCard.classList.add('sprite-card');
+                    spriteCard.dataset.spriteId = id;
+                    spriteCard.innerHTML = `
+                        <img src="${imageUrl}" alt="${name}">
+                        <span class="text-sm mt-1">${name}</span>
+                        <div class="delete-button">X</div>
+                    `;
+                    spritesList.appendChild(spriteCard);
+
+                    const spriteOnStage = document.createElement('div');
+                    spriteOnStage.classList.add('sprite-wrapper');
+                    spriteOnStage.id = id;
+                    spriteOnStage.innerHTML = `
+                        <img src="${imageUrl}" alt="${name}">
+                        <div class="speech-bubble"></div>
+                    `;
+                    stageArea.appendChild(spriteOnStage);
+
+                    // הוספת מאזינים
+                    spriteCard.addEventListener('click', () => {
+                        setActiveSprite(spriteData);
+                    });
+                    spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, spriteData));
+                    spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, spriteData));
+                    spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteSprite(id);
+                    });
+
+                    setActiveSprite(spriteData);
+                    return spriteData;
+                };
+
+                const deleteSprite = (id) => {
+                    document.getElementById(id).remove();
+                    document.querySelector(`.sprite-card[data-sprite-id="${id}"]`).remove();
+                    if (activeSprite && activeSprite.id === id) {
+                        activeSprite = null;
+                        const firstSprite = spritesList.querySelector('.sprite-card');
+                        if (firstSprite) {
+                            setActiveSprite({ id: firstSprite.dataset.spriteId });
                         }
                     }
-                }
-            }
-            
-            closeNumberPad();
-        }
-
-        // מאזין לחיצות על שדות מספרים - גרסה מתוקנת
-        function setupNumberPadListener() {
-            setTimeout(function() {
-                const blocklyDiv = document.getElementById('blocklyDiv');
-                if (blocklyDiv) {
-                    console.log('מגדיר מאזין לפד מספרים...'); // לבדיקה
-                    
-                    blocklyDiv.addEventListener('click', function(e) {
-                        console.log('לחיצה זוהתה:', e.target); // לבדיקה
-                        const target = e.target;
-                        
-                        // בודק כל סוג של אלמנט מספר אפשרי בבלוקלי
-                        if (target && (
-                            target.classList.contains('blocklyEditableText') ||
-                            target.classList.contains('blocklyText') ||
-                            target.tagName === 'text'
-                        )) {
-                            const text = target.textContent?.trim();
-                            console.log('טקסט נמצא:', text); // לבדיקה
-                            
-                            if (text && !isNaN(parseFloat(text))) {
-                                console.log('זהו מספר, פותח פד...'); // לבדיקה
-                                e.preventDefault();
-                                e.stopPropagation();
-                                
-                                // פתיחה ישירה של הפד
-                                openNumberPadDirect(text, e);
-                            }
-                        }
-                    }, true);
-                }
+                    log(`הדמות ${id} נמחקה.`);
+                };
                 
-                // סוגר את הפד אם לוחצים מחוץ אליו
-                document.addEventListener('click', function(e) {
-                    const pad = document.getElementById('numberPad');
-                    const target = e.target;
-                    
-                    if (pad.style.display === 'block' && 
-                        !pad.contains(target) && 
-                        !target.closest('.blocklyEditableText') &&
-                        !target.closest('.blocklyText')) {
-                        closeNumberPad();
+                const setActiveSprite = (spriteData) => {
+                    if (activeSprite) {
+                        document.querySelector(`.sprite-card[data-sprite-id="${activeSprite.id}"]`).classList.remove('selected');
+                    }
+                    activeSprite = spriteData;
+                    document.querySelector(`.sprite-card[data-sprite-id="${spriteData.id}"]`).classList.add('selected');
+                    log(`הדמות הפעילה היא: ${activeSprite.name}`);
+                    // עדכון התצוגה של הבלוקים בהתאם לדמות הפעילה
+                };
+
+                const updateSpritePosition = () => {
+                    const spriteEl = document.getElementById(activeSprite.id);
+                    if (spriteEl) {
+                        spriteEl.style.transform = `translate(calc(-50% + ${activeSprite.x}px), calc(-50% + ${activeSprite.y}px)) rotate(${activeSprite.direction - 90}deg)`;
+                        spriteEl.style.opacity = activeSprite.opacity;
+                    }
+                };
+
+                let isDragging = false;
+                let initialMouseX, initialMouseY, initialSpriteX, initialSpriteY;
+
+                const getPointerPosition = (e) => {
+                    const isTouch = e.touches && e.touches.length > 0;
+                    return { x: isTouch ? e.touches[0].clientX : e.clientX, y: isTouch ? e.touches[0].clientY : e.clientY };
+                };
+                
+                const startDrag = (e, spriteData) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    setActiveSprite(spriteData);
+                    const { x, y } = getPointerPosition(e);
+                    initialMouseX = x;
+                    initialMouseY = y;
+                    initialSpriteX = activeSprite.x;
+                    initialSpriteY = activeSprite.y;
+                    document.getElementById(activeSprite.id).style.transition = 'none';
+                    log('הדמות נתפסה לגרירה.');
+                };
+
+                const drag = (e) => {
+                    if (isDragging && activeSprite) {
+                        const { x, y } = getPointerPosition(e);
+                        const deltaX = x - initialMouseX;
+                        const deltaY = y - initialMouseY;
+                        
+                        activeSprite.x = initialSpriteX + deltaX;
+                        activeSprite.y = initialSpriteY + deltaY;
+                        
+                        updateSpritePosition();
+                    }
+                };
+
+                const endDrag = () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        if (activeSprite) {
+                            document.getElementById(activeSprite.id).style.transition = 'transform 0.5s ease-out';
+                            log(`הדמות נגררה למיקום חדש (x: ${activeSprite.x.toFixed(0)}, y: ${activeSprite.y.toFixed(0)})`);
+                        }
+                    }
+                };
+
+                stageArea.addEventListener('mousemove', drag);
+                stageArea.addEventListener('touchmove', drag);
+                document.addEventListener('mouseup', endDrag);
+                document.addEventListener('touchend', endDrag);
+                document.addEventListener('touchcancel', endDrag);
+
+                // הגדרת בלוקים מותאמים אישית
+                // Event Blocks
+                Blockly.Blocks['event_when_flag_clicked'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField(new Blockly.FieldImage("https://www.gstatic.com/codesite/ph/images/play_button.gif", 36, 36, { alt: "green flag", flipRtl: "false" }));
+                        this.setNextStatement(true, null);
+                        this.setColour("#FFD95A");
+                        this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
+                        this.setHelpUrl("");
+                    }
+                };
+                Blockly.JavaScript['event_when_flag_clicked'] = function(block) { return ''; };
+
+                Blockly.Blocks['event_when_stage_clicked'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/6495ED/FFFFFF?text=B", 36, 36, { alt: "stage icon", flipRtl: "false" }));
+                        this.setNextStatement(true, null);
+                        this.setColour("#FFD95A");
+                        this.setTooltip("הפעל את התסריט כאשר לוחצים על אזור הבמה.");
+                        this.setHelpUrl("");
+                    }
+                };
+                Blockly.JavaScript['event_when_stage_clicked'] = function(block) { return ''; };
+
+                Blockly.Blocks['event_when_key_pressed'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/6495ED/FFFFFF?text=K", 36, 36, { alt: "keyboard icon", flipRtl: "false" })).appendField(new Blockly.FieldDropdown([
+                            ["רווח", "SPACE"], ["חץ למעלה", "UP"], ["חץ למטה", "DOWN"], ["חץ ימינה", "RIGHT"], ["חץ שמאלה", "LEFT"]
+                        ]), "KEY");
+                        this.setNextStatement(true, null);
+                        this.setColour("#FFD95A");
+                        this.setTooltip("הפעל קוד כאשר מקש נלחץ. (פונקציונליות זו אינה נתמכת במלואה בדוגמה הנוכחית.)");
+                        this.setHelpUrl("");
+                    }
+                };
+                Blockly.JavaScript['event_when_key_pressed'] = function(block) { return ''; };
+
+                // Motion Blocks
+                Blockly.Blocks['motion_move_steps'] = {
+                    init: function() {
+                        this.appendValueInput("STEPS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
+                            .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/walk.svg", 36, 36, "*"));
+                        this.setInputsInline(true);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("הזז את הדמות בכיוון שהיא פונה.");
+                    }
+                };
+                Blockly.JavaScript['motion_move_steps'] = function(block) {
+                    const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || '10';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                const radians = (activeSprite.direction - 90) * Math.PI / 180;
+                                activeSprite.x += (${steps} * Math.cos(radians));
+                                activeSprite.y -= (${steps} * Math.sin(radians));
+                                updateSpritePosition();
+                                log('הדמות זזה ' + ${steps} + ' צעדים.');
+                                setTimeout(resolve, 500);
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['motion_turn_right_degrees'] = {
+                    init: function() {
+                        this.appendValueInput("DEGREES").setCheck("Number")
+                            .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 36, 36, { alt: "turn right icon", flipRtl: "false" }))
+                        this.setInputsInline(true);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("סובב את הדמות ימינה.");
+                    }
+                };
+                Blockly.JavaScript['motion_turn_right_degrees'] = function(block) {
+                    const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                activeSprite.direction += ${degrees};
+                                updateSpritePosition();
+                                log('הדמות הסתובבה ימינה ב-' + ${degrees} + ' מעלות.');
+                                setTimeout(resolve, 10);
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['motion_turn_left_degrees'] = {
+                    init: function() {
+                        this.appendValueInput("DEGREES").setCheck("Number").appendField(new Blockly.FieldImage("https://www.flaticon.com/svg/static/icons/svg/25/25295.svg", 36, 36, { alt: "turn left icon", flipRtl: "false" }));
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("סובב את הדמות שמאלה.");
+                    }
+                };
+                Blockly.JavaScript['motion_turn_left_degrees'] = function(block) {
+                    const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                activeSprite.direction -= ${degrees};
+                                updateSpritePosition();
+                                log('הדמות הסתובבה שמאלה ב-' + ${degrees} + ' מעלות.');
+                                setTimeout(resolve, 10);
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['motion_go_to_xy'] = {
+                    init: function() {
+                        this.appendValueInput("X").setCheck("Number").appendField(new Blockly.FieldImage("https://placehold.co/36x36/4C97FF/FFFFFF?text=XY", 36, 36, { alt: "go to xy icon", flipRtl: "false" }));
+                        this.appendValueInput("Y").setCheck("Number").appendField("y:");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("קפיצה למיקום מסוים על הבמה.");
+                    }
+                };
+                Blockly.JavaScript['motion_go_to_xy'] = function(block) {
+                    const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                activeSprite.x = ${x};
+                                activeSprite.y = -${y};
+                                updateSpritePosition();
+                                log('קפץ ל-x: ' + ${x} + ' y: ' + ${y});
+                                resolve();
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['motion_glide_to_xy'] = {
+                    init: function() {
+                        this.appendValueInput("SECS").setCheck("Number").appendField(new Blockly.FieldImage("https://placehold.co/36x36/4C97FF/FFFFFF?text=GL", 36, 36, { alt: "glide icon", flipRtl: "false" }));
+                        this.appendValueInput("X").setCheck("Number").appendField("x:");
+                        this.appendValueInput("Y").setCheck("Number").appendField("y:");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#4C97FF");
+                        this.setTooltip("החלק את הדמות בצורה חלקה למיקום מסוים.");
+                    }
+                };
+                Blockly.JavaScript['motion_glide_to_xy'] = function(block) {
+                    const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                    const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                const spriteEl = document.getElementById(activeSprite.id);
+                                spriteEl.style.transition = 'transform ' + ${secs} + 's ease-in-out';
+                                activeSprite.x = ${x};
+                                activeSprite.y = -${y};
+                                updateSpritePosition();
+                                log('הדמות מחליקה ל-x: ' + ${x} + ' y: ' + ${y});
+                                setTimeout(() => {
+                                    spriteEl.style.transition = 'transform 0.1s ease-out';
+                                    resolve();
+                                }, ${secs} * 1000);
+                            });
+                        }
+                    `;
+                };
+
+                // Looks Blocks
+                Blockly.Blocks['looks_say_for_secs'] = {
+                    init: function() {
+                        this.appendValueInput("MESSAGE").setCheck("String").appendField(new Blockly.FieldImage("https://www.flaticon.com/svg/static/icons/svg/598/598166.svg", 36, 36, { alt: "speech bubble icon", flipRtl: "false" }));
+                        this.appendValueInput("SECS").setCheck("Number");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הצג בועת דיבור.");
+                    }
+                };
+                Blockly.JavaScript['looks_say_for_secs'] = function(block) {
+                    const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
+                    const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                const spriteEl = document.getElementById(activeSprite.id);
+                                const speechBubble = spriteEl.querySelector('.speech-bubble');
+                                speechBubble.textContent = ${message.replace(/'/g, "")};
+                                speechBubble.classList.add('visible');
+                                log('אומר: ' + ${message});
+                                setTimeout(() => {
+                                    speechBubble.classList.remove('visible');
+                                    resolve();
+                                }, ${secs} * 1000);
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['looks_say'] = {
+                    init: function() {
+                        this.appendValueInput("MESSAGE").setCheck("String").appendField(new Blockly.FieldImage("https://www.flaticon.com/svg/static/icons/svg/598/598166.svg", 36, 36, { alt: "speech bubble icon", flipRtl: "false" }));
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הצג בועת דיבור.");
+                    }
+                };
+                Blockly.JavaScript['looks_say'] = function(block) {
+                    const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || '"שלום!"';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                const spriteEl = document.getElementById(activeSprite.id);
+                                const speechBubble = spriteEl.querySelector('.speech-bubble');
+                                speechBubble.textContent = ${message.replace(/'/g, "")};
+                                speechBubble.classList.add('visible');
+                                log('אומר: ' + ${message});
+                                resolve();
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['looks_show'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/9966FF/FFFFFF?text=Show", 36, 36, { alt: "show icon", flipRtl: "false" }));
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הצג את הדמות.");
+                    }
+                };
+                Blockly.JavaScript['looks_show'] = function(block) {
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                const spriteEl = document.getElementById(activeSprite.id);
+                                spriteEl.style.display = 'flex';
+                                log('הדמות מופיעה.');
+                                resolve();
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['looks_hide'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/9966FF/FFFFFF?text=Hide", 36, 36, { alt: "hide icon", flipRtl: "false" }));
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("הסתר את הדמות.");
+                    }
+                };
+                Blockly.JavaScript['looks_hide'] = function(block) {
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                const spriteEl = document.getElementById(activeSprite.id);
+                                spriteEl.style.display = 'none';
+                                log('הדמות הוסתרה.');
+                                resolve();
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['looks_set_transparency'] = {
+                    init: function() {
+                        this.appendValueInput("TRANSPARENCY").setCheck("Number").appendField(new Blockly.FieldImage("https://placehold.co/36x36/9966FF/FFFFFF?text=Tr", 36, 36, { alt: "transparency icon", flipRtl: "false" }));
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("שנה את שקיפות הדמות (0-100).");
+                    }
+                };
+                Blockly.JavaScript['looks_set_transparency'] = function(block) {
+                    const transparency = Blockly.JavaScript.valueToCode(block, 'TRANSPARENCY', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                activeSprite.opacity = Math.max(0, Math.min(1, ${transparency} / 100));
+                                updateSpritePosition();
+                                log('שקיפות הדמות שונתה ל-' + ${transparency} + '%');
+                                resolve();
+                            });
+                        }
+                    `;
+                };
+                Blockly.Blocks['looks_set_sprite'] = {
+                    init: function() {
+                        this.appendValueInput("URL").setCheck("String").appendField(new Blockly.FieldImage("https://placehold.co/36x36/9966FF/FFFFFF?text=Sp", 36, 36, { alt: "sprite icon", flipRtl: "false" }));
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#9966FF");
+                        this.setTooltip("שנה את מראה הדמות לקובץ SVG מקישור.");
+                    }
+                };
+                Blockly.JavaScript['looks_set_sprite'] = function(block) {
+                    const url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC) || '""';
+                    return `
+                        if (activeSprite) {
+                            await new Promise(resolve => {
+                                const spriteEl = document.getElementById(activeSprite.id);
+                                const imgElement = spriteEl.querySelector('img');
+                                const speechBubble = spriteEl.querySelector('.speech-bubble');
+                                imgElement.src = ${url};
+                                log('הדמות שונתה לקובץ SVG.');
+                                resolve();
+                            });
+                        }
+                    `;
+                };
+
+                // Control Blocks
+                Blockly.Blocks['control_wait_secs'] = {
+                    init: function() {
+                        this.appendValueInput("SECS").setCheck("Number").appendField(new Blockly.FieldImage("https://placehold.co/36x36/FF6B1A/FFFFFF?text=Wt", 36, 36, { alt: "wait icon", flipRtl: "false" }));
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#FF6B1A");
+                        this.setTooltip("המתן מספר שניות.");
+                    }
+                };
+                Blockly.JavaScript['control_wait_secs'] = function(block) {
+                    const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                    return `
+                        await new Promise(resolve => {
+                            log('ממתין ' + ${secs} + ' שניות...');
+                            setTimeout(resolve, ${secs} * 1000);
+                        });
+                    `;
+                };
+                Blockly.Blocks['control_repeat_times'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField(new Blockly.FieldImage("https://www.flaticon.com/svg/static/icons/svg/25/25291.svg", 36, 36, { alt: "repeat icon", flipRtl: "false" }));
+                        this.appendValueInput("TIMES").setCheck("Number");
+                        this.appendStatementInput("DO").setCheck(null);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#FF6B1A");
+                        this.setTooltip("חזור על הבלוקים שבפנים מספר פעמים.");
+                    }
+                };
+                Blockly.JavaScript['control_repeat_times'] = function(block) {
+                    const times = Blockly.JavaScript.valueToCode(block, 'TIMES', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+                    const doCode = Blockly.JavaScript.statementToCode(block, 'DO');
+                    return `
+                        log('מתחיל חזרה על ' + ${times} + ' פעמים.');
+                        for (let i = 0; i < ${times}; i++) {
+                            await (async () => {
+                                ${doCode}
+                            })();
+                        }
+                    `;
+                };
+                Blockly.Blocks['control_forever'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField(new Blockly.FieldImage("https://placehold.co/36x36/FF6B1A/FFFFFF?text=Loop", 36, 36, { alt: "loop icon", flipRtl: "false" }));
+                        this.appendStatementInput("DO").setCheck(null);
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour("#FF6B1A");
+                        this.setTooltip("חזור על הבלוקים ללא הפסקה. (עשוי להיתקע - יש להשתמש בזהירות)");
+                    }
+                };
+                Blockly.JavaScript['control_forever'] = function(block) {
+                    const doCode = Blockly.JavaScript.statementToCode(block, 'DO');
+                    return `
+                        log('מתחיל לולאת לנצח...');
+                        while(true) {
+                            await new Promise(resolve => setTimeout(resolve, 10));
+                            await (async () => {
+                                ${doCode}
+                            })();
+                        }
+                    `;
+                };
+
+                // Operator Blocks
+                Blockly.Blocks['operator_add'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("+");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("מחבר שני מספרים.");
+                    }
+                };
+                Blockly.JavaScript['operator_add'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_ADDITION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_ADDITION) || '0';
+                    const code = `(${num1} + ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_ADDITION];
+                };
+                Blockly.Blocks['operator_subtract'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("-");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                    }
+                };
+                Blockly.JavaScript['operator_subtract'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
+                    const code = `(${num1} - ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_SUBTRACTION];
+                };
+                Blockly.Blocks['operator_multiply'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("×");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("מכפיל שני מספרים.");
+                    }
+                };
+                Blockly.JavaScript['operator_multiply'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
+                    const code = `(${num1} * ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_MULTIPLICATION];
+                };
+                Blockly.Blocks['operator_divide'] = {
+                    init: function() {
+                        this.appendValueInput("NUM1").setCheck("Number");
+                        this.appendValueInput("NUM2").setCheck("Number").appendField("÷");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("מחלק שני מספרים.");
+                    }
+                };
+                Blockly.JavaScript['operator_divide'] = function(block) {
+                    const num1 = Blockly.JavaScript.valueToCode(block, 'NUM1', Blockly.JavaScript.ORDER_DIVISION) || '0';
+                    const num2 = Blockly.JavaScript.valueToCode(block, 'NUM2', Blockly.JavaScript.ORDER_DIVISION) || '0';
+                    const code = `(${num1} / ${num2})`;
+                    return [code, Blockly.JavaScript.ORDER_DIVISION];
+                };
+                Blockly.Blocks['operator_random_number'] = {
+                    init: function() {
+                        this.appendDummyInput().appendField("בחר מספר אקראי מ-").appendField(new Blockly.FieldTextInput("1"), "FROM").appendField("עד").appendField(new Blockly.FieldTextInput("10"), "TO");
+                        this.setOutput(true, "Number");
+                        this.setColour("#40BF4A");
+                        this.setTooltip("בחר מספר אקראי בטווח שצוין.");
+                    }
+                };
+                Blockly.JavaScript['operator_random_number'] = function(block) {
+                    const from = block.getFieldValue('FROM');
+                    const to = block.getFieldValue('TO');
+                    const code = `Math.floor(Math.random() * (${to} - ${from} + 1)) + ${from}`;
+                    return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+                };
+
+                const resetState = () => {
+                    if (activeSprite) {
+                         activeSprite.x = 0;
+                         activeSprite.y = 0;
+                         activeSprite.direction = 90;
+                         activeSprite.opacity = 1;
+                         updateSpritePosition();
+                         const speechBubble = document.getElementById(activeSprite.id).querySelector('.speech-bubble');
+                         speechBubble.classList.remove('visible');
+                    }
+                    log('הבמה אופסה.');
+                };
+
+                const eventHandlers = {
+                    'event_when_flag_clicked': async () => {
+                        const code = Blockly.JavaScript.workspaceToCode(workspace);
+                        await runCode(code);
+                    },
+                    'event_when_stage_clicked': async () => {
+                        const code = Blockly.JavaScript.workspaceToCode(workspace);
+                        await runCode(code);
+                    }
+                };
+
+                const runCode = async (code) => {
+                    if (!code.trim()) {
+                        log('אין בלוקים בתוכנית. גרור בלוקים כדי להתחיל!');
+                        return;
+                    }
+                    log('--- הפעלה חדשה ---');
+                    try {
+                        await eval('(async () => {' + code + '})()');
+                        log('הפעלה הסתיימה בהצלחה.');
+                    } catch (e) {
+                        log('שגיאה בהפעלת הקוד: ' + e + '. אנא ודא שהבלוקים מחוברים כראוי ושהקוד שלם.');
+                    }
+                };
+
+                // Functions for managing backdrops
+                const setBackdrop = (url, name) => {
+                    stageArea.style.backgroundImage = `url(${url})`;
+                    stageArea.style.backgroundColor = 'transparent';
+                    log(`רקע שונה ל-${name}`);
+                    const allCards = document.querySelectorAll('.backdrop-card');
+                    allCards.forEach(card => card.classList.remove('selected'));
+                    const selected = document.querySelector(`.backdrop-card[data-url="${url}"]`);
+                    if (selected) {
+                        selected.classList.add('selected');
+                    } else { // אם הרקע לא קיים ברשימה, צור כרטיס עבורו
+                         const newCard = createBackdropCard(url, name);
+                         backdropsList.appendChild(newCard);
+                         newCard.classList.add('selected');
+                    }
+                };
+
+                const createBackdropCard = (url, name) => {
+                    const card = document.createElement('div');
+                    card.classList.add('backdrop-card');
+                    card.dataset.url = url;
+                    card.style.backgroundImage = `url(${url})`;
+                    card.addEventListener('click', () => setBackdrop(url, name));
+                    return card;
+                };
+
+                const showGallery = (type) => {
+                    if (type === 'backdrop') {
+                        backgroundGallery.classList.add('visible');
+                        const thumbnails = thumbnailsGrid.querySelectorAll('.thumbnail');
+                        thumbnails.forEach(thumb => {
+                            thumb.addEventListener('click', () => {
+                                setBackdrop(thumb.src, thumb.alt);
+                                backgroundGallery.classList.remove('visible');
+                            });
+                        });
+                        closeGalleryButton.addEventListener('click', () => backgroundGallery.classList.remove('visible'));
+                    }
+                };
+
+                // Initialization
+                workspace = Blockly.inject('blockly-area', {
+                    toolbox: document.getElementById('toolbox'),
+                    scrollbars: true,
+                    trashcan: true,
+                    rtl: true,
+                    zoom: {
+                        controls: true,
+                        wheel: true,
+                        startScale: 1.25,
+                        maxScale: 3,
+                        minScale: 0.3,
+                        scaleSpeed: 1.2
+                    },
+                    renderer: 'thrasos'
+                });
+
+                // Attach event handlers
+                document.getElementById('run-button').addEventListener('click', eventHandlers['event_when_flag_clicked']);
+                document.getElementById('reset-button').addEventListener('click', resetState);
+                document.getElementById('fullscreen-button').addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        containerWrapper.requestFullscreen().catch(err => log(`Error: ${err.message}`));
+                    } else {
+                        document.exitFullscreen();
                     }
                 });
-            }, 1000);
-        }
+                stageArea.addEventListener('click', (event) => {
+                    if (event.target.closest('.sprite-wrapper') === null) {
+                        eventHandlers['event_when_stage_clicked']();
+                    }
+                });
 
-        // אתחול האפליקציה
-        function init() {
-            canvas = document.getElementById('turtle-canvas');
-            ctx = canvas.getContext('2d');
-            
-            // ודא שהחתול במרכז הבמה בדיוק
-            turtle.x = 240; // מרכז הבמה ברוחב (480/2)
-            turtle.y = 180; // מרכז הבמה בגובה (360/2)
-            updateTurtlePosition();
-            
-            workspace = Blockly.inject('blocklyDiv', {
-                toolbox: document.getElementById('toolbox'),
-                rtl: true,
-                scrollbars: true,
-                trashcan: true,
-                sounds: false,
-                zoom: {
-                    controls: true,
-                    wheel: true,
-                    startScale: 1.0,
-                    maxScale: 3,
-                    minScale: 0.3,
-                    scaleSpeed: 1.2
-                },
-                grid: {
-                    spacing: 20,
-                    length: 3,
-                    colour: '#ccc',
-                    snap: true
-                },
-                theme: Blockly.Themes.Zelos,
-                renderer: 'zelos'
-            });
+                // Sprite and Backdrop management
+                addSpriteButton.addEventListener('click', () => {
+                    const defaultSpriteUrl = 'https://codejredu.github.io/claudejr/GingerCat.svg';
+                    const newSprite = createNewSprite(`חתול`, defaultSpriteUrl);
+                    resetState(); // Reset position for the new sprite
+                });
+                addBackdropButton.addEventListener('click', () => showGallery('backdrop'));
 
-            // נוודא שאין גנרטורים של wait או sleep (אבל נשמור על wait_block)
-            if (Blockly.JavaScript['wait']) {
-                delete Blockly.JavaScript['wait'];
-            }
-            if (Blockly.JavaScript['sleep']) {
-                delete Blockly.JavaScript['sleep'];  
-            }
-
-            // הפעלת פד מספרים
-            setupNumberPadListener();
-        }
-
-        // אתחול כשהדף נטען
-        window.addEventListener('load', init);
+                // Add a default cat sprite on load
+                const initialSprite = createNewSprite('חתול', 'https://codejredu.github.io/claudejr/GingerCat.svg');
+                resetState();
+                
+                // Render initial backdrop
+                const defaultBackdrop = { url: "https://codejredu.github.io/test/assets/bg/savanna1.svg", name: "סוואנה" };
+                const defaultCard = createBackdropCard(defaultBackdrop.url, defaultBackdrop.name);
+                backdropsList.appendChild(defaultCard);
+                setBackdrop(defaultBackdrop.url, defaultBackdrop.name);
+                
+                // Make the default cat sprite active
+                setActiveSprite(initialSprite);
+            };
+        });
     </script>
 </body>
 </html>
