@@ -539,13 +539,6 @@
                     </shadow>
                 </value>
             </block>
-            <block type="looks_set_sprite">
-                <value name="URL">
-                    <shadow type="text">
-                        <field name="TEXT">https://codejredu.github.io/claudejr/GingerCat.svg</field>
-                    </shadow>
-                </value>
-            </block>
         </category>
         <category name="בקרה" colour="#FF6B1A">
             <block type="control_wait_secs">
@@ -1133,33 +1126,7 @@
                     }
                 `;
             };
-
-            // Fix for the invalid block definition.
-            Blockly.Blocks['looks_set_sprite'] = {
-                init: function() {
-                    this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/cat.png", 36, 36, { alt: "cat icon", flipRtl: "false" }))
-                        .appendField("           ");
-                    this.appendValueInput("URL").setCheck("String");
-                    this.setInputsInline(true);
-                    this.setPreviousStatement(true, null);
-                    this.setNextStatement(true, null);
-                    this.setColour("#9966FF");
-                    this.setTooltip("החלף את הדמות לתמונה חדשה.");
-                }
-            };
-            Blockly.JavaScript['looks_set_sprite'] = function(block) {
-                const url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC) || "''";
-                return `
-                    if (activeSprite) {
-                        const spriteEl = document.getElementById(activeSprite.id);
-                        spriteEl.querySelector('img').src = ${url};
-                        log('הדמות שונתה ל-' + ${url});
-                    }
-                `;
-            };
-
-
+            
             // Control Blocks
             Blockly.Blocks['control_wait_secs'] = {
                 init: function() {
