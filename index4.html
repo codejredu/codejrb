@@ -447,7 +447,7 @@
                 </value>
             </block>
             <block type="motion_set_direction">
-                <field name="DEGREES">0</field>
+                <field name="DEGREES">90</field>
             </block>
             <block type="motion_go_to_xy">
                 <value name="X">
@@ -815,135 +815,13 @@
                     }
                 `;
             };
-
-            class FieldProtractor extends Blockly.FieldTextInput {
-                constructor(value) {
-                    super(value);
-                    this.protractorContainer = null;
-                    this.isDragging = false;
-                    this.canvas = null;
-                    this.ctx = null;
-                    this.valueDisplay = null;
-                    this.centerX = 0;
-                    this.centerY = 0;
-                }
-                
-                showEditor_() {
-                    this.protractorContainer = document.createElement('div');
-                    this.protractorContainer.className = 'protractor-container';
-                    
-                    this.canvas = document.createElement('canvas');
-                    this.canvas.className = 'protractor-canvas';
-                    this.canvas.width = 200;
-                    this.canvas.height = 200;
-                    this.protractorContainer.appendChild(this.canvas);
-                    
-                    this.valueDisplay = document.createElement('div');
-                    this.valueDisplay.className = 'protractor-value';
-                    this.protractorContainer.appendChild(this.valueDisplay);
-
-                    const closeBtn = document.createElement('div');
-                    closeBtn.className = 'protractor-close';
-                    closeBtn.textContent = 'X';
-                    this.protractorContainer.appendChild(closeBtn);
-
-                    document.body.appendChild(this.protractorContainer);
-
-                    const rect = this.getSourceBlock().getSvgRoot().getBoundingClientRect();
-                    this.protractorContainer.style.top = `${rect.top + window.scrollY}px`;
-                    this.protractorContainer.style.left = `${rect.left + window.scrollX + rect.width}px`;
-
-                    this.ctx = this.canvas.getContext('2d');
-                    this.centerX = this.canvas.width / 2;
-                    this.centerY = this.canvas.height / 2;
-
-                    this.drawProtractor(this.getValue());
-
-                    this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
-                    this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
-                    this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
-                    
-                    closeBtn.addEventListener('click', this.hideEditor.bind(this));
-                    Blockly.bindEvent_(this.getSourceBlock().getSvgRoot(), 'mouseup', this, this.onMouseUp);
-                }
-
-                hideEditor() {
-                    if (this.protractorContainer) {
-                        this.protractorContainer.remove();
-                        this.protractorContainer = null;
-                    }
-                }
-
-                onMouseDown(e) {
-                    this.isDragging = true;
-                    this.updateAngle(e);
-                }
-
-                onMouseMove(e) {
-                    if (this.isDragging) {
-                        this.updateAngle(e);
-                    }
-                }
-
-                onMouseUp(e) {
-                    this.isDragging = false;
-                    this.updateAngle(e);
-                    this.hideEditor();
-                }
-
-                updateAngle(e) {
-                    const rect = this.canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left - this.centerX;
-                    const y = e.clientY - rect.top - this.centerY;
-                    
-                    let angle = (Math.atan2(x, -y) * 180 / Math.PI);
-                    
-                    angle = (angle + 360) % 360;
-
-                    angle = Math.round(angle);
-                    this.setValue(String(angle));
-                    this.drawProtractor(angle);
-                }
-
-                drawProtractor(angle) {
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                    this.ctx.lineWidth = 2;
-                    
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, this.centerY);
-                    this.ctx.lineTo(this.canvas.width, this.centerY);
-                    this.ctx.strokeStyle = '#ccc';
-                    this.ctx.stroke();
-
-                    this.ctx.beginPath();
-                    this.ctx.arc(this.centerX, this.centerY, this.centerX - 10, 0, 2 * Math.PI);
-                    this.ctx.strokeStyle = '#4C97FF';
-                    this.ctx.stroke();
-                    
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.centerX, this.centerY);
-                    const radians = (angle) * Math.PI / 180;
-                    const x = this.centerX + (this.centerX - 10) * Math.sin(radians);
-                    const y = this.centerY - (this.centerY - 10) * Math.cos(radians);
-                    this.ctx.lineTo(x, y);
-                    this.ctx.strokeStyle = '#FF6B1A';
-                    this.ctx.stroke();
-                    
-                    this.ctx.beginPath();
-                    this.ctx.arc(this.centerX, this.centerY, 3, 0, 2 * Math.PI);
-                    this.ctx.fillStyle = '#FF6B1A';
-                    this.ctx.fill();
-
-                    this.valueDisplay.textContent = `${angle}°`;
-                }
-            }
             
             Blockly.Blocks['motion_set_direction'] = {
                 init: function() {
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 36, 36, { alt: "compass icon", flipRtl: "false" }))
                         .appendField("         ")
-                        .appendField(new FieldProtractor('0'), 'DEGREES');
+                        .appendField(new Blockly.FieldAngle('90'), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
