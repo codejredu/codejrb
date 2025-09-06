@@ -13,26 +13,18 @@
         }
         .container-wrapper {
             display: flex;
-            flex-direction: column;
-            height: 100vh;
+            flex-direction: row-reverse; /* שינוי: פריסה אופקית כברירת מחדל */
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            min-height: 100vh;
             padding: 1rem;
-        }
-        @media (min-width: 1024px) {
-            .container-wrapper {
-                flex-direction: row-reverse;
-            }
         }
         #stage-and-sections-wrapper {
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
-            margin: 0 auto 1rem;
-            max-height: 100vh;
-        }
-        @media (min-width: 1024px) {
-            #stage-and-sections-wrapper {
-                margin: 0 1rem 0 0;
-            }
+            width: 50%; /* שינוי: תופס חצי מהרוחב כברירת מחדל */
+            flex: 1;
         }
         #stage-aspect-ratio-wrapper {
             position: relative;
@@ -117,14 +109,15 @@
         .controls-and-blockly {
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            width: 50%; /* שינוי: תופס חצי מהרוחב כברירת מחדל */
         }
         #blockly-area {
             flex-grow: 1;
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            height: 100%;
+            height: 60vh;
+            min-height: 400px;
         }
         .section {
             background-color: #fff;
@@ -133,6 +126,7 @@
             margin-bottom: 1rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             border: 1px solid #ccc;
+            position: relative; /* הוספה: עבור מיקום יחסי של הגלריה */
         }
         .section-header {
             display: flex;
@@ -227,7 +221,7 @@
             display: none;
             transition: all 0.5s ease-in-out;
             border: 2px solid #ccc;
-            position: absolute;
+            position: absolute; /* שינוי: מיקום יחסי ל-section */
             top: 0;
             left: 0;
             right: 0;
@@ -321,10 +315,44 @@
 <body class="bg-gray-100 text-gray-800">
 
     <div id="container-wrapper" class="container-wrapper">
-        <div class="flex-1 lg:w-1/2 flex flex-col" id="stage-and-sections-wrapper">
+        <div class="flex flex-col flex-1" id="stage-and-sections-wrapper">
             <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
             <div id="stage-aspect-ratio-wrapper" class="w-full relative">
                 <div id="stage-area">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>דמויות</h2>
+                    <div id="add-sprite-button" class="plus-button">+</div>
+                </div>
+                <div id="sprites-list" class="section-content">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>צלילים</h2>
+                    <div id="add-sound-button" class="plus-button">+</div>
+                </div>
+                <div id="sounds-list" class="section-content">
+                    <div class="sound-card">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-gray-500">
+                            <path d="M13.5 4.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM12 18.75a7.5 7.5 0 00-4.721-6.766L7.5 12h-.779c-2.15 0-4.14-1.285-5.328-3.359.18-.553.77-.959 1.488-.959h11.15c.718 0 1.307.406 1.487.96-.282.525-.43 1.11-.429 1.704a4.496 4.496 0 01-1.298 3.163A6.096 6.096 0 0012 18.75z"/>
+                            <path fill-rule="evenodd" d="M19.303 7.643a.75.75 0 111.061 1.061l-3.385 3.384a.75.75 0 01-1.061-1.06l3.385-3.386zM15.918 2.628a.75.75 0 01.993 1.121C15.612 4.605 14.218 6 12.5 6a.75.75 0 010-1.5c1.474 0 2.806-1.139 3.593-2.628z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm mt-1">צליל ברירת מחדל</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section" id="backdrops-section">
+                <div class="section-header">
+                    <h2>רקעים</h2>
+                    <div id="add-backdrop-button" class="plus-button">+</div>
+                </div>
+                <div id="backdrops-list" class="section-content">
                 </div>
                 <div id="background-gallery" class="gallery-container">
                     <button class="close-gallery-button" id="close-gallery-button">X</button>
@@ -362,44 +390,10 @@
                     </div>
                 </div>
             </div>
-
-            <div class="section">
-                <div class="section-header">
-                    <h2>דמויות</h2>
-                    <div id="add-sprite-button" class="plus-button">+</div>
-                </div>
-                <div id="sprites-list" class="section-content">
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-header">
-                    <h2>צלילים</h2>
-                    <div id="add-sound-button" class="plus-button">+</div>
-                </div>
-                <div id="sounds-list" class="section-content">
-                    <div class="sound-card">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-gray-500">
-                            <path d="M13.5 4.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM12 18.75a7.5 7.5 0 00-4.721-6.766L7.5 12h-.779c-2.15 0-4.14-1.285-5.328-3.359.18-.553.77-.959 1.488-.959h11.15c.718 0 1.307.406 1.487.96-.282.525-.43 1.11-.429 1.704a4.496 4.496 0 01-1.298 3.163A6.096 6.096 0 0012 18.75z"/>
-                            <path fill-rule="evenodd" d="M19.303 7.643a.75.75 0 111.061 1.061l-3.385 3.384a.75.75 0 01-1.061-1.06l3.385-3.386zM15.918 2.628a.75.75 0 01.993 1.121C15.612 4.605 14.218 6 12.5 6a.75.75 0 010-1.5c1.474 0 2.806-1.139 3.593-2.628z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="text-sm mt-1">צליל ברירת מחדל</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-header">
-                    <h2>רקעים</h2>
-                    <div id="add-backdrop-button" class="plus-button">+</div>
-                </div>
-                <div id="backdrops-list" class="section-content">
-                </div>
-            </div>
         </div>
 
-        <div class="controls-and-blockly w-full mt-4 lg:w-1/2 lg:mt-0">
-            <div id="blockly-area" class="h-[calc(100vh-16rem)] lg:h-[calc(100vh-2rem)] w-full rounded-2xl"></div>
+        <div class="controls-and-blockly flex-1 w-full mt-4 lg:mt-0">
+            <div id="blockly-area" class="h-[60vh] min-h-[400px] w-full rounded-2xl"></div>
             <div class="flex flex-row space-x-2 space-x-reverse justify-center mt-4">
                 <button id="run-button" class="px-6 py-3 bg-green-500 text-white font-bold rounded-full shadow-md hover:bg-green-600 transition-colors">
                     <span class="ml-2">הפעל</span>
@@ -553,6 +547,7 @@
             const spritesList = document.getElementById('sprites-list');
             const addBackdropButton = document.getElementById('add-backdrop-button');
             const backdropsList = document.getElementById('backdrops-list');
+            const backdropsSection = document.getElementById('backdrops-section');
             const backgroundGallery = document.getElementById('background-gallery');
             const closeGalleryButton = document.getElementById('close-gallery-button');
             const thumbnailsGrid = document.getElementById('thumbnails-grid');
