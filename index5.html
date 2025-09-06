@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>בלוקלי: פריסה משופרת</title>
+    <title>בלוקלי: פריסה בסגנון סקראץ'</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/blockly@9.0.0/blockly.min.js"></script>
     <style>
@@ -22,22 +22,24 @@
             flex-direction: row-reverse;
             justify-content: center;
             align-items: flex-start;
-            gap: 2.5rem; /* Increased gap */
+            gap: 1.5rem;
             width: 100%;
             max-width: 1400px;
             padding: 2rem;
             box-sizing: border-box;
         }
-        #sections-wrapper {
+        .left-panel {
             display: flex;
             flex-direction: column;
-            width: 30%; /* Smaller section area */
-        }
-        #stage-and-sections-wrapper {
-            display: flex;
-            flex-direction: column;
-            width: 35%; /* Smaller section area */
+            width: 35%;
             flex-shrink: 0;
+            gap: 1.5rem;
+        }
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            width: 65%;
+            gap: 1.5rem;
         }
         #stage-aspect-ratio-wrapper {
             position: relative;
@@ -47,7 +49,6 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             background-color: #fff;
             border: 2px solid #ccc;
-            margin-bottom: 1rem;
         }
         #stage-area {
             position: absolute;
@@ -119,24 +120,18 @@
         .speech-bubble.visible {
             opacity: 1;
         }
-        .controls-and-blockly {
-            display: flex;
-            flex-direction: column;
-            width: 65%; /* Wider blockly area */
-        }
         #blockly-area {
             flex-grow: 1;
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            height: 80vh; /* Taller blockly area */
+            height: 80vh;
             min-height: 500px;
         }
         .section {
             background-color: #fff;
             border-radius: 12px;
             padding: 1rem;
-            margin-bottom: 1rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             border: 1px solid #ccc;
             position: relative;
@@ -329,7 +324,7 @@
                 flex-direction: column;
                 padding: 1rem;
             }
-            #stage-and-sections-wrapper, .controls-and-blockly {
+            .left-panel, .right-panel {
                 width: 100%;
             }
             #blockly-area {
@@ -341,7 +336,7 @@
 <body class="bg-gray-100 text-gray-800">
 
     <div id="container-wrapper" class="container-wrapper">
-        <div class="flex flex-col" id="stage-and-sections-wrapper">
+        <div class="left-panel">
             <h1 class="text-3xl font-bold mb-4 text-center">במה של החתול</h1>
             <div id="stage-aspect-ratio-wrapper" class="w-full relative">
                 <div id="stage-area">
@@ -418,7 +413,7 @@
             </div>
         </div>
 
-        <div class="controls-and-blockly flex-1 w-full mt-4 lg:mt-0">
+        <div class="right-panel">
             <div id="blockly-area" class="h-[80vh] min-h-[500px] w-full rounded-2xl"></div>
             <div class="flex flex-row space-x-2 space-x-reverse justify-center mt-4">
                 <button id="run-button" class="px-6 py-3 bg-green-500 text-white font-bold rounded-full shadow-md hover:bg-green-600 transition-colors">
@@ -770,7 +765,7 @@
             Blockly.Blocks['motion_move_steps'] = {
                 init: function() {
                     this.appendValueInput("STEPS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 24, 24, "*")).appendField("הזז את הדמות ב-");
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 24, 24, "*")).appendField("");
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -785,7 +780,7 @@
                         await new Promise(resolve => {
                             const radians = (activeSprite.direction - 90) * Math.PI / 180;
                             activeSprite.x += (${steps} * Math.cos(radians));
-                            activeSprite.y -= (${steps} * Math.sin(radians));
+                            activeSprite.y += (${steps} * Math.sin(radians));
                             updateSpritePosition();
                             log('הדמות זזה ' + ${steps} + ' צעדים.');
                             setTimeout(resolve, 500);
@@ -796,7 +791,7 @@
             Blockly.Blocks['motion_turn_right_degrees'] = {
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 24, 24, { alt: "turn right icon", flipRtl: "false" })).appendField("סובב ימינה ב-")
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 24, 24, { alt: "turn right icon", flipRtl: "false" })).appendField("")
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -820,7 +815,7 @@
             Blockly.Blocks['motion_turn_left_degrees'] = {
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 24, 24, { alt: "turn left icon", flipRtl: "false" })).appendField("סובב שמאלה ב-");
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 24, 24, { alt: "turn left icon", flipRtl: "false" })).appendField("");
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -846,7 +841,7 @@
                 init: function() {
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 24, 24, { alt: "compass icon", flipRtl: "false" }))
-                        .appendField("קבע כיוון ל-")
+                        .appendField("")
                         .appendField(new Blockly.FieldAngle('90'), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -868,13 +863,13 @@
                     }
                 `;
             };
-
+            
             Blockly.Blocks['looks_say_for_secs'] = {
                 init: function() {
                     this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 24, 24, { alt: "say icon", flipRtl: "false" }))
-                        .appendField("אמור ");
-                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("  למשך  ");
+                        .appendField("");
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("");
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -905,7 +900,7 @@
                 init: function() {
                     this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 24, 24, { alt: "say icon", flipRtl: "false" }))
-                        .appendField("אמור");
+                        .appendField("");
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -927,7 +922,7 @@
             };
             Blockly.Blocks['looks_show'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 24, 24, { alt: "show icon", flipRtl: "false" })).appendField("הצג");
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 24, 24, { alt: "show icon", flipRtl: "false" })).appendField("");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -945,7 +940,7 @@
             };
             Blockly.Blocks['looks_hide'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 24, 24, { alt: "hide icon", flipRtl: "false" })).appendField("הסתר");
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 24, 24, { alt: "hide icon", flipRtl: "false" })).appendField("");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -965,7 +960,7 @@
                 init: function() {
                     this.appendValueInput("TRANSPARENCY").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/opacity.png", 24, 24, { alt: "opacity icon", flipRtl: "false" }))
-                        .appendField("קבע שקיפות ל-");
+                        .appendField("");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -985,8 +980,8 @@
             
             Blockly.Blocks['control_wait_secs'] = {
                 init: function() {
-                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/wait.png", 24, 24, "*")).appendField("המתן ");
-                    this.appendDummyInput().appendField("שניות");
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/wait.png", 24, 24, "*")).appendField("");
+                    this.appendDummyInput().appendField("");
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1006,8 +1001,8 @@
 
             Blockly.Blocks['control_repeat_times'] = {
                 init: function() {
-                    this.appendValueInput("TIMES").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/loop.png", 24, 24, "*")).appendField("חזור");
-                    this.appendDummyInput().appendField("פעמים");
+                    this.appendValueInput("TIMES").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/loop.png", 24, 24, "*")).appendField("");
+                    this.appendDummyInput().appendField("");
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1028,7 +1023,7 @@
 
             Blockly.Blocks['control_forever'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*")).appendField("לנצח");
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*")).appendField("");
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
                     this.setColour("#FF6B1A");
@@ -1046,7 +1041,7 @@
             };
             Blockly.Blocks['motion_go_to_xy'] = {
                 init: function() {
-                    this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("עבור ל- X:");
+                    this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("X:");
                     this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("Y:");
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -1069,9 +1064,9 @@
             };
             Blockly.Blocks['motion_glide_to_xy'] = {
                 init: function() {
-                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("החלק למשך");
-                    this.appendDummyInput().appendField("שניות");
-                    this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("  ל- X:");
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("");
+                    this.appendDummyInput().appendField("");
+                    this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("X:");
                     this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("Y:");
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -1185,9 +1180,9 @@
 
             Blockly.Blocks['operator_random_number'] = {
                 init: function() {
-                    this.appendDummyInput().appendField("מספר אקראי בין");
+                    this.appendDummyInput().appendField("");
                     this.appendDummyInput().appendField(new Blockly.FieldNumber(1), "FROM");
-                    this.appendDummyInput().appendField("ל-");
+                    this.appendDummyInput().appendField("-");
                     this.appendDummyInput().appendField(new Blockly.FieldNumber(10), "TO");
                     this.setInputsInline(true);
                     this.setOutput(true, "Number");
