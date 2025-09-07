@@ -1328,13 +1328,39 @@
                     return;
                 }
                 log('התסריט הופעל.');
-                const code = Blockly.JavaScript.workspaceToCode(workspace);
+
+                const topBlocks = workspace.getTopBlocks(true);
+                const flagClickScripts = topBlocks.filter(block => block.type === 'event_when_flag_clicked');
+                
+                if (flagClickScripts.length === 0) {
+                    log('לא נמצאו תסריטים שמתחילים בדגל ירוק.');
+                    return;
+                }
+
+                const scriptPromises = flagClickScripts.map(startBlock => {
+                    const firstBlockOfScript = startBlock.getNextBlock();
+                    if (!firstBlockOfScript) {
+                        return Promise.resolve();
+                    }
+                    
+                    const code = Blockly.JavaScript.blockToCode(firstBlockOfScript);
+                    
+                    return (async () => {
+                        try {
+                            const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+                            const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', code);
+                            await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT);
+                        } catch (e) {
+                            log('שגיאת ריצה בתסריט: ' + e);
+                        }
+                    })();
+                });
+
                 try {
-                    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                    const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', code);
-                    await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT);
+                    await Promise.all(scriptPromises);
+                    log('כל התסריטים של הדגל הירוק הסתיימו.');
                 } catch (e) {
-                    log('שגיאת ריצה: ' + e);
+                    log('שגיאה כללית בהרצת תסריטים במקביל: ' + e);
                 }
             }
 
@@ -1431,5 +1457,4 @@
     </script>
 </body>
 </html>
-
 
