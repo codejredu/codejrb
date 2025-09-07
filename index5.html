@@ -1690,16 +1690,12 @@
                 executionCancelled = true;
                 
                 setTimeout(() => {
+                    // Hide any visible speech bubbles when stopping
                     Object.values(sprites).forEach(sprite => {
-                        sprite.x = 0;
-                        sprite.y = 0;
-                        sprite.direction = 90;
-                        sprite.opacity = 1;
-                        updateSpritePosition(sprite.id);
                         const bubble = document.querySelector(`#${sprite.id} .speech-bubble`);
                         if (bubble) bubble.classList.remove('visible');
                     });
-                    log('הבמה אופסה.');
+                    log('כל התסריטים נעצרו.');
                     isRunning = false; // Allow new run
                 }, 50);
             }
