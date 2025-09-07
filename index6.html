@@ -2120,10 +2120,30 @@
                     const sprite = getActiveSprite();
                     if (!sprite) return;
                     
+                    anglePickerWidget.style.display = 'flex'; // Display first to get its dimensions
+
                     const inputRect = propDirection.getBoundingClientRect();
-                    anglePickerWidget.style.top = `${inputRect.bottom + 5}px`;
-                    anglePickerWidget.style.left = `${inputRect.left + (inputRect.width / 2) - (anglePickerWidget.offsetWidth / 2)}px`;
-                    anglePickerWidget.style.display = 'flex';
+                    const widgetWidth = anglePickerWidget.offsetWidth;
+                    const widgetHeight = anglePickerWidget.offsetHeight;
+
+                    // Attempt to position it to the left of the input field (preferred for RTL)
+                    let left = inputRect.left - widgetWidth - 10; // 10px gap
+                    let top = inputRect.top + (inputRect.height / 2) - (widgetHeight / 2);
+
+                    // Boundary check: If it goes off-screen to the left, position it below instead.
+                    if (left < 5) { 
+                        left = inputRect.left + (inputRect.width / 2) - (widgetWidth / 2);
+                        top = inputRect.bottom + 5;
+                    }
+                     if (top < 5) {
+                        top = 5;
+                    }
+                    if (top + widgetHeight > window.innerHeight) {
+                        top = window.innerHeight - widgetHeight - 5;
+                    }
+
+                    anglePickerWidget.style.top = `${top}px`;
+                    anglePickerWidget.style.left = `${left}px`;
                     
                     anglePickerHandle.style.transform = `rotate(${sprite.direction - 90}deg)`;
                 });
