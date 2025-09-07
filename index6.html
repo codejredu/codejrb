@@ -101,8 +101,8 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 80px;
-            height: 80px;
+            width: 80px; /* Base size */
+            height: 80px; /* Base size */
             background-color: transparent;
             border-radius: 0;
             display: flex;
@@ -392,6 +392,15 @@
             box-shadow: 0 0 #00000033;
         }
 
+        /* Sprite Properties Panel */
+        #prop-show.active, #prop-hide.active {
+            background-color: #60a5fa; /* bg-blue-400 */
+            color: white;
+        }
+        #prop-show, #prop-hide {
+            transition: background-color 0.2s, color 0.2s;
+        }
+
         /* Stage Expanded Styles */
         .container-wrapper.stage-expanded {
             padding: 0.5rem;
@@ -404,7 +413,8 @@
         }
         .container-wrapper.stage-expanded .right-panel,
         .container-wrapper.stage-expanded .section,
-        .container-wrapper.stage-expanded #stage-header {
+        .container-wrapper.stage-expanded #stage-header,
+        .container-wrapper.stage-expanded #sprite-properties-panel {
             display: none;
         }
         .container-wrapper.stage-expanded #stage-aspect-ratio-wrapper {
@@ -412,7 +422,7 @@
             padding-top: 0;
         }
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         /* Mobile layout adjustments */
@@ -475,6 +485,42 @@
             <div id="stage-aspect-ratio-wrapper" class="w-full relative">
                 <div id="stage-area"></div>
             </div>
+            
+            <div id="sprite-properties-panel" class="section hidden">
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+                    <div class="flex items-center gap-2">
+                        <label for="prop-name" class="font-medium">דמות:</label>
+                        <input type="text" id="prop-name" class="p-1 border rounded-lg w-24">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="prop-x" class="font-medium">X:</label>
+                        <input type="number" id="prop-x" class="p-1 border rounded-lg w-16 text-center">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="prop-y" class="font-medium">Y:</label>
+                        <input type="number" id="prop-y" class="p-1 border rounded-lg w-16 text-center">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="prop-size" class="font-medium">גודל:</label>
+                        <input type="number" id="prop-size" min="0" class="p-1 border rounded-lg w-16 text-center">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="prop-direction" class="font-medium">כיוון:</label>
+                        <input type="number" id="prop-direction" class="p-1 border rounded-lg w-16 text-center">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="font-medium">הצגה:</label>
+                        <div class="flex bg-gray-200 rounded-lg p-0.5">
+                            <button id="prop-show" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="הצג">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C3.732 4.943 7.523 3 10 3s6.268 1.943 9.542 7c-3.274 5.057-7.27 7-9.542 7S3.732 15.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <button id="prop-hide" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="הסתר">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.27 8.138 16.545 7 14.66 6.36l-1.07-1.071A9.95 9.95 0 0010 3C4.943 3 1.943 7.732 1.458 9.227l-1.473-1.473a1 1 0 00-1.414 0zM10 12a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /><path d="M10 15a5 5 0 004.95-4.286l-1.543-1.543A3.001 3.001 0 0110 13a3 3 0 01-2.43-1.088l-1.528-1.528A4.982 4.982 0 005.05 10.714 5 5 0 0010 15z" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="section">
                 <div class="section-header">
@@ -510,22 +556,6 @@
                         <img src="https://codejredu.github.io/claudejr/Flower.svg" alt="Flower" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Monkey.svg" alt="Monkey" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Crocodile.svg" alt="Crocodile" class="thumbnail">
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <div class="section-header">
-                    <h2>צלילים</h2>
-                    <div id="add-sound-button" class="plus-button">+</div>
-                </div>
-                <div id="sounds-list" class="section-content">
-                    <div class="sound-card">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-gray-500">
-                            <path d="M13.5 4.5a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM12 18.75a7.5 7.5 0 00-4.721-6.766L7.5 12h-.779c-2.15 0-4.14-1.285-5.328-3.359.18-.553.77-.959 1.488-.959h11.15c.718 0 1.307.406 1.487.96-.282.525-.43 1.11-.429 1.704a4.496 4.496 0 01-1.298 3.163A6.096 6.096 0 0012 18.75z"/>
-                            <path fill-rule="evenodd" d="M19.303 7.643a.75.75 0 111.061 1.061l-3.385 3.384a.75.75 0 01-1.061-1.06l3.385-3.386zM15.918 2.628a.75.75 0 01.993 1.121C15.612 4.605 14.218 6 12.5 6a.75.75 0 010-1.5c1.474 0 2.806-1.139 3.593-2.628z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="text-sm mt-1">צליל ברירת מחדל</span>
                     </div>
                 </div>
             </div>
@@ -734,6 +764,16 @@
             const loadButton = document.getElementById('load-button');
             const loadInput = document.getElementById('load-input');
 
+            // Sprite Properties Panel elements
+            const propertiesPanel = document.getElementById('sprite-properties-panel');
+            const propName = document.getElementById('prop-name');
+            const propX = document.getElementById('prop-x');
+            const propY = document.getElementById('prop-y');
+            const propShow = document.getElementById('prop-show');
+            const propHide = document.getElementById('prop-hide');
+            const propSize = document.getElementById('prop-size');
+            const propDirection = document.getElementById('prop-direction');
+
             const STAGE_WIDTH = 480;
             const STAGE_HEIGHT = 360;
 
@@ -748,8 +788,15 @@
             };
 
             const getActiveSprite = () => sprites[activeSpriteId] || null;
-
-            const updateSpritePosition = (spriteId) => {
+            
+            // This global function allows block code to update the panel
+            window.updateActiveSpritePanel = () => {
+                if (activeSpriteId && sprites[activeSpriteId]) {
+                    updatePropertiesPanel();
+                }
+            }
+            
+            const updateSpriteAppearance = (spriteId) => {
                 const spriteData = sprites[spriteId];
                 if (!spriteData) return;
 
@@ -758,11 +805,40 @@
                     const rect = stageArea.getBoundingClientRect();
                     const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
                     const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
+                    
+                    const baseSize = 80;
+                    const newSize = baseSize * (spriteData.size / 100);
+
+                    spriteEl.style.width = `${newSize}px`;
+                    spriteEl.style.height = `${newSize}px`;
                     spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${spriteData.direction - 90}deg)`;
                     spriteEl.style.opacity = spriteData.opacity;
                 }
             };
             
+            const updatePropertiesPanel = () => {
+                const sprite = getActiveSprite();
+                if (sprite) {
+                    propertiesPanel.classList.remove('hidden');
+                    
+                    propName.value = sprite.name;
+                    propX.value = Math.round(sprite.x);
+                    propY.value = Math.round(sprite.y);
+                    propSize.value = sprite.size;
+                    propDirection.value = sprite.direction;
+
+                    if (sprite.opacity === 1) {
+                        propShow.classList.add('active');
+                        propHide.classList.remove('active');
+                    } else {
+                        propShow.classList.remove('active');
+                        propHide.classList.add('active');
+                    }
+                } else {
+                    propertiesPanel.classList.add('hidden');
+                }
+            };
+
             const createNewSprite = (name, imageUrl, initialX = 0, initialY = 0) => {
                 const id = `sprite-${Date.now()}`;
                 const spriteData = {
@@ -773,6 +849,7 @@
                     y: initialY,
                     direction: 90,
                     opacity: 1,
+                    size: 100,
                     workspaceXml: null
                 };
                 
@@ -808,7 +885,7 @@
                 });
 
                 setActiveSprite(id);
-                updateSpritePosition(id);
+                updateSpriteAppearance(id);
                 return spriteData;
             };
 
@@ -824,6 +901,9 @@
                     const firstSpriteId = Object.keys(sprites)[0];
                     if (firstSpriteId) {
                         setActiveSprite(firstSpriteId);
+                    } else {
+                        // No sprites left, hide panel
+                        updatePropertiesPanel();
                     }
                 }
                 log(`הדמות ${id} נמחקה.`);
@@ -867,6 +947,10 @@
                 if (newCard) {
                     newCard.classList.add('selected');
                 }
+                
+                // 6. Update properties panel
+                updatePropertiesPanel();
+
                 log(`הדמות הפעילה היא: ${newSprite.name}`);
             };
 
@@ -909,7 +993,8 @@
                     spriteData.x = initialSpriteX + deltaX * scaleX;
                     spriteData.y = initialSpriteY - deltaY * scaleY;
                     
-                    updateSpritePosition(dragSpriteId);
+                    updateSpriteAppearance(dragSpriteId);
+                    updatePropertiesPanel();
                 }
             };
 
@@ -917,6 +1002,7 @@
                 if (isDragging && dragSpriteId) {
                     const spriteData = sprites[dragSpriteId];
                     document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out';
+                    updatePropertiesPanel(); // Final update
                     log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
                 }
                 isDragging = false;
@@ -930,7 +1016,7 @@
             document.addEventListener('touchcancel', endDrag);
 
             window.addEventListener('resize', () => {
-                Object.keys(sprites).forEach(updateSpritePosition);
+                Object.keys(sprites).forEach(updateSpriteAppearance);
                 Blockly.svgResize(workspace);
             });
             
@@ -1037,7 +1123,8 @@
                         sprite.x += parseFloat(${steps}) * Math.sin(radians);
                         sprite.y += parseFloat(${steps}) * Math.cos(radians);
                         
-                        updateSpritePosition(sprite.id);
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
                         log(sprite.name + ' זזה ' + ${steps} + ' צעדים.');
                         await new Promise(resolve => {
                             let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 50);
@@ -1064,7 +1151,8 @@
                 return `
                     if (sprite) {
                          sprite.direction += parseFloat(${degrees});
-                         updateSpritePosition(sprite.id);
+                         updateSpriteAppearance(sprite.id);
+                         window.updateActiveSpritePanel();
                         log(sprite.name + ' הסתובבה ימינה ב-' + ${degrees} + ' מעלות.');
                     }
                 `;
@@ -1085,7 +1173,8 @@
                 return `
                     if (sprite) {
                         sprite.direction -= parseFloat(${degrees});
-                        updateSpritePosition(sprite.id);
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
                         log(sprite.name + ' הסתובבה שמאלה ב-' + ${degrees} + ' מעלות.');
                     }
                 `;
@@ -1097,7 +1186,8 @@
                          if (getActiveSprite()) {
                             let sprite = getActiveSprite();
                             sprite.direction = newValue;
-                            updateSpritePosition(sprite.id);
+                            updateSpriteAppearance(sprite.id);
+                            updatePropertiesPanel();
                         }
                         return newValue;
                     };
@@ -1118,7 +1208,8 @@
                 return `
                     if (sprite) {
                         sprite.direction = ${degrees};
-                        updateSpritePosition(sprite.id);
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
                         log(sprite.name + ' קבעה כיוון ל-' + ${degrees} + ' מעלות.');
                     }
                 `;
@@ -1201,7 +1292,8 @@
                 return `
                     if (sprite) {
                         sprite.opacity = 1;
-                        updateSpritePosition(sprite.id);
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
                         log(sprite.name + ' הוצגה.');
                     }
                 `;
@@ -1219,7 +1311,8 @@
                 return `
                     if (sprite) {
                         sprite.opacity = 0;
-                        updateSpritePosition(sprite.id);
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
                         log(sprite.name + ' הוסתרה.');
                     }
                 `;
@@ -1240,7 +1333,8 @@
                 return `
                     if (sprite) {
                         sprite.opacity = 1 - (parseFloat(${transparency}) / 100);
-                        updateSpritePosition(sprite.id);
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
                         log('שקיפות ' + sprite.name + ' נקבעה ל-' + ${transparency} + '%.');
                     }
                 `;
@@ -1337,7 +1431,8 @@
                     if (sprite) {
                         sprite.x = parseFloat(${x});
                         sprite.y = parseFloat(${y});
-                        updateSpritePosition(sprite.id);
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
                         log(sprite.name + ' עברה למיקום: ' + sprite.x.toFixed(0) + ', ' + sprite.y.toFixed(0));
                     }
                 `;
@@ -1377,7 +1472,8 @@
                                 sprite.x = startX + (endX - startX) * progress;
                                 sprite.y = startY + (endY - startY) * progress;
                                 
-                                updateSpritePosition(sprite.id);
+                                updateSpriteAppearance(sprite.id);
+                                window.updateActiveSpritePanel();
                                 
                                 if (progress < 1) {
                                     requestAnimationFrame(animate);
@@ -1424,7 +1520,8 @@
                                 const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
                                 sprite.y = startY + parabolicProgress;
 
-                                updateSpritePosition(sprite.id);
+                                updateSpriteAppearance(sprite.id);
+                                window.updateActiveSpritePanel();
                                 
                                 if (progress < 1) {
                                     requestAnimationFrame(animateJump);
@@ -1598,8 +1695,8 @@
                 if (code && !getExecutionCancelled()) {
                     try {
                         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                        const f = new AsyncFunction('sprite', 'updateSpritePosition', 'log', 'getExecutionCancelled', code);
-                        await f(sprite, updateSpritePosition, log, getExecutionCancelled);
+                        const f = new AsyncFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
+                        await f(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
                     } catch (e) {
                         log(`שגיאת ריצה בתסריט: ${e}`);
                     }
@@ -1842,8 +1939,9 @@
             };
 
             const loadSpriteFromData = (spriteData) => {
-                const { id, name, imageUrl, x, y, direction, opacity } = spriteData;
+                const { id, name, imageUrl, x, y, direction, opacity, size } = spriteData;
 
+                spriteData.size = size || 100;
                 sprites[id] = spriteData;
 
                 const spriteCard = document.createElement('div');
@@ -1869,7 +1967,7 @@
                     e.stopPropagation();
                     deleteSprite(id);
                 });
-                updateSpritePosition(id);
+                updateSpriteAppearance(id);
             };
 
             const loadProject = (e) => {
@@ -1927,9 +2025,65 @@
             loadInput.addEventListener('change', loadProject);
 
 
+            // --- Properties Panel Listeners ---
+            function setupPropertiesPanelListeners() {
+                propName.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.name = e.target.value;
+                        document.querySelector(`.sprite-card[data-sprite-id="${sprite.id}"] span`).textContent = sprite.name;
+                    }
+                });
+                propX.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.x = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                propY.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.y = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                propSize.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.size = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                propDirection.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.direction = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                propShow.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.opacity = 1;
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+                propHide.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.opacity = 0;
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+            }
+
             // --- Initial Setup ---
             createDefaultBackdrop();
             createDefaultSprite();
+            setupPropertiesPanelListeners();
 
             backdropsList.addEventListener('click', handleBackdropSelection);
             
