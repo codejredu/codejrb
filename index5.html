@@ -278,44 +278,63 @@
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .protractor-container {
+        /* Number Pad Styles */
+        .number-pad-container {
             position: absolute;
-            z-index: 9999;
-            background-color: #ffffff;
-            border: 2px solid #333;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            z-index: 10000;
+            background-color: #f9fafb;
+            border: 2px solid #9ca3af;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            width: 200px;
             padding: 10px;
             user-select: none;
-            -webkit-user-select: none;
         }
-        .protractor-canvas {
-            cursor: crosshair;
+        .number-pad-display {
+            background-color: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: right;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            min-height: 40px;
+            color: #1f2937;
         }
-        .protractor-value {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-top: 10px;
-            color: #333;
+        .number-pad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
         }
-        .protractor-close {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background-color: #ef4444;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .number-pad-grid button {
+            padding: 15px 0;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 6px;
+            background-color: #e5e7eb;
             cursor: pointer;
-            font-weight: bold;
+            transition: background-color 0.2s;
         }
+        .number-pad-grid button:hover {
+            background-color: #d1d5db;
+        }
+        .number-pad-done {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px 0;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .number-pad-done:hover {
+            background-color: #2563eb;
+        }
+
         /* Mobile layout adjustments */
         @media (max-width: 768px) {
             .container-wrapper {
@@ -464,6 +483,25 @@
                 </button>
             </div>
         </div>
+    </div>
+    
+    <div id="number-pad-container" class="number-pad-container">
+        <div id="number-pad-display" class="number-pad-display"></div>
+        <div class="number-pad-grid">
+            <button data-value="7">7</button>
+            <button data-value="8">8</button>
+            <button data-value="9">9</button>
+            <button data-value="4">4</button>
+            <button data-value="5">5</button>
+            <button data-value="6">6</button>
+            <button data-value="1">1</button>
+            <button data-value="2">2</button>
+            <button data-value="3">3</button>
+            <button data-value="0">0</button>
+            <button data-value=".">.</button>
+            <button data-value="backspace">⌫</button>
+        </div>
+        <button id="number-pad-done" class="number-pad-done">אישור</button>
     </div>
     
     <xml id="toolbox" style="display: none">
@@ -746,6 +784,53 @@
             window.addEventListener('resize', () => {
                 updateSpritePosition();
             });
+            
+            // Custom Field for Number Pad
+            class FieldCustomNumber extends Blockly.FieldNumber {
+                constructor(value, min, max, precision, validator) {
+                    super(value, min, max, precision, validator);
+                }
+
+                showEditor_() {
+                    const numberPad = document.getElementById('number-pad-container');
+                    const numberPadDisplay = document.getElementById('number-pad-display');
+                    
+                    numberPad.currentField = this;
+                    numberPadDisplay.textContent = this.getValue();
+
+                    const blockSvg = this.getSourceBlock().getSvgRoot();
+                    const blockBounds = blockSvg.getBoundingClientRect();
+                    const workspaceBounds = document.getElementById('blockly-area').getBoundingClientRect();
+
+                    numberPad.style.display = 'block';
+                    
+                    let top = blockBounds.bottom + 5;
+                    let left = blockBounds.left;
+
+                    if (left + numberPad.offsetWidth > workspaceBounds.right) {
+                        left = workspaceBounds.right - numberPad.offsetWidth - 5;
+                    }
+                    if (top + numberPad.offsetHeight > workspaceBounds.bottom) {
+                        top = blockBounds.top - numberPad.offsetHeight - 5;
+                    }
+                    
+                    numberPad.style.top = `${top}px`;
+                    numberPad.style.left = `${left}px`;
+                }
+            }
+            Blockly.fieldRegistry.register('field_custom_number', FieldCustomNumber);
+            
+            // Redefine standard math_number block to use our custom field
+            Blockly.Blocks['math_number'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField(new FieldCustomNumber(0), 'NUM');
+                    this.setOutput(true, 'Number');
+                    this.setColour("#40BF4A");
+                    this.setTooltip("A number.");
+                    this.setHelpUrl("%{BKY_MATH_NUMBER_HELPURL}");
+                }
+            };
 
             Blockly.Blocks['event_when_flag_clicked'] = {
                 init: function() {
@@ -1255,9 +1340,9 @@
             Blockly.Blocks['operator_random_number'] = {
                 init: function() {
                     this.appendDummyInput().appendField("");
-                    this.appendDummyInput().appendField(new Blockly.FieldNumber(1), "FROM");
+                    this.appendDummyInput().appendField(new FieldCustomNumber(1), "FROM");
                     this.appendDummyInput().appendField("-");
-                    this.appendDummyInput().appendField(new Blockly.FieldNumber(10), "TO");
+                    this.appendDummyInput().appendField(new FieldCustomNumber(10), "TO");
                     this.setInputsInline(true);
                     this.setOutput(true, "Number");
                     this.setColour("#40BF4A");
@@ -1426,6 +1511,47 @@
                     spriteGallery.classList.remove('visible');
                 }
             }
+            
+            // Number Pad Logic
+            const numberPad = document.getElementById('number-pad-container');
+            const numberPadDisplay = document.getElementById('number-pad-display');
+            const numberPadGrid = numberPad.querySelector('.number-pad-grid');
+            const numberPadDone = document.getElementById('number-pad-done');
+            
+            numberPadGrid.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const value = e.target.dataset.value;
+                    if (value === 'backspace') {
+                        numberPadDisplay.textContent = numberPadDisplay.textContent.slice(0, -1);
+                    } else {
+                        // Prevent multiple decimals
+                        if (value === '.' && numberPadDisplay.textContent.includes('.')) return;
+                        numberPadDisplay.textContent += value;
+                    }
+                }
+            });
+
+            numberPadDone.addEventListener('click', () => {
+                const field = numberPad.currentField;
+                if (field) {
+                    let newValue = parseFloat(numberPadDisplay.textContent);
+                    if (isNaN(newValue)) {
+                        newValue = 0;
+                    }
+                    field.setValue(newValue);
+                }
+                numberPad.style.display = 'none';
+                numberPad.currentField = null;
+            });
+            
+            // Hide number pad when clicking outside
+            document.addEventListener('click', (e) => {
+                // If the click is not on the number pad and not on a blockly field
+                if (numberPad.style.display === 'block' && !numberPad.contains(e.target) && !e.target.closest('.blocklyText')) {
+                    numberPadDone.click();
+                }
+            }, true);
+
 
             createDefaultBackdrop();
             createDefaultSprite();
