@@ -1491,6 +1491,7 @@
                 });
 
                 if (matchingScripts.length > 0) {
+                    event.preventDefault(); // מונע את התנהגות ברירת המחדל של הדפדפן (כמו גלילה)
                     log(`מקש נלחץ: ${pressedKey}. מריץ ${matchingScripts.length} תסריטים.`);
                     const scriptPromises = matchingScripts.map(scriptBlock => {
                         const code = Blockly.JavaScript.blockToCode(scriptBlock);
