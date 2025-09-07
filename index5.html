@@ -420,7 +420,7 @@
                     <button id="run-button" class="w-10 h-10 bg-green-500 text-white font-bold rounded-full flex justify-center items-center shadow-md hover:bg-green-600 transition-colors" title="הפעל">
                         <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 3v18h2v-8h10l-4-5 4-5H8V3H6z"/></svg>
                     </button>
-                    <button id="reset-button" class="w-10 h-10 bg-red-500 text-white font-bold rounded-md flex justify-center items-center shadow-md hover:bg-red-600 transition-colors" title="אפס">
+                    <button id="reset-button" class="w-10 h-10 bg-red-500 text-white font-bold rounded-md flex justify-center items-center shadow-md hover:bg-red-600 transition-colors" title="עצור">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M4 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H4z" />
                         </svg>
@@ -697,6 +697,7 @@
 
             let workspace;
             let activeSprite = null;
+            let executionCancelled = false;
             
             const log = (message) => {
                 console.log(message);
@@ -955,6 +956,7 @@
                             log('הדמות זזה ' + ${steps} + ' צעדים.');
                             setTimeout(resolve, 500);
                         });
+                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -979,6 +981,7 @@
                             log('הדמות הסתובבה ימינה ב-' + ${degrees} + ' מעלות.');
                             setTimeout(resolve, 10);
                         });
+                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1003,6 +1006,7 @@
                             log('הדמות הסתובבה שמאלה ב-' + ${degrees} + ' מעלות.');
                             setTimeout(resolve, 10);
                         });
+                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1038,6 +1042,7 @@
                             log('הדמות קבעה כיוון ל-' + ${degrees} + ' מעלות.');
                             setTimeout(resolve, 10);
                         });
+                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1070,6 +1075,7 @@
                                 resolve();
                             }, ${secs} * 1000);
                         });
+                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1172,6 +1178,7 @@
                         log('המתנה של ' + ${secs} + ' שניות...');
                         setTimeout(resolve, ${secs} * 1000);
                     });
+                    if (executionCancelled) return;
                 `;
             };
 
@@ -1191,6 +1198,7 @@
                 const branch = Blockly.JavaScript.statementToCode(block, 'DO');
                 return `
                     for (let i = 0; i < ${times}; i++) {
+                        if (executionCancelled) break;
                         log('חזרה מספר: ' + (i + 1));
                         ${branch}
                     }
@@ -1209,7 +1217,7 @@
             Blockly.JavaScript['control_forever'] = function(block) {
                 const branch = Blockly.JavaScript.statementToCode(block, 'DO');
                 return `
-                    while(true) {
+                    while(!executionCancelled) {
                         ${branch}
                         await new Promise(r => setTimeout(r, 10));
                     }
@@ -1266,6 +1274,7 @@
                             const startTime = Date.now();
                             
                             const animate = () => {
+                                if (executionCancelled) { resolve(); return; }
                                 const elapsed = Date.now() - startTime;
                                 const progress = Math.min(elapsed / duration, 1);
                                 
@@ -1283,6 +1292,7 @@
                             };
                             animate();
                         });
+                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1312,6 +1322,7 @@
                             const startTime = Date.now();
 
                             const animateJump = () => {
+                                if (executionCancelled) { resolve(); return; }
                                 const elapsed = Date.now() - startTime;
                                 const progress = Math.min(elapsed / DURATION, 1);
                                 
@@ -1330,6 +1341,7 @@
                             log('הדמות מתחילה לקפוץ...');
                             animateJump();
                         });
+                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1461,7 +1473,7 @@
             });
 
             document.getElementById('run-button').addEventListener('click', runCode);
-            document.getElementById('reset-button').addEventListener('click', reset);
+            document.getElementById('reset-button').addEventListener('click', stopAllScripts);
             
             fullscreenButton.addEventListener('click', () => {
                 containerWrapper.classList.toggle('stage-expanded');
@@ -1488,6 +1500,7 @@
             }
             
             async function runCode() {
+                executionCancelled = false;
                 if (!activeSprite) {
                     log('אין דמות פעילה, בחר דמות לפני הפעלת קוד.');
                     return;
@@ -1555,8 +1568,10 @@
             }
             document.addEventListener('keydown', handleKeyPress);
 
+            function stopAllScripts() {
+                executionCancelled = true;
+                log('כל התסריטים נעצרו.');
 
-            function reset() {
                 if (activeSprite) {
                     activeSprite.x = 0;
                     activeSprite.y = 0;
