@@ -880,7 +880,7 @@
 
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 24, 24, { alt: "compass icon", flipRtl: "false" }))
-                        .appendField("")
+                        .appendField('\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -906,9 +906,8 @@
             Blockly.Blocks['looks_say_for_secs'] = {
                 init: function() {
                     this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 24, 24, { alt: "say icon", flipRtl: "false" }))
-                        .appendField("");
-                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("");
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 24, 24, { alt: "say icon", flipRtl: "false" }));
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT);
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -938,8 +937,7 @@
             Blockly.Blocks['looks_say'] = {
                 init: function() {
                     this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 24, 24, { alt: "say icon", flipRtl: "false" }))
-                        .appendField("");
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 24, 24, { alt: "say icon", flipRtl: "false" }));
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -961,7 +959,7 @@
             };
             Blockly.Blocks['looks_show'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 24, 24, { alt: "show icon", flipRtl: "false" })).appendField("");
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 24, 24, { alt: "show icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -979,7 +977,7 @@
             };
             Blockly.Blocks['looks_hide'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 24, 24, { alt: "hide icon", flipRtl: "false" })).appendField("");
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 24, 24, { alt: "hide icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1396,6 +1394,7 @@
     </script>
 </body>
 </html>
+
 
 
 
