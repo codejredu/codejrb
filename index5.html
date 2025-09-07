@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -717,7 +717,6 @@
             let workspace;
             let activeSprite = null;
             let executionCancelled = false;
-            let isRunning = false;
             
             const log = (message) => {
                 console.log(message);
@@ -1204,22 +1203,10 @@
                 return `
                     await new Promise(resolve => {
                         log('המתנה של ' + ${secs} + ' שניות...');
-                        let timeoutId = null;
-                        let checkCancelId = null;
-
-                        const cleanup = () => {
-                            if (timeoutId) clearTimeout(timeoutId);
-                            if (checkCancelId) clearInterval(checkCancelId);
-                        };
-
-                        timeoutId = setTimeout(() => {
-                            cleanup();
-                            resolve();
-                        }, ${secs} * 1000);
-
-                        checkCancelId = setInterval(() => {
-                            if (executionCancelled) {
-                                cleanup();
+                        const timeoutId = setTimeout(resolve, ${secs} * 1000);
+                        const checkCancel = setInterval(() => {
+                            if(executionCancelled) {
+                                clearTimeout(timeoutId);
                                 resolve();
                             }
                         }, 100);
@@ -1538,8 +1525,8 @@
                 if (code) {
                     try {
                         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                        const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', code);
-                        await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT);
+                        const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', 'executionCancelled', code);
+                        await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT, executionCancelled);
                     } catch (e) {
                         log(`שגיאת ריצה בתסריט: ${e}`);
                     }
@@ -1547,16 +1534,9 @@
             }
             
             async function runCode() {
-                if (isRunning) {
-                    log('A script is already running.');
-                    return;
-                }
-                isRunning = true;
                 executionCancelled = false;
-                
                 if (!activeSprite) {
                     log('אין דמות פעילה, בחר דמות לפני הפעלת קוד.');
-                    isRunning = false;
                     return;
                 }
                 log('התסריט הופעל.');
@@ -1566,7 +1546,6 @@
                 
                 if (flagClickScripts.length === 0) {
                     log('לא נמצאו תסריטים שמתחילים בדגל ירוק.');
-                    isRunning = false;
                     return;
                 }
 
@@ -1583,8 +1562,6 @@
                     }
                 } catch (e) {
                     log('שגיאה כללית בהרצת תסריטים במקביל: ' + e);
-                } finally {
-                    isRunning = false;
                 }
             }
 
@@ -1645,7 +1622,6 @@
 
                         log('הבמה אופסה.');
                     }
-                    isRunning = false; // Allow new run
                 }, 50);
             }
             
