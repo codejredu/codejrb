@@ -31,14 +31,14 @@
         .left-panel {
             display: flex;
             flex-direction: column;
-            width: 35%;
+            width: 25%;
             flex-shrink: 0;
             gap: 1.5rem;
         }
         .right-panel {
             display: flex;
             flex-direction: column;
-            width: 65%;
+            width: 75%;
             gap: 1.5rem;
         }
         #stage-aspect-ratio-wrapper {
@@ -778,9 +778,10 @@
                 return `
                     if (activeSprite) {
                         await new Promise(resolve => {
-                            const radians = (activeSprite.direction - 90) * Math.PI / 180;
-                            activeSprite.x += (${steps} * Math.cos(radians));
-                            activeSprite.y += (${steps} * Math.sin(radians));
+                            // Scratch coordinates: 0 is up, increases clockwise
+                            const radians = activeSprite.direction * Math.PI / 180;
+                            activeSprite.x += ${steps} * Math.sin(radians);
+                            activeSprite.y += ${steps} * Math.cos(radians);
                             updateSpritePosition();
                             log('הדמות זזה ' + ${steps} + ' צעדים.');
                             setTimeout(resolve, 500);
@@ -839,10 +840,18 @@
             
             Blockly.Blocks['motion_set_direction'] = {
                 init: function() {
+                    const angleValidator = (newValue) => {
+                        if (activeSprite) {
+                            activeSprite.direction = newValue;
+                            updateSpritePosition();
+                        }
+                        return newValue; // Return the value to set it on the block
+                    };
+
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 24, 24, { alt: "compass icon", flipRtl: "false" }))
                         .appendField("")
-                        .appendField(new Blockly.FieldAngle('90'), 'DEGREES');
+                        .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1197,6 +1206,11 @@
                 return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
             };
             
+            // Configure Blockly's angle picker to match Scratch
+            // 0 is up, clockwise
+            Blockly.FieldAngle.OFFSET = 90;
+            Blockly.FieldAngle.CLOCKWISE = true;
+            
             workspace = Blockly.inject('blockly-area', {
                 toolbox: document.getElementById('toolbox'),
                 rtl: true
@@ -1323,3 +1337,5 @@
     </script>
 </body>
 </html>
+
+
