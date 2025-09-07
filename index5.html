@@ -509,23 +509,7 @@
                     </shadow>
                 </value>
             </block>
-            <block type="motion_glide_to_xy">
-                <value name="SECS">
-                    <shadow type="math_number">
-                        <field name="NUM">1</field>
-                    </shadow>
-                </value>
-                <value name="X">
-                    <shadow type="math_number">
-                        <field name="NUM">0</field>
-                    </shadow>
-                </value>
-                <value name="Y">
-                    <shadow type="math_number">
-                        <field name="NUM">0</field>
-                    </shadow>
-                </value>
-            </block>
+            <block type="motion_jump"></block>
         </category>
         <category name="מראה" colour="#9966FF">
             <block type="looks_say_for_secs">
@@ -1148,6 +1132,50 @@
                 `;
             };
 
+            Blockly.Blocks['motion_jump'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test//assets/blocklyicon/jump.svg", 24, 24, { alt: "jump icon", flipRtl: "false" }))
+                        .appendField("קפוץ");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#4C97FF");
+                    this.setTooltip("גורם לדמות לקפוץ במקום.");
+                }
+            };
+
+            Blockly.JavaScript['motion_jump'] = function(block) {
+                return `
+                    if (activeSprite) {
+                        await new Promise(resolve => {
+                            const JUMP_HEIGHT = 100;
+                            const DURATION = 500;
+                            const startY = activeSprite.y;
+                            const startTime = Date.now();
+
+                            const animateJump = () => {
+                                const elapsed = Date.now() - startTime;
+                                const progress = Math.min(elapsed / DURATION, 1);
+                                
+                                const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
+                                activeSprite.y = startY + parabolicProgress;
+                                
+                                updateSpritePosition();
+                                
+                                if (progress < 1) {
+                                    requestAnimationFrame(animateJump);
+                                } else {
+                                    log('הדמות סיימה לקפוץ.');
+                                    resolve();
+                                }
+                            };
+                            log('הדמות מתחילה לקפוץ...');
+                            animateJump();
+                        });
+                    }
+                `;
+            };
+
             Blockly.Blocks['operator_add'] = {
                 init: function() {
                     this.appendValueInput("NUM1").setCheck("Number");
@@ -1394,6 +1422,7 @@
     </script>
 </body>
 </html>
+
 
 
 
