@@ -855,7 +855,9 @@
 
             Blockly.Blocks['event_when_flag_clicked'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 24, 24, { alt: "green flag", flipRtl: "false" }));
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 24, 24, { alt: "green flag", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
                     this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
@@ -882,7 +884,7 @@
                     ]), "KEY");
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
-                    this.setTooltip("הפעל קוד כאשר מקש נלחץ. (פונקציונליות זו אינה נתמכת במלואה בדוגמה הנוכחית.)");
+                    this.setTooltip("הפעל את התסריט כאשר המקש הנבחר נלחץ.");
                     this.setHelpUrl("");
                 }
             };
@@ -1402,15 +1404,7 @@
                 log(`מפעיל בלוק בודד: ${block.type}`);
                 
                 const code = Blockly.JavaScript.blockToCode(block);
-                if (code) {
-                    try {
-                        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                        const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', code);
-                        await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT);
-                    } catch (e) {
-                        log('שגיאת ריצה: ' + e);
-                    }
-                }
+                await executeScript(code);
             }
             
             // שינוי האזנה: לכידת אירוע לחיצה על האובייקט SVG של הבלוק
@@ -1428,6 +1422,18 @@
             document.getElementById('run-button').addEventListener('click', runCode);
             document.getElementById('reset-button').addEventListener('click', reset);
 
+            async function executeScript(code) {
+                if (code) {
+                    try {
+                        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+                        const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', code);
+                        await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT);
+                    } catch (e) {
+                        log(`שגיאת ריצה בתסריט: ${e}`);
+                    }
+                }
+            }
+            
             async function runCode() {
                 if (!activeSprite) {
                     log('אין דמות פעילה, בחר דמות לפני הפעלת קוד.');
@@ -1445,21 +1451,8 @@
 
                 const scriptPromises = flagClickScripts.map(startBlock => {
                     const firstBlockOfScript = startBlock.getNextBlock();
-                    if (!firstBlockOfScript) {
-                        return Promise.resolve();
-                    }
-                    
                     const code = Blockly.JavaScript.blockToCode(firstBlockOfScript);
-                    
-                    return (async () => {
-                        try {
-                            const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                            const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', code);
-                            await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT);
-                        } catch (e) {
-                            log('שגיאת ריצה בתסריט: ' + e);
-                        }
-                    })();
+                    return executeScript(code);
                 });
 
                 try {
@@ -1469,6 +1462,45 @@
                     log('שגיאה כללית בהרצת תסריטים במקביל: ' + e);
                 }
             }
+
+            async function handleKeyPress(event) {
+                if (!activeSprite) return;
+
+                const keyMap = {
+                    'SPACE': ' ',
+                    'UP': 'ArrowUp',
+                    'DOWN': 'ArrowDown',
+                    'RIGHT': 'ArrowRight',
+                    'LEFT': 'ArrowLeft'
+                };
+                const pressedKey = event.key;
+                
+                const topBlocks = workspace.getTopBlocks(true);
+                const matchingScripts = [];
+
+                topBlocks.forEach(block => {
+                    if (block.type === 'event_when_key_pressed') {
+                        const selectedKey = block.getFieldValue('KEY');
+                        if (keyMap[selectedKey] === pressedKey) {
+                            const firstBlockOfScript = block.getNextBlock();
+                            if (firstBlockOfScript) {
+                                matchingScripts.push(firstBlockOfScript);
+                            }
+                        }
+                    }
+                });
+
+                if (matchingScripts.length > 0) {
+                    log(`מקש נלחץ: ${pressedKey}. מריץ ${matchingScripts.length} תסריטים.`);
+                    const scriptPromises = matchingScripts.map(scriptBlock => {
+                        const code = Blockly.JavaScript.blockToCode(scriptBlock);
+                        return executeScript(code);
+                    });
+                    await Promise.all(scriptPromises);
+                }
+            }
+            document.addEventListener('keydown', handleKeyPress);
+
 
             function reset() {
                 if (activeSprite) {
