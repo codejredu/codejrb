@@ -350,6 +350,35 @@
                 </div>
                 <div id="sprites-list" class="section-content">
                 </div>
+                <div id="sprite-gallery" class="gallery-container">
+                    <button class="close-gallery-button" id="close-sprite-gallery-button">X</button>
+                    <h2 class="text-xl font-bold text-center mb-4">גלריית דמויות</h2>
+                    <div id="sprite-thumbnails-grid" class="thumbnail-grid">
+                        <img src="https://codejredu.github.io/claudejr/Chick.svg" alt="Chick" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Rabbit.svg" alt="Rabbit" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Beetle.svg" alt="Beetle" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/GingerCat.svg" alt="GingerCat" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/AmericanFootball.svg" alt="AmericanFootball" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Basketball.svg" alt="Basketball" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Football.svg" alt="Football" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Dog.svg" alt="Dog" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/PistonPlane.svg" alt="PistonPlane" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/ColorfulPlane.svg" alt="ColorfulPlane" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/YellowCar.svg" alt="YellowCar" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Helicopter.svg" alt="Helicopter" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/SpaceShuttle.svg" alt="SpaceShuttle" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Truck.svg" alt="Truck" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Tiger.svg" alt="Tiger" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Rhino.svg" alt="Rhino" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Spindle.svg" alt="Spindle" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Crab.svg" alt="Crab" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/GreenSpottedTree.svg" alt="GreenSpottedTree" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Flamingo.svg" alt="Flamingo" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Flower.svg" alt="Flower" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Monkey.svg" alt="Monkey" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/Crocodile.svg" alt="Crocodile" class="thumbnail">
+                    </div>
+                </div>
             </div>
 
             <div class="section">
@@ -572,6 +601,9 @@
             const backgroundGallery = document.getElementById('background-gallery');
             const closeGalleryButton = document.getElementById('close-gallery-button');
             const thumbnailsGrid = document.getElementById('thumbnails-grid');
+            const spriteGallery = document.getElementById('sprite-gallery');
+            const closeSpriteGalleryButton = document.getElementById('close-sprite-gallery-button');
+            const spriteThumbnailsGrid = document.getElementById('sprite-thumbnails-grid');
 
             const STAGE_WIDTH = 480;
             const STAGE_HEIGHT = 360;
@@ -1326,6 +1358,16 @@
                 }
             }
 
+            function handleSpriteGallerySelection(e) {
+                const target = e.target;
+                if (target.tagName === 'IMG' && target.classList.contains('thumbnail')) {
+                    const url = target.src;
+                    const name = target.alt || 'דמות חדשה';
+                    createNewSprite(name, url, 0, 0);
+                    spriteGallery.classList.remove('visible');
+                }
+            }
+
             createDefaultBackdrop();
             createDefaultSprite();
 
@@ -1341,6 +1383,17 @@
             });
             
             thumbnailsGrid.addEventListener('click', handleGallerySelection);
+            
+            addSpriteButton.addEventListener('click', () => {
+                spriteGallery.classList.add('visible');
+            });
+
+            closeSpriteGalleryButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                spriteGallery.classList.remove('visible');
+            });
+
+            spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
         });
     </script>
 </body>
