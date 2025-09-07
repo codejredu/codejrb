@@ -717,6 +717,7 @@
             let workspace;
             let activeSprite = null;
             let executionCancelled = false;
+            let isRunning = false;
             
             const log = (message) => {
                 console.log(message);
@@ -966,16 +967,17 @@
                 const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_NONE) || '10';
                 return `
                     if (activeSprite) {
+                        const radians = activeSprite.direction * Math.PI / 180;
+                        activeSprite.x += ${steps} * Math.sin(radians);
+                        activeSprite.y += ${steps} * Math.cos(radians);
+                        updateSpritePosition();
+                        log('הדמות זזה ' + ${steps} + ' צעדים.');
                         await new Promise(resolve => {
-                            if (executionCancelled) { resolve(); return; }
-                            const radians = activeSprite.direction * Math.PI / 180;
-                            activeSprite.x += ${steps} * Math.sin(radians);
-                            activeSprite.y += ${steps} * Math.cos(radians);
-                            updateSpritePosition();
-                            log('הדמות זזה ' + ${steps} + ' צעדים.');
-                            setTimeout(resolve, 500);
+                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 500);
+                            const checkCancelId = setInterval(() => {
+                                if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
+                            }, 50);
                         });
-                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -994,14 +996,15 @@
                 const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
                 return `
                     if (activeSprite) {
+                        activeSprite.direction += ${degrees};
+                        updateSpritePosition();
+                        log('הדמות הסתובבה ימינה ב-' + ${degrees} + ' מעלות.');
                         await new Promise(resolve => {
-                             if (executionCancelled) { resolve(); return; }
-                            activeSprite.direction += ${degrees};
-                            updateSpritePosition();
-                            log('הדמות הסתובבה ימינה ב-' + ${degrees} + ' מעלות.');
-                            setTimeout(resolve, 10);
+                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 10);
+                            const checkCancelId = setInterval(() => {
+                                if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
+                            }, 10);
                         });
-                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1020,14 +1023,15 @@
                 const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
                 return `
                     if (activeSprite) {
+                        activeSprite.direction -= ${degrees};
+                        updateSpritePosition();
+                        log('הדמות הסתובבה שמאלה ב-' + ${degrees} + ' מעלות.');
                         await new Promise(resolve => {
-                             if (executionCancelled) { resolve(); return; }
-                            activeSprite.direction -= ${degrees};
-                            updateSpritePosition();
-                            log('הדמות הסתובבה שמאלה ב-' + ${degrees} + ' מעלות.');
-                            setTimeout(resolve, 10);
+                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 10);
+                            const checkCancelId = setInterval(() => {
+                                if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
+                            }, 10);
                         });
-                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1057,14 +1061,9 @@
                 const degrees = block.getFieldValue('DEGREES');
                 return `
                     if (activeSprite) {
-                        await new Promise(resolve => {
-                             if (executionCancelled) { resolve(); return; }
-                            activeSprite.direction = ${degrees};
-                            updateSpritePosition();
-                            log('הדמות קבעה כיוון ל-' + ${degrees} + ' מעלות.');
-                            setTimeout(resolve, 10);
-                        });
-                        if (executionCancelled) return;
+                        activeSprite.direction = ${degrees};
+                        updateSpritePosition();
+                        log('הדמות קבעה כיוון ל-' + ${degrees} + ' מעלות.');
                     }
                 `;
             };
@@ -1086,19 +1085,27 @@
                 const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2';
                 return `
                     if (activeSprite) {
+                        const spriteEl = document.getElementById(activeSprite.id);
+                        const bubble = spriteEl.querySelector('.speech-bubble');
+                        bubble.textContent = ${message};
+                        bubble.classList.add('visible');
+                        log('הדמות אומרת: ' + ${message});
+
                         await new Promise(resolve => {
-                            if (executionCancelled) { resolve(); return; }
-                            const spriteEl = document.getElementById(activeSprite.id);
-                            const bubble = spriteEl.querySelector('.speech-bubble');
-                            bubble.textContent = ${message};
-                            bubble.classList.add('visible');
-                            log('הדמות אומרת: ' + ${message});
-                            setTimeout(() => {
+                            const timeoutId = setTimeout(() => {
                                 bubble.classList.remove('visible');
+                                clearInterval(checkCancelId);
                                 resolve();
                             }, ${secs} * 1000);
+                            const checkCancelId = setInterval(() => {
+                                if (getExecutionCancelled()) {
+                                    clearTimeout(timeoutId);
+                                    clearInterval(checkCancelId);
+                                    bubble.classList.remove('visible');
+                                    resolve();
+                                }
+                            }, 50);
                         });
-                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1117,7 +1124,6 @@
                 const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "''";
                 return `
                     if (activeSprite) {
-                        if (executionCancelled) return;
                         const spriteEl = document.getElementById(activeSprite.id);
                         const bubble = spriteEl.querySelector('.speech-bubble');
                         bubble.textContent = ${message};
@@ -1138,7 +1144,6 @@
             Blockly.JavaScript['looks_show'] = function(block) {
                 return `
                     if (activeSprite) {
-                        if (executionCancelled) return;
                         activeSprite.opacity = 1;
                         updateSpritePosition();
                         log('הדמות הוצגה.');
@@ -1157,7 +1162,6 @@
             Blockly.JavaScript['looks_hide'] = function(block) {
                 return `
                     if (activeSprite) {
-                        if (executionCancelled) return;
                         activeSprite.opacity = 0;
                         updateSpritePosition();
                         log('הדמות הוסתרה.');
@@ -1179,7 +1183,6 @@
                 const transparency = Blockly.JavaScript.valueToCode(block, 'TRANSPARENCY', Blockly.JavaScript.ORDER_ATOMIC) || '0';
                 return `
                     if (activeSprite) {
-                        if (executionCancelled) return;
                         activeSprite.opacity = 1 - (${transparency} / 100);
                         updateSpritePosition();
                         log('שקיפות הדמות נקבעה ל-' + ${transparency} + '%.');
@@ -1201,17 +1204,20 @@
             Blockly.JavaScript['control_wait_secs'] = function(block) {
                 const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
                 return `
+                    log('המתנה של ' + ${secs} + ' שניות...');
                     await new Promise(resolve => {
-                        log('המתנה של ' + ${secs} + ' שניות...');
-                        const timeoutId = setTimeout(resolve, ${secs} * 1000);
-                        const checkCancel = setInterval(() => {
-                            if(executionCancelled) {
+                        const timeoutId = setTimeout(() => {
+                            clearInterval(checkCancelId);
+                            resolve();
+                        }, ${secs} * 1000);
+                        const checkCancelId = setInterval(() => {
+                            if (getExecutionCancelled()) {
                                 clearTimeout(timeoutId);
+                                clearInterval(checkCancelId);
                                 resolve();
                             }
-                        }, 100);
+                        }, 50);
                     });
-                    if (executionCancelled) return;
                 `;
             };
 
@@ -1231,9 +1237,10 @@
                 const branch = Blockly.JavaScript.statementToCode(block, 'DO');
                 return `
                     for (let i = 0; i < ${times}; i++) {
-                        if (executionCancelled) break;
+                        if (getExecutionCancelled()) break;
                         log('חזרה מספר: ' + (i + 1));
                         ${branch}
+                        if (getExecutionCancelled()) break;
                     }
                 `;
             };
@@ -1250,9 +1257,9 @@
             Blockly.JavaScript['control_forever'] = function(block) {
                 const branch = Blockly.JavaScript.statementToCode(block, 'DO');
                 return `
-                    while(!executionCancelled) {
+                    while(!getExecutionCancelled()) {
                         ${branch}
-                        await new Promise(r => setTimeout(r, 10));
+                        await new Promise(r => setTimeout(r, 10)); // Yield to event loop
                     }
                 `;
             };
@@ -1272,7 +1279,6 @@
                 const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
                 return `
                     if (activeSprite) {
-                        if (executionCancelled) return;
                         activeSprite.x = parseFloat(${x});
                         activeSprite.y = parseFloat(${y});
                         updateSpritePosition();
@@ -1308,7 +1314,7 @@
                             const startTime = Date.now();
                             
                             const animate = () => {
-                                if (executionCancelled) { resolve(); return; }
+                                if (getExecutionCancelled()) { resolve(); return; }
                                 const elapsed = Date.now() - startTime;
                                 const progress = Math.min(elapsed / duration, 1);
                                 
@@ -1326,7 +1332,6 @@
                             };
                             animate();
                         });
-                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1356,7 +1361,7 @@
                             const startTime = Date.now();
 
                             const animateJump = () => {
-                                if (executionCancelled) { resolve(); return; }
+                                if (getExecutionCancelled()) { resolve(); return; }
                                 const elapsed = Date.now() - startTime;
                                 const progress = Math.min(elapsed / DURATION, 1);
                                 
@@ -1375,7 +1380,6 @@
                             log('הדמות מתחילה לקפוץ...');
                             animateJump();
                         });
-                        if (executionCancelled) return;
                     }
                 `;
             };
@@ -1484,6 +1488,8 @@
                 }
             });
 
+            const getExecutionCancelled = () => executionCancelled;
+
             async function executeBlock(blockId) {
                 const block = workspace.getBlockById(blockId);
                 if (!block || block.type.startsWith('event_')) return;
@@ -1491,17 +1497,29 @@
                 log(`מפעיל בלוק בודד: ${block.type}`);
                 
                 const code = Blockly.JavaScript.blockToCode(block);
+                // Wrap single block execution to handle state
+                isRunning = true;
+                executionCancelled = false;
                 await executeScript(code);
+                isRunning = false;
             }
             
-            // שינוי האזנה: לכידת אירוע לחיצה על האובייקט SVG של הבלוק
             const blocklyDiv = document.getElementById('blockly-area');
             blocklyDiv.addEventListener('click', (event) => {
+                if (isRunning) return;
                 const blocklyBlockSvg = event.target.closest('.blocklyDraggable');
                 if (blocklyBlockSvg) {
                     const blockId = blocklyBlockSvg.getAttribute('data-id');
                     if (blockId) {
-                        executeBlock(blockId);
+                        const block = workspace.getBlockById(blockId);
+                        if (block) {
+                            if (block.type === 'event_when_flag_clicked') {
+                                log('לחיצה על בלוק הדגל הירוק, מפעיל את כל התסריטים.');
+                                runCode();
+                            } else if (!block.type.startsWith('event_')) {
+                                executeBlock(blockId);
+                            }
+                        }
                     }
                 }
             });
@@ -1522,11 +1540,11 @@
             });
 
             async function executeScript(code) {
-                if (code) {
+                if (code && !getExecutionCancelled()) {
                     try {
                         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                        const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', 'executionCancelled', code);
-                        await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT, executionCancelled);
+                        const f = new AsyncFunction('activeSprite', 'updateSpritePosition', 'log', 'STAGE_WIDTH', 'STAGE_HEIGHT', 'getExecutionCancelled', code);
+                        await f(activeSprite, updateSpritePosition, log, STAGE_WIDTH, STAGE_HEIGHT, getExecutionCancelled);
                     } catch (e) {
                         log(`שגיאת ריצה בתסריט: ${e}`);
                     }
@@ -1534,9 +1552,16 @@
             }
             
             async function runCode() {
+                if (isRunning) {
+                    log('תסריט כבר רץ. לחץ על עצור לפני הפעלה מחדש.');
+                    return;
+                }
+                isRunning = true;
                 executionCancelled = false;
+                
                 if (!activeSprite) {
                     log('אין דמות פעילה, בחר דמות לפני הפעלת קוד.');
+                    isRunning = false;
                     return;
                 }
                 log('התסריט הופעל.');
@@ -1546,27 +1571,35 @@
                 
                 if (flagClickScripts.length === 0) {
                     log('לא נמצאו תסריטים שמתחילים בדגל ירוק.');
+                    isRunning = false;
                     return;
                 }
 
                 const scriptPromises = flagClickScripts.map(startBlock => {
-                    const firstBlockOfScript = startBlock.getNextBlock();
-                    const code = Blockly.JavaScript.blockToCode(firstBlockOfScript);
+                    let code = '';
+                    let currentBlock = startBlock.getNextBlock();
+                    while(currentBlock) {
+                        code += Blockly.JavaScript.blockToCode(currentBlock);
+                        code += `if (getExecutionCancelled()) return;\n`;
+                        currentBlock = currentBlock.getNextBlock();
+                    }
                     return executeScript(code);
                 });
 
                 try {
                     await Promise.all(scriptPromises);
-                    if (!executionCancelled) {
+                    if (!getExecutionCancelled()) {
                         log('כל התסריטים של הדגל הירוק הסתיימו.');
                     }
                 } catch (e) {
                     log('שגיאה כללית בהרצת תסריטים במקביל: ' + e);
+                } finally {
+                    isRunning = false;
                 }
             }
 
             async function handleKeyPress(event) {
-                if (!activeSprite) return;
+                if (!activeSprite || isRunning) return;
 
                 const keyMap = {
                     'SPACE': ' ',
@@ -1593,23 +1626,30 @@
                 });
 
                 if (matchingScripts.length > 0) {
-                    event.preventDefault(); // מונע את התנהגות ברירת המחדל של הדפדפן (כמו גלילה)
+                    event.preventDefault(); 
                     log(`מקש נלחץ: ${pressedKey}. מריץ ${matchingScripts.length} תסריטים.`);
+                    isRunning = true;
+                    executionCancelled = false;
                     const scriptPromises = matchingScripts.map(scriptBlock => {
-                        const code = Blockly.JavaScript.blockToCode(scriptBlock);
+                        let code = '';
+                        let currentBlock = scriptBlock;
+                        while(currentBlock) {
+                            code += Blockly.JavaScript.blockToCode(currentBlock);
+                            code += `if (getExecutionCancelled()) return;\n`;
+                            currentBlock = currentBlock.getNextBlock();
+                        }
                         return executeScript(code);
                     });
                     await Promise.all(scriptPromises);
+                    isRunning = false;
                 }
             }
             document.addEventListener('keydown', handleKeyPress);
 
-
             function stopAllScripts() {
+                log('לחצן עצור נלחץ.');
                 executionCancelled = true;
-                log('כל התסריטים נעצרו.');
-
-                // Reset sprite position after a short delay to allow scripts to terminate
+                
                 setTimeout(() => {
                     if (activeSprite) {
                         activeSprite.x = 0;
@@ -1619,9 +1659,9 @@
                         updateSpritePosition();
                         const bubble = document.querySelector(`#${activeSprite.id} .speech-bubble`);
                         if (bubble) bubble.classList.remove('visible');
-
                         log('הבמה אופסה.');
                     }
+                    isRunning = false; // Allow new run
                 }, 50);
             }
             
