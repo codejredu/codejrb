@@ -400,6 +400,44 @@
         #prop-show, #prop-hide {
             transition: background-color 0.2s, color 0.2s;
         }
+        #prop-direction {
+            cursor: pointer;
+        }
+
+        /* Custom Angle Picker */
+        #angle-picker-widget {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background-color: #fff;
+            border: 2px solid #a5b4fc;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            z-index: 10001;
+            display: none;
+            user-select: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #angle-picker-dial {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="48" stroke="%23d1d5db" stroke-width="2" fill="none"/><line x1="50" y1="2" x2="50" y2="12" stroke="%23d1d5db" stroke-width="2"/><line x1="98" y1="50" x2="88" y2="50" stroke="%23d1d5db" stroke-width="2"/><line x1="50" y1="98" x2="50" y2="88" stroke="%23d1d5db" stroke-width="2"/><line x1="2" y1="50" x2="12" y2="50" stroke="%23d1d5db" stroke-width="2"/></svg>');
+            background-size: 80%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        #angle-picker-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 2px;
+            background: #4C97FF;
+            transform-origin: 0% 50%;
+        }
 
         /* Stage Expanded Styles */
         .container-wrapper.stage-expanded {
@@ -628,6 +666,12 @@
         </div>
         <button id="number-pad-done" class="number-pad-done">אישור</button>
     </div>
+
+    <div id="angle-picker-widget">
+        <div id="angle-picker-dial">
+            <div id="angle-picker-handle"></div>
+        </div>
+    </div>
     
     <xml id="toolbox" style="display: none">
         <category name="אירועים" colour="#FFD95A">
@@ -773,6 +817,11 @@
             const propHide = document.getElementById('prop-hide');
             const propSize = document.getElementById('prop-size');
             const propDirection = document.getElementById('prop-direction');
+            
+            // Angle Picker elements
+            const anglePickerWidget = document.getElementById('angle-picker-widget');
+            const anglePickerDial = document.getElementById('angle-picker-dial');
+            const anglePickerHandle = document.getElementById('angle-picker-handle');
 
             const STAGE_WIDTH = 480;
             const STAGE_HEIGHT = 360;
@@ -1185,7 +1234,7 @@
                     const angleValidator = (newValue) => {
                          if (getActiveSprite()) {
                             let sprite = getActiveSprite();
-                            sprite.direction = newValue;
+                            sprite.direction = Number(newValue);
                             updateSpriteAppearance(sprite.id);
                             updatePropertiesPanel();
                         }
@@ -2017,7 +2066,7 @@
                         e.target.value = null;
                     }
                 };
-                reader.readAsText(file);
+                reader.readText(file);
             };
 
             saveButton.addEventListener('click', saveProject);
@@ -2055,6 +2104,8 @@
                         updateSpriteAppearance(sprite.id);
                     }
                 });
+                
+                // For manually typing a value
                 propDirection.addEventListener('change', (e) => {
                     const sprite = getActiveSprite();
                     if (sprite) {
@@ -2062,6 +2113,21 @@
                         updateSpriteAppearance(sprite.id);
                     }
                 });
+                
+                // For opening the custom angle picker
+                propDirection.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sprite = getActiveSprite();
+                    if (!sprite) return;
+                    
+                    const inputRect = propDirection.getBoundingClientRect();
+                    anglePickerWidget.style.top = `${inputRect.bottom + 5}px`;
+                    anglePickerWidget.style.left = `${inputRect.left + (inputRect.width / 2) - (anglePickerWidget.offsetWidth / 2)}px`;
+                    anglePickerWidget.style.display = 'flex';
+                    
+                    anglePickerHandle.style.transform = `rotate(${sprite.direction - 90}deg)`;
+                });
+
                 propShow.addEventListener('click', () => {
                     const sprite = getActiveSprite();
                     if (sprite) {
@@ -2079,6 +2145,74 @@
                     }
                 });
             }
+            
+            // --- Custom Angle Picker Logic ---
+            let isDraggingAngle = false;
+
+            const updateAngleFromEvent = (e) => {
+                 const sprite = getActiveSprite();
+                 if (!sprite) return;
+
+                const dialRect = anglePickerDial.getBoundingClientRect();
+                const centerX = dialRect.left + dialRect.width / 2;
+                const centerY = dialRect.top + dialRect.height / 2;
+                
+                const pointer = e.touches ? e.touches[0] : e;
+
+                const deltaX = pointer.clientX - centerX;
+                const deltaY = pointer.clientY - centerY;
+                
+                // Calculate angle: 0 is up, clockwise
+                let degrees = Math.atan2(deltaX, -deltaY) * (180 / Math.PI);
+                if (degrees < 0) {
+                    degrees += 360;
+                }
+                degrees = Math.round(degrees);
+                if (degrees === 360) degrees = 0;
+
+                // Update everything
+                sprite.direction = degrees;
+                propDirection.value = degrees;
+                anglePickerHandle.style.transform = `rotate(${degrees - 90}deg)`;
+                updateSpriteAppearance(sprite.id);
+            };
+
+            anglePickerDial.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDraggingAngle = true;
+                updateAngleFromEvent(e);
+            });
+            anglePickerDial.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                isDraggingAngle = true;
+                updateAngleFromEvent(e);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDraggingAngle) {
+                    updateAngleFromEvent(e);
+                }
+            });
+            document.addEventListener('touchmove', (e) => {
+                if (isDraggingAngle) {
+                    updateAngleFromEvent(e);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDraggingAngle = false;
+            });
+             document.addEventListener('touchend', () => {
+                isDraggingAngle = false;
+            });
+
+            // Hide picker when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!anglePickerWidget.contains(e.target) && e.target !== propDirection) {
+                    anglePickerWidget.style.display = 'none';
+                }
+            });
+
 
             // --- Initial Setup ---
             createDefaultBackdrop();
