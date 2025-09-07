@@ -56,10 +56,6 @@
             left: 0;
             width: 100%;
             height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
             background-size: cover;
             background-position: center;
@@ -67,6 +63,8 @@
         }
         .sprite-wrapper {
             position: absolute;
+            top: 50%;
+            left: 50%;
             width: 80px;
             height: 80px;
             background-color: transparent;
@@ -74,7 +72,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transform: translate(calc(-50% + 0px), calc(-50% + 0px));
+            transform: translate(-50%, -50%);
             transition: transform 0.1s ease-out;
             z-index: 10;
             opacity: 1;
@@ -1398,4 +1396,5 @@
     </script>
 </body>
 </html>
+
 
