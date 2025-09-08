@@ -546,34 +546,9 @@
         .blocklyTreeRow.blocklyTreeSelected {
             background-color: #e4f2ff !important;
         }
-        .blocklyTreeRow .blocklyTreeLabel::before {
-            content: '';
-            display: block;
+        .kidi-category-icon {
             width: 28px;
             height: 28px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        /* Assign icons to categories using css-class */
-        .category-events .blocklyTreeLabel::before {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d1a000'><path d='M5 16.544V7.456c0-.58.683-.895 1.134-.526l7.85 4.544c.451.26.451.93 0 1.19l-7.85 4.544C5.683 17.44 5 17.123 5 16.544zM18 6h-2v12h2V6z' /></svg>");
-        }
-        .category-control .blocklyTreeLabel::before {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c45a11'><path d='M12 4c-4.418 0-8 3.582-8 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6zm1-7.586V8h-2v4.414l3.293 3.293 1.414-1.414L13 10.414z' /></svg>");
-        }
-        .category-motion .blocklyTreeLabel::before {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233e83f7'><path d='M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1.002 14.502-4.244-4.244L13 8l4.244 4.244-4.242 4.258z' /></svg>");
-        }
-        .category-looks .blocklyTreeLabel::before {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238a4cff'><path d='M12 2C6.486 2 2 6.486 2 12c0 3.553 1.846 6.63 4.566 8.332.148.066.33.024.437-.113.107-.137.07-.34-.063-.448C4.24 18.01 3 15.22 3 12c0-4.962 4.038-9 9-9s9 4.038 9 9-4.038 9-9 9c-.551 0-1-.449-1-1s.449-1 1-1c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7c0 1.294.358 2.502.984 3.558.125.208.04.473-.145.613-.185.14-.45.064-.59-.12C4.6 14.93 4 13.51 4 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z' /><path d='M11 7h2v6h-2zm0 8h2v2h-2z' /></svg>");
-        }
-        .category-sound .blocklyTreeLabel::before {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b858b8'><path d='M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z' /><path d='M14.225 10.225c.594 1.159.594 2.591 0 3.75l1.5 1.5c1.172-1.943 1.172-4.307 0-6.25l-1.5 1.5z' /><path d='M10 8.5v7l4-3.5-4-3.5z' /></svg>");
-        }
-        .category-operators .blocklyTreeLabel::before {
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23389a40'><path d='M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm4 11h-3v3h-2v-3H8v-2h3V8h2v3h3v2z' /></svg>");
         }
     </style>
 </head>
@@ -780,9 +755,9 @@
     
     <xml id="toolbox" style="display: none">
         <category 
-            name="אירועים" 
+            name="להפעיל" 
             colour="#FFD95A" 
-            css-class="category-events">
+            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFC107'><path d='M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z'/></svg>">
             <block type="event_when_flag_clicked"></block>
             <block type="event_when_stage_clicked"></block>
             <block type="event_when_key_pressed"></block>
@@ -790,7 +765,7 @@
         <category 
             name="בקרה" 
             colour="#FF6B1A"
-            css-class="category-control">
+            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c45a11'><path d='M12 4c-4.418 0-8 3.582-8 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6zm1-7.586V8h-2v4.414l3.293 3.293 1.414-1.414L13 10.414z' /></svg>">
             <block type="control_wait_secs">
                 <value name="SECS">
                     <shadow type="math_number">
@@ -810,7 +785,7 @@
         <category 
             name="תנועה" 
             colour="#4C97FF"
-            css-class="category-motion">
+            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233e83f7'><path d='M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z'/></svg>">
             <block type="motion_move_steps">
                 <value name="STEPS">
                     <shadow type="math_number">
@@ -858,7 +833,7 @@
         <category 
             name="מראה" 
             colour="#9966FF"
-            css-class="category-looks">
+            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238a4cff'><path d='M12 2C6.486 2 2 6.486 2 12c0 3.553 1.846 6.63 4.566 8.332.148.066.33.024.437-.113.107-.137.07-.34-.063-.448C4.24 18.01 3 15.22 3 12c0-4.962 4.038-9 9-9s9 4.038 9 9-4.038 9-9 9c-.551 0-1-.449-1-1s.449-1 1-1c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7c0 1.294.358 2.502.984 3.558.125.208.04.473-.145.613-.185.14-.45.064-.59-.12C4.6 14.93 4 13.51 4 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z' /><path d='M11 7h2v6h-2zm0 8h2v2h-2z' /></svg>">
             <block type="looks_say_for_secs">
                 <value name="MESSAGE">
                     <shadow type="text">
@@ -891,13 +866,13 @@
         <category 
             name="צליל" 
             colour="#CF63CF"
-            css-class="category-sound">
+            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b858b8'><path d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'></path></svg>">
              <block type="sound_play_until_done"></block>
         </category>
         <category 
             name="אופרטורים" 
             colour="#40BF4A"
-            css-class="category-operators">
+            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23389a40'><path d='M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm4 11h-3v3h-2v-3H8v-2h3V8h2v3h3v2z' /></svg>">
             <block type="operator_add"></block>
             <block type="operator_subtract"></block>
             <block type="operator_multiply"></block>
@@ -911,13 +886,40 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+             // START OF CUSTOM TOOLBOX RENDERER
+            class KidiToolboxCategory extends Blockly.ToolboxCategory {
+                createDom_() {
+                    super.createDom_(); // Let the parent class create the basic structure
+
+                    const iconUri = this.toolboxItemDef_['icon-uri'];
+                    if (iconUri) {
+                        const label = this.rowDiv_.querySelector('.blocklyTreeLabel');
+                        if (label) {
+                            const icon = document.createElement('img');
+                            icon.src = iconUri;
+                            icon.className = 'kidi-category-icon';
+                            // Prepend the icon to the label div
+                            label.insertBefore(icon, label.firstChild);
+                        }
+                    }
+                    return this.rowDiv_;
+                }
+            }
+
+            Blockly.registry.register(
+                Blockly.registry.Type.TOOLBOX_ITEM,
+                Blockly.ToolboxCategory.registrationName,
+                KidiToolboxCategory, 
+                true // Allow override
+            );
+            // END OF CUSTOM TOOLBOX RENDERER
+
+
             // Monkey-patch FieldImage to vertically align icons better.
-            // This is more robust than CSS as it hooks into Blockly's rendering.
             const originalInitView = Blockly.FieldImage.prototype.initView;
             Blockly.FieldImage.prototype.initView = function() {
                 originalInitView.call(this);
                 const yOffset = 3; // Pixels to shift down for better alignment
-                // We use a transform because Blockly might recalculate and override the 'y' attribute.
                 this.imageElement_.setAttribute('transform', `translate(0, ${yOffset})`);
             };
 
@@ -2034,11 +2036,11 @@
             function createDefaultBackdrop() {
                 const defaultBackdrop = document.createElement('div');
                 defaultBackdrop.classList.add('backdrop-card');
-                defaultBackdrop.style.backgroundImage = 'url("https://codejredu.github.io/test/assets/bg/space1.svg")';
-                defaultBackdrop.dataset.url = "https://codejredu.github.io/test/assets/bg/space1.svg";
+                defaultBackdrop.style.backgroundImage = 'url("https://codejredu.github.io/test/assets/bg/farm.svg")';
+                defaultBackdrop.dataset.url = "https://codejredu.github.io/test/assets/bg/farm.svg";
                 defaultBackdrop.classList.add('selected');
                 backdropsList.appendChild(defaultBackdrop);
-                document.getElementById('stage-area').style.backgroundImage = `url("https://codejredu.github.io/test/assets/bg/space1.svg")`;
+                document.getElementById('stage-area').style.backgroundImage = `url("https://codejredu.github.io/test/assets/bg/farm.svg")`;
             }
 
             function createDefaultSprite() {
@@ -2427,4 +2429,5 @@
     </script>
 </body>
 </html>
+
 
