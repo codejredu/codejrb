@@ -26,7 +26,6 @@
             align-items: flex-start;
             gap: 1.5rem;
             width: 100%;
-            max-width: 1400px;
             padding: 2rem;
             box-sizing: border-box;
             transition: all 0.3s ease-in-out;
@@ -249,6 +248,7 @@
             background-size: cover;
             background-position: center;
             transition: border-color 0.2s;
+            flex-shrink: 0;
         }
         .backdrop-card.selected {
             border-color: #4C97FF;
@@ -441,12 +441,10 @@
         /* Sprites Carousel with Slider */
         #sprites-list {
             flex-wrap: nowrap;
-            overflow-x: auto; /* Changed to auto to show scrollbar when needed */
+            overflow-x: auto;
             scroll-behavior: smooth;
-            padding-bottom: 1rem; /* More space for the scrollbar */
+            padding-bottom: 1rem;
         }
-        
-        /* Custom Scrollbar for Sprites List */
         #sprites-list::-webkit-scrollbar {
           height: 12px;
         }
@@ -461,6 +459,29 @@
         }
         #sprites-list::-webkit-scrollbar-thumb:hover {
           background-color: #6366f1;
+        }
+        
+        /* Backdrops Carousel with Slider */
+        #backdrops-list {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 1rem;
+        }
+        #backdrops-list::-webkit-scrollbar {
+          height: 12px;
+        }
+        #backdrops-list::-webkit-scrollbar-track {
+          background: #d1fae5; /* light-green-100 */
+          border-radius: 10px;
+        }
+        #backdrops-list::-webkit-scrollbar-thumb {
+          background-color: #34d399; /* green-400 */
+          border-radius: 10px;
+          border: 3px solid #d1fae5; /* light-green-100 */
+        }
+        #backdrops-list::-webkit-scrollbar-thumb:hover {
+          background-color: #10b981; /* green-500 */
         }
 
 
@@ -631,7 +652,10 @@
                     <h2>רקעים</h2>
                     <div id="add-backdrop-button" class="plus-button">+</div>
                 </div>
-                <div id="backdrops-list" class="flex flex-wrap gap-4 mt-4">
+                <div id="backdrops-carousel-wrapper" class="relative mt-4">
+                    <div id="backdrops-list" class="flex items-center gap-4">
+                        <!-- Backdrops will be dynamically added here -->
+                    </div>
                 </div>
                 <div id="background-gallery" class="gallery-container">
                     <button class="close-gallery-button" id="close-gallery-button">X</button>
