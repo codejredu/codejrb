@@ -192,26 +192,25 @@
             font-size: 1.5rem;
             cursor: pointer;
         }
-        .section-content {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
+        
         .sprite-card {
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            border: 2px solid transparent;
+            border: 2px solid #e5e7eb; /* Added gray border for separation */
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border-radius: 12px;
             padding: 0.5rem;
             cursor: pointer;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
             position: relative;
+            flex-shrink: 0;
         }
         .sprite-card.selected {
             border-color: #4C97FF;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .sprite-card img {
             width: 60px;
@@ -438,6 +437,32 @@
             background: #4C97FF;
             transform-origin: 0% 50%;
         }
+        
+        /* Sprites Carousel with Slider */
+        #sprites-list {
+            flex-wrap: nowrap;
+            overflow-x: auto; /* Changed to auto to show scrollbar when needed */
+            scroll-behavior: smooth;
+            padding-bottom: 1rem; /* More space for the scrollbar */
+        }
+        
+        /* Custom Scrollbar for Sprites List */
+        #sprites-list::-webkit-scrollbar {
+          height: 12px;
+        }
+        #sprites-list::-webkit-scrollbar-track {
+          background: #e0e7ff; 
+          border-radius: 10px;
+        }
+        #sprites-list::-webkit-scrollbar-thumb {
+          background-color: #818cf8; 
+          border-radius: 10px;
+          border: 3px solid #e0e7ff; 
+        }
+        #sprites-list::-webkit-scrollbar-thumb:hover {
+          background-color: #6366f1;
+        }
+
 
         /* Stage Expanded Styles */
         .container-wrapper.stage-expanded {
@@ -565,7 +590,10 @@
                     <h2>דמויות</h2>
                     <div id="add-sprite-button" class="plus-button">+</div>
                 </div>
-                <div id="sprites-list" class="section-content">
+                <div id="sprites-carousel-wrapper" class="relative mt-4">
+                     <div id="sprites-list" class="flex items-center gap-4">
+                        <!-- Sprites will be dynamically added here -->
+                    </div>
                 </div>
                 <div id="sprite-gallery" class="gallery-container">
                     <button class="close-gallery-button" id="close-sprite-gallery-button">X</button>
@@ -603,7 +631,7 @@
                     <h2>רקעים</h2>
                     <div id="add-backdrop-button" class="plus-button">+</div>
                 </div>
-                <div id="backdrops-list" class="section-content">
+                <div id="backdrops-list" class="flex flex-wrap gap-4 mt-4">
                 </div>
                 <div id="background-gallery" class="gallery-container">
                     <button class="close-gallery-button" id="close-gallery-button">X</button>
@@ -789,6 +817,8 @@
             const containerWrapper = document.getElementById('container-wrapper');
             const addSpriteButton = document.getElementById('add-sprite-button');
             const spritesList = document.getElementById('sprites-list');
+            const spritesCarouselWrapper = document.getElementById('sprites-carousel-wrapper');
+            
             const addBackdropButton = document.getElementById('add-backdrop-button');
             const backdropsList = document.getElementById('backdrops-list');
             const backdropsSection = document.getElementById('backdrops-section');
@@ -2232,7 +2262,6 @@
                     anglePickerWidget.style.display = 'none';
                 }
             });
-
 
             // --- Initial Setup ---
             createDefaultBackdrop();
