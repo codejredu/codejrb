@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -497,13 +497,24 @@
         }
         .container-wrapper.stage-expanded .right-panel,
         .container-wrapper.stage-expanded .section,
-        .container-wrapper.stage-expanded #stage-header,
         .container-wrapper.stage-expanded #sprite-properties-panel {
             display: none;
         }
         .container-wrapper.stage-expanded #stage-aspect-ratio-wrapper {
             height: 100%;
             padding-top: 0;
+        }
+        /* Keep stage controls visible in fullscreen but hide unnecessary buttons */
+        .container-wrapper.stage-expanded #stage-header {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 20;
+        }
+        .container-wrapper.stage-expanded #stage-header h2,
+        .container-wrapper.stage-expanded #run-button,
+        .container-wrapper.stage-expanded #reset-button {
+            display: none;
         }
         .hidden {
             display: none !important;
