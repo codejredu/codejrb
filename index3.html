@@ -1454,7 +1454,7 @@
 
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 24, 24, { alt: "compass icon", flipRtl: "false" }))
-                        .appendField('פנה לכיוון')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -1541,7 +1541,7 @@
             };
             Blockly.Blocks['looks_show'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 24, 24, { alt: "show icon", flipRtl: "false" })).appendField('הצג');
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 24, 24, { alt: "show icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1560,7 +1560,7 @@
             };
             Blockly.Blocks['looks_hide'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 24, 24, { alt: "hide icon", flipRtl: "false" })).appendField('הסתר');
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 24, 24, { alt: "hide icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1581,7 +1581,7 @@
                 init: function() {
                     this.appendValueInput("TRANSPARENCY").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/opacity.png", 24, 24, { alt: "opacity icon", flipRtl: "false" }))
-                        .appendField("שקיפות");
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1679,7 +1679,6 @@
             };
             Blockly.Blocks['motion_go_to_xy'] = {
                 init: function() {
-                    this.appendDummyInput().appendField("קפוץ אל");
                     this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("x:");
                     this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("y:");
                     this.setInputsInline(true);
@@ -1758,7 +1757,7 @@
                     this.appendValueInput("HEIGHT")
                         .setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test//assets/blocklyicon/jump.svg", 24, 24, { alt: "jump icon", flipRtl: "false" }))
-                        .appendField('קפוץ');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1897,7 +1896,7 @@
                 init: function() {
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/play_sound.svg", 24, 24, "*"))
-                        .appendField("נגן צליל")
+                        .appendField('\u00A0\u00A0')
                         .appendField(new Blockly.FieldDropdown([
                             ["מחיאות כפיים", "APPLAUSE"],
                             ["קפיצה", "BOING"],
