@@ -1003,6 +1003,7 @@
             let executionCancelled = false;
             let isRunning = false;
             let justDragged = false;
+            let dragStartX, dragStartY;
             
             const log = (message) => {
                 console.log(message);
@@ -1100,10 +1101,11 @@
                 });
 
                 spriteOnStage.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent stage click from also firing
                     if (justDragged) {
                         return;
                     }
-                    runSpriteClickScripts(id);
+                    handleSpriteClick(id); // Corrected function name
                 });
 
                 spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
@@ -1188,8 +1190,10 @@
             let initialMouseX, initialMouseY, initialSpriteX, initialSpriteY;
 
             const getPointerPosition = (e) => {
-                const isTouch = e.touches && e.touches.length > 0;
-                return { x: isTouch ? e.touches[0].clientX : e.clientX, y: isTouch ? e.touches[0].clientY : e.clientY };
+                if (e.touches && e.touches.length > 0) {
+                    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+                return { x: e.clientX, y: e.clientY };
             };
             
             const startDrag = (e, spriteId) => {
@@ -1200,6 +1204,8 @@
 
                 setActiveSprite(spriteId);
                 const { x, y } = getPointerPosition(e);
+                dragStartX = x;
+                dragStartY = y;
                 initialMouseX = x;
                 initialMouseY = y;
                 initialSpriteX = spriteData.x;
@@ -1227,8 +1233,20 @@
                 }
             };
 
-            const endDrag = () => {
+            const endDrag = (e) => {
                 if (isDragging && dragSpriteId) {
+                     const pointer = e.changedTouches ? e.changedTouches[0] : e;
+                    const deltaX = pointer.clientX - dragStartX;
+                    const deltaY = pointer.clientY - dragStartY;
+                    const distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+
+                    if (distance > 5) { // Threshold to differentiate click from drag
+                        justDragged = true;
+                        setTimeout(() => { justDragged = false; }, 50);
+                    } else {
+                        justDragged = false;
+                    }
+
                     const spriteData = sprites[dragSpriteId];
                     document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out';
                     updatePropertiesPanel(); // Final update
@@ -1236,8 +1254,6 @@
                 }
                 isDragging = false;
                 dragSpriteId = null;
-                justDragged = true;
-                setTimeout(() => { justDragged = false; }, 50);
             };
 
             stageArea.addEventListener('mousemove', drag);
@@ -1301,8 +1317,8 @@
             Blockly.Blocks['event_when_flag_clicked'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 24, 24, { alt: "green flag", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 48, 48, { alt: "green flag", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
                     this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
@@ -1314,8 +1330,8 @@
             Blockly.Blocks['event_when_sprite_clicked'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 24, 24, "*"))
-                        .appendField('כאשר לוחצים על דמות זו');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 48, 48, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
                     this.setTooltip("התחל את התסריט כאשר לוחצים על הדמות.");
@@ -1337,7 +1353,7 @@
 
             Blockly.Blocks['event_when_key_pressed'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 24, 24, { alt: "keyboard icon", flipRtl: "false" })).appendField(new Blockly.FieldDropdown([
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 36, 36, { alt: "keyboard icon", flipRtl: "false" })).appendField(new Blockly.FieldDropdown([
                         ["רווח", "SPACE"], ["חץ למעלה", "UP"], ["חץ למטה", "DOWN"], ["חץ ימינה", "RIGHT"], ["חץ שמאלה", "LEFT"]
                     ]), "KEY");
                     this.setNextStatement(true, null);
@@ -2031,18 +2047,20 @@
                     }
                 }
             }
+
+            function saveActiveSpriteWorkspace() {
+                 if (activeSpriteId && sprites[activeSpriteId]) {
+                    const dom = Blockly.Xml.workspaceToDom(workspace);
+                    sprites[activeSpriteId].workspaceXml = Blockly.Xml.domToText(dom);
+                }
+            }
             
             async function runCode() {
                 if (isRunning) {
                     log('תסריט כבר רץ. לחץ על עצור לפני הפעלה מחדש.');
                     return;
                 }
-
-                // Save the current workspace before running to capture changes for the active sprite
-                if (activeSpriteId && sprites[activeSpriteId]) {
-                    const dom = Blockly.Xml.workspaceToDom(workspace);
-                    sprites[activeSpriteId].workspaceXml = Blockly.Xml.domToText(dom);
-                }
+                saveActiveSpriteWorkspace();
 
                 isRunning = true;
                 executionCancelled = false;
@@ -2088,15 +2106,106 @@
                 }
             }
 
-            async function handleKeyPress(event) {
+            async function handleSpriteClick(spriteId) {
                 if (isRunning) return;
+                saveActiveSpriteWorkspace();
+                
+                const sprite = sprites[spriteId];
+                if (!sprite || !sprite.workspaceXml) return;
 
-                // Save the current workspace before running to capture changes for the active sprite
-                if (activeSpriteId && sprites[activeSpriteId]) {
-                    const dom = Blockly.Xml.workspaceToDom(workspace);
-                    sprites[activeSpriteId].workspaceXml = Blockly.Xml.domToText(dom);
+                log(`קליק על ${sprite.name}. מריץ תסריטים.`);
+                isRunning = true;
+                executionCancelled = false;
+
+                const tempWorkspace = new Blockly.Workspace();
+                Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                const topBlocks = tempWorkspace.getTopBlocks(true);
+                const clickScripts = topBlocks.filter(block => block.type === 'event_when_sprite_clicked');
+
+                const scriptPromises = clickScripts.map(startBlock => {
+                    let code = '';
+                    let currentBlock = startBlock.getNextBlock();
+                    while (currentBlock) {
+                        code += Blockly.JavaScript.blockToCode(currentBlock);
+                        code += `if (getExecutionCancelled()) return;\n`;
+                        currentBlock = currentBlock.getNextBlock();
+                    }
+                    return executeScript(code, sprite);
+                });
+                
+                tempWorkspace.dispose();
+
+                if (scriptPromises.length > 0) {
+                    try {
+                        await Promise.all(scriptPromises);
+                        if (!getExecutionCancelled()) {
+                            log(`התסריטים של ${sprite.name} הסתיימו.`);
+                        }
+                    } catch (e) {
+                        log('שגיאה בהרצת תסריט קליק: ' + e);
+                    } finally {
+                        isRunning = false;
+                    }
+                } else {
+                    isRunning = false;
+                }
+            }
+            
+            async function handleStageClick(event) {
+                // Ignore clicks on sprites
+                if (event.target.closest('.sprite-wrapper')) return;
+                if (isRunning) return;
+                saveActiveSpriteWorkspace();
+                
+                log('הבמה נלחצה. מריץ תסריטים.');
+                isRunning = true;
+                executionCancelled = false;
+                
+                const allScriptPromises = Object.values(sprites).map(sprite => {
+                     if (!sprite.workspaceXml) return [];
+                     const tempWorkspace = new Blockly.Workspace();
+                     Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                     const topBlocks = tempWorkspace.getTopBlocks(true);
+                     const stageClickScripts = topBlocks.filter(block => block.type === 'event_when_stage_clicked');
+                     
+                     const scriptPromises = stageClickScripts.map(startBlock => {
+                        let code = '';
+                        let currentBlock = startBlock.getNextBlock();
+                        while(currentBlock) {
+                            code += Blockly.JavaScript.blockToCode(currentBlock);
+                            code += `if (getExecutionCancelled()) return;\n`;
+                            currentBlock = currentBlock.getNextBlock();
+                        }
+                        return executeScript(code, sprite);
+                    });
+                    tempWorkspace.dispose();
+                    return scriptPromises;
+                }).flat();
+
+
+                if(allScriptPromises.length === 0) {
+                     log('לא נמצאו תסריטים של לחיצה על הבמה.');
+                     isRunning = false;
+                     return;
                 }
 
+                try {
+                    await Promise.all(allScriptPromises);
+                    if (!getExecutionCancelled()) {
+                        log('כל תסריטי הלחיצה על הבמה הסתיימו.');
+                    }
+                } catch (e) {
+                    log('שגיאה בהרצת תסריטי לחיצה על הבמה: ' + e);
+                } finally {
+                    isRunning = false;
+                }
+            }
+
+
+            async function handleKeyPress(event) {
+                if (isRunning) return;
+                saveActiveSpriteWorkspace();
+                
                 const keyMap = { 'SPACE': ' ', 'UP': 'ArrowUp', 'DOWN': 'ArrowDown', 'RIGHT': 'ArrowRight', 'LEFT': 'ArrowLeft' };
                 const pressedKey = event.key;
                 
@@ -2519,6 +2628,7 @@
             setupPropertiesPanelListeners();
 
             backdropsList.addEventListener('click', handleBackdropSelection);
+            stageArea.addEventListener('click', handleStageClick);
             
             addBackdropButton.addEventListener('click', () => {
                 backgroundGallery.classList.add('visible');
@@ -2545,3 +2655,4 @@
     </script>
 </body>
 </html>
+
