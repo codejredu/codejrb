@@ -915,9 +915,6 @@
             class CustomConstantProvider extends Blockly.zelos.ConstantProvider {
                 constructor() {
                     super();
-                }
-                init() {
-                    super.init();
                     this.STATEMENT_INPUT_MIN_HEIGHT = 48;
                 }
             }
@@ -1107,6 +1104,26 @@
                     updatePropertiesPanel();
                 }
             }
+
+            // Centralized backdrop switching logic
+            window.switchBackdrop = (url) => {
+                if (!url || url === 'NONE') return;
+                try {
+                    stageArea.style.backgroundImage = `url("${url}")`;
+
+                    document.querySelectorAll('.backdrop-card').forEach(card => card.classList.remove('selected'));
+                    
+                    const allCards = Array.from(document.querySelectorAll('.backdrop-card'));
+                    const cardToSelect = allCards.find(card => card.dataset.url === url);
+                    
+                    if (cardToSelect) {
+                        cardToSelect.classList.add('selected');
+                    }
+                    log(`הרקע הוחלף ל: ${url}`);
+                } catch (e) {
+                    console.error("Failed to switch backdrop:", e);
+                }
+            };
             
             const updateSpriteAppearance = (spriteId) => {
                 const spriteData = sprites[spriteId];
@@ -1816,14 +1833,10 @@
              Blockly.JavaScript['looks_switch_backdrop'] = function(block) {
                 const backdropUrl = block.getFieldValue('BACKDROP');
                 if (backdropUrl && backdropUrl !== 'NONE') {
-                    // Escape single quotes in the URL for the generated string
-                    const safeUrl = backdropUrl.replace(/'/g, "\\'");
+                    const safeUrl = backdropUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
                     return `
-                        document.getElementById('stage-area').style.backgroundImage = 'url("${safeUrl}")';
-                        document.querySelectorAll('.backdrop-card').forEach(card => card.classList.remove('selected'));
-                        const cardToSelect = document.querySelector('.backdrop-card[data-url="${safeUrl}"]');
-                        if(cardToSelect) cardToSelect.classList.add('selected');
-                        log('הרקע הוחלף ל: ${safeUrl}');
+                        window.switchBackdrop('${safeUrl}');
+                        await new Promise(r => setTimeout(r, 20)); // Short delay for rendering
                     `;
                 }
                 return ''; // Do nothing if no backdrop is selected
@@ -2558,9 +2571,7 @@
             function handleBackdropSelection(e) {
                 const url = e.target.dataset.url;
                 if (url) {
-                    document.getElementById('stage-area').style.backgroundImage = `url("${url}")`;
-                    document.querySelectorAll('.backdrop-card').forEach(card => card.classList.remove('selected'));
-                    e.target.classList.add('selected');
+                   window.switchBackdrop(url);
                 }
             }
 
@@ -2721,10 +2732,7 @@
                             backdropsList.appendChild(newBackdropCard);
                         });
 
-                        stageArea.style.backgroundImage = `url("${projectData.currentBackdrop}")`;
-                        document.querySelectorAll('.backdrop-card').forEach(card => {
-                            card.classList.toggle('selected', card.dataset.url === projectData.currentBackdrop);
-                        });
+                        window.switchBackdrop(projectData.currentBackdrop);
 
                         Object.values(projectData.sprites).forEach(loadSpriteFromData);
                         
