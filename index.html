@@ -1878,9 +1878,9 @@
                 init: function() {
                     this.appendValueInput("TIMES")
                         .setCheck("Number")
-                        .appendField("חזור")
+                        .appendField('\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
-                    this.appendDummyInput().appendField("פעמים");
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -1905,7 +1905,7 @@
             Blockly.Blocks['control_forever'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField("לעולמים")
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*"));
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
