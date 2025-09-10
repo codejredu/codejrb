@@ -137,6 +137,7 @@
             margin-bottom: 10px;
             opacity: 0;
             transition: opacity 0.3s ease;
+            z-index: 11; /* Make sure it's above other sprites */
         }
         .speech-bubble::after {
             content: '';
@@ -787,7 +788,6 @@
             icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFC107'><path d='M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z'/></svg>">
             <block type="event_when_flag_clicked"></block>
             <block type="event_when_sprite_clicked"></block>
-            <block type="event_when_stage_clicked"></block>
             <block type="event_when_key_pressed"></block>
             <block type="event_broadcast"></block>
             <block type="event_when_broadcast_received"></block>
@@ -885,13 +885,7 @@
             </block>
             <block type="looks_show"></block>
             <block type="looks_hide"></block>
-            <block type="looks_set_transparency">
-                <value name="TRANSPARENCY">
-                    <shadow type="math_number">
-                        <field name="NUM">50</field>
-                    </shadow>
-                </value>
-            </block>
+            <block type="looks_switch_backdrop"></block>
         </category>
         <category 
             name="צליל" 
@@ -917,6 +911,29 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+             // START OF CUSTOM RENDERER FOR LOOP BLOCKS
+            class CustomConstantProvider extends Blockly.zelos.ConstantProvider {
+                constructor() {
+                    super();
+                    this.STATEMENT_INPUT_MIN_HEIGHT = 48;
+                }
+            }
+
+            class CustomRenderer extends Blockly.zelos.Renderer {
+                constructor(name) {
+                    super(name);
+                }
+                makeConstants_() {
+                    return new CustomConstantProvider();
+                }
+            }
+            Blockly.registry.register(
+                Blockly.registry.Type.RENDERER,
+                'custom_renderer',
+                CustomRenderer
+            );
+            // END OF CUSTOM RENDERER
+
              // START OF CUSTOM TOOLBOX RENDERER
             class KidiToolboxCategory extends Blockly.ToolboxCategory {
                 createDom_() {
@@ -1410,22 +1427,58 @@
             };
             Blockly.JavaScript['event_when_sprite_clicked'] = function(block) { return ''; };
 
-            Blockly.Blocks['event_when_stage_clicked'] = {
-                init: function() {
-                    this.appendDummyInput().appendField("כאשר לוחצים על הבמה");
-                    this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
-                    this.setTooltip("הפעל את התסריט כאשר לוחצים על אזור הבמה.");
-                    this.setHelpUrl("");
-                }
-            };
-            Blockly.JavaScript['event_when_stage_clicked'] = function(block) { return ''; };
-
             Blockly.Blocks['event_when_key_pressed'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 36, 36, { alt: "keyboard icon", flipRtl: "false" })).appendField(new Blockly.FieldDropdown([
-                        ["רווח", "SPACE"], ["חץ למעלה", "UP"], ["חץ למטה", "DOWN"], ["חץ ימינה", "RIGHT"], ["חץ שמאלה", "LEFT"]
-                    ]), "KEY");
+                    const keyOptions = [
+                        [
+                            {
+                                src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24" viewBox="0 0 48 24"><rect x="1" y="1" width="46" height="22" rx="4" fill="%23fff" stroke="%23555" stroke-width="2"/><text x="24" y="16" font-family="Arial" font-size="12" text-anchor="middle" fill="%23000">רווח</text></svg>',
+                                width: 48,
+                                height: 24,
+                                alt: 'רווח'
+                            },
+                            'SPACE'
+                        ],
+                        [
+                             {
+                                src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="%23fff" stroke="%23555" stroke-width="2"/><path d="M12 8l-4 4h8z" fill="%23555"/></svg>',
+                                width: 24,
+                                height: 24,
+                                alt: 'חץ למעלה'
+                            },
+                            'UP'
+                        ],
+                        [
+                            {
+                                src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="%23fff" stroke="%23555" stroke-width="2"/><path d="M12 16l4-4H8z" fill="%23555"/></svg>',
+                                width: 24,
+                                height: 24,
+                                alt: 'חץ למטה'
+                            },
+                            'DOWN'
+                        ],
+                        [
+                            {
+                                src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="%23fff" stroke="%23555" stroke-width="2"/><path d="M14 12l-4 4V8z" fill="%23555"/></svg>',
+                                width: 24,
+                                height: 24,
+                                alt: 'חץ ימינה'
+                            },
+                            'RIGHT'
+                        ],
+                        [
+                            {
+                                src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="%23fff" stroke="%23555" stroke-width="2"/><path d="M10 12l4-4v8z" fill="%23555"/></svg>',
+                                width: 24,
+                                height: 24,
+                                alt: 'חץ שמאלה'
+                            },
+                            'LEFT'
+                        ]
+                    ];
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 36, 36, { alt: "keyboard icon", flipRtl: "false" }))
+                        .appendField(new Blockly.FieldDropdown(keyOptions), "KEY");
                     this.setNextStatement(true, null);
                     this.setColour("#FFD95A");
                     this.setTooltip("הפעל את התסריט כאשר המקש הנבחר נלחץ.");
@@ -1682,28 +1735,98 @@
                     }
                 `;
             };
-            Blockly.Blocks['looks_set_transparency'] = {
+            
+            // Custom field for backdrop selection
+            class FieldBackdrop extends Blockly.FieldDropdown {
+                constructor() {
+                    // We pass a function that will be called by Blockly when it needs the options.
+                    super(FieldBackdrop.generateOptions);
+                }
+
+                static generateOptions() {
+                    const backdropElements = document.querySelectorAll('#backdrops-list .backdrop-card');
+                    if (!backdropElements || backdropElements.length === 0) {
+                        return [['(אין רקעים)', 'NONE']];
+                    }
+                    
+                    const options = Array.from(backdropElements).map((card) => {
+                        const url = card.dataset.url;
+                        const name = url.substring(url.lastIndexOf('/') + 1).replace(/\.(svg|png|jpg|jpeg)$/i, '');
+                        return [
+                            {
+                                src: url,
+                                width: 48, // Thumbnail width
+                                height: 36, // Thumbnail height
+                                alt: name,
+                            },
+                            url // The value for this option is the URL string
+                        ];
+                    });
+                    
+                    return options.length > 0 ? options : [['(אין רקעים)', 'NONE']];
+                }
+
+                // Override to show image in the block itself
+                initView() {
+                    super.initView();
+                    this.imageElement_ = Blockly.utils.dom.createSvgElement('image', {
+                        'height': '36px',
+                        'width': '48px',
+                        'y': -10, // Adjust vertical position
+                        'x': 5
+                    }, this.fieldGroup_);
+                    this.updateImageView_();
+                }
+
+                doValueUpdate_(newValue) {
+                    super.doValueUpdate_(newValue);
+                    this.updateImageView_();
+                }
+
+                updateImageView_() {
+                    if (this.value_ && this.imageElement_ && this.value_ !== 'NONE') {
+                        this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', this.value_);
+                         if (this.textElement_) {
+                           this.textElement_.style.display = 'none';
+                        }
+                    } else if (this.imageElement_) {
+                        this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '');
+                         if (this.textElement_) {
+                           this.textElement_.style.display = 'block';
+                        }
+                    }
+                }
+            }
+            Blockly.fieldRegistry.register('field_backdrop', FieldBackdrop);
+
+            Blockly.Blocks['looks_switch_backdrop'] = {
                 init: function() {
-                    this.appendValueInput("TRANSPARENCY").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/opacity.png", 34, 34, { alt: "opacity icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/backdrop.svg", 34, 34, "*"))
+                        .appendField(new FieldBackdrop(), 'BACKDROP');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
-                    this.setTooltip("קבע את רמת השקיפות של הדמות (0-100).");
+                    this.setTooltip("משנה את הרקע של הבמה.");
                 }
             };
-            Blockly.JavaScript['looks_set_transparency'] = function(block) {
-                const transparency = Blockly.JavaScript.valueToCode(block, 'TRANSPARENCY', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-                return `
-                    if (sprite) {
-                        sprite.opacity = 1 - ((${transparency}) / 100);
-                        updateSpriteAppearance(sprite.id);
-                        window.updateActiveSpritePanel();
-                        log('שקיפות ' + sprite.name + ' נקבעה ל-' + (${transparency}) + '%.');
-                    }
-                `;
+             Blockly.JavaScript['looks_switch_backdrop'] = function(block) {
+                const backdropUrl = block.getFieldValue('BACKDROP');
+                if (backdropUrl && backdropUrl !== 'NONE') {
+                    // Escape single quotes in the URL for the generated string
+                    const safeUrl = backdropUrl.replace(/'/g, "\\'");
+                    return `
+                        document.getElementById('stage-area').style.backgroundImage = 'url("${safeUrl}")';
+                        document.querySelectorAll('.backdrop-card').forEach(card => card.classList.remove('selected'));
+                        const cardToSelect = document.querySelector('.backdrop-card[data-url="${safeUrl}"]');
+                        if(cardToSelect) cardToSelect.classList.add('selected');
+                        log('הרקע הוחלף ל: ${safeUrl}');
+                    `;
+                }
+                return ''; // Do nothing if no backdrop is selected
             };
+
+
             
             Blockly.Blocks['control_wait_secs'] = {
                 init: function() {
@@ -1739,8 +1862,9 @@
                 init: function() {
                     this.appendValueInput("TIMES")
                         .setCheck("Number")
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 34, 34, "*"))
-                        .appendField('\u00A0\u00A0\u00A0');
+                        .appendField("חזור")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
+                    this.appendDummyInput().appendField("פעמים");
                     this.setInputsInline(true);
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -1765,8 +1889,8 @@
             Blockly.Blocks['control_forever'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 34, 34, "*"))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'); // Add spacing to match width
+                        .appendField("לעולמים")
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*"));
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
                     this.setColour("#FF6B1A");
@@ -2029,6 +2153,7 @@
             
             workspace = Blockly.inject('blockly-area', {
                 toolbox: document.getElementById('toolbox'),
+                renderer: 'custom_renderer',
                 rtl: true,
                 zoom: {
                     controls: true,
@@ -2153,7 +2278,7 @@
                                 runCode();
                                 return; // Handled
                             }
-                            if (block.type === 'event_when_sprite_clicked' || block.type === 'event_when_stage_clicked') {
+                            if (block.type === 'event_when_sprite_clicked') {
                                 runScriptStack(block);
                                 return; // Handled
                             }
@@ -2356,57 +2481,6 @@
                     isRunning = false;
                 }
             }
-            
-            async function handleStageClick(event) {
-                // Ignore clicks on sprites
-                if (event.target.closest('.sprite-wrapper')) return;
-                if (isRunning) return;
-                saveActiveSpriteWorkspace();
-                
-                log('הבמה נלחצה. מריץ תסריטים.');
-                isRunning = true;
-                executionCancelled = false;
-                
-                const allScriptPromises = Object.values(sprites).map(sprite => {
-                     if (!sprite.workspaceXml) return [];
-                     const tempWorkspace = new Blockly.Workspace();
-                     Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
-                     const topBlocks = tempWorkspace.getTopBlocks(true);
-                     const stageClickScripts = topBlocks.filter(block => block.type === 'event_when_stage_clicked');
-                     
-                     const scriptPromises = stageClickScripts.map(startBlock => {
-                        let code = '';
-                        let currentBlock = startBlock.getNextBlock();
-                        while(currentBlock) {
-                            code += Blockly.JavaScript.blockToCode(currentBlock);
-                            code += `if (getExecutionCancelled()) return;\n`;
-                            currentBlock = currentBlock.getNextBlock();
-                        }
-                        return executeScript(code, sprite);
-                    });
-                    tempWorkspace.dispose();
-                    return scriptPromises;
-                }).flat();
-
-
-                if(allScriptPromises.length === 0) {
-                     log('לא נמצאו תסריטים של לחיצה על הבמה.');
-                     isRunning = false;
-                     return;
-                }
-
-                try {
-                    await Promise.all(allScriptPromises);
-                    if (!getExecutionCancelled()) {
-                        log('כל תסריטי הלחיצה על הבמה הסתיימו.');
-                    }
-                } catch (e) {
-                    log('שגיאה בהרצת תסריטי לחיצה על הבמה: ' + e);
-                } finally {
-                    isRunning = false;
-                }
-            }
-
 
             async function handleKeyPress(event) {
                 if (isRunning) return;
@@ -2490,16 +2564,11 @@
             function handleGallerySelection(e) {
                 const url = e.target.src;
                 if (url) {
-                    document.getElementById('stage-area').style.backgroundImage = `url("${url}")`;
-                    
                     const newBackdropCard = document.createElement('div');
                     newBackdropCard.classList.add('backdrop-card');
                     newBackdropCard.style.backgroundImage = `url("${url}")`;
                     newBackdropCard.dataset.url = url;
                     
-                    document.querySelectorAll('.backdrop-card').forEach(card => card.classList.remove('selected'));
-                    
-                    newBackdropCard.classList.add('selected');
                     backdropsList.appendChild(newBackdropCard);
 
                     backgroundGallery.classList.remove('visible');
@@ -2562,10 +2631,13 @@
                     const dom = Blockly.Xml.workspaceToDom(workspace);
                     sprites[activeSpriteId].workspaceXml = Blockly.Xml.domToText(dom);
                 }
-                const backdropUrl = stageArea.style.backgroundImage.replace(/url\((['"])?(.*?)\1\)/, '$2');
+                const backdrops = Array.from(document.querySelectorAll('#backdrops-list .backdrop-card')).map(card => card.dataset.url);
+                const currentBackdrop = stageArea.style.backgroundImage.replace(/url\((['"])?(.*?)\1\)/, '$2');
+
                 const projectData = {
                     sprites: sprites,
-                    backdropUrl: backdropUrl
+                    backdrops: backdrops,
+                    currentBackdrop: currentBackdrop
                 };
 
                 const dataStr = JSON.stringify(projectData, null, 2);
@@ -2623,7 +2695,7 @@
                     try {
                         const projectData = JSON.parse(event.target.result);
 
-                        if (!projectData.sprites || !projectData.backdropUrl) {
+                        if (!projectData.sprites || !projectData.backdrops) {
                             throw new Error("קובץ פרויקט לא תקין.");
                         }
                         
@@ -2638,12 +2710,18 @@
                         workspace.clear();
                         backdropsList.innerHTML = '';
                         
-                        stageArea.style.backgroundImage = `url("${projectData.backdropUrl}")`;
-                        const newBackdropCard = document.createElement('div');
-                        newBackdropCard.classList.add('backdrop-card', 'selected');
-                        newBackdropCard.style.backgroundImage = `url("${projectData.backdropUrl}")`;
-                        newBackdropCard.dataset.url = projectData.backdropUrl;
-                        backdropsList.appendChild(newBackdropCard);
+                        projectData.backdrops.forEach(url => {
+                            const newBackdropCard = document.createElement('div');
+                            newBackdropCard.classList.add('backdrop-card');
+                            newBackdropCard.style.backgroundImage = `url("${url}")`;
+                            newBackdropCard.dataset.url = url;
+                            backdropsList.appendChild(newBackdropCard);
+                        });
+
+                        stageArea.style.backgroundImage = `url("${projectData.currentBackdrop}")`;
+                        document.querySelectorAll('.backdrop-card').forEach(card => {
+                            card.classList.toggle('selected', card.dataset.url === projectData.currentBackdrop);
+                        });
 
                         Object.values(projectData.sprites).forEach(loadSpriteFromData);
                         
@@ -2656,7 +2734,6 @@
 
                     } catch (error) {
                         console.error("שגיאה בטעינת הפרויקט:", error);
-                        // Using console.error instead of alert as per instructions.
                     } finally {
                         e.target.value = null;
                     }
@@ -2834,7 +2911,6 @@
             setupPropertiesPanelListeners();
 
             backdropsList.addEventListener('click', handleBackdropSelection);
-            stageArea.addEventListener('click', handleStageClick);
             
             addBackdropButton.addEventListener('click', () => {
                 backgroundGallery.classList.add('visible');
@@ -2861,9 +2937,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
 
