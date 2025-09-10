@@ -915,6 +915,9 @@
             class CustomConstantProvider extends Blockly.zelos.ConstantProvider {
                 constructor() {
                     super();
+                }
+                init() {
+                    super.init();
                     this.STATEMENT_INPUT_MIN_HEIGHT = 48;
                 }
             }
@@ -1802,7 +1805,7 @@
             Blockly.Blocks['looks_switch_backdrop'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/backdrop.svg", 34, 34, "*"))
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/bg/bgimage.svg", 34, 34, "*"))
                         .appendField(new FieldBackdrop(), 'BACKDROP');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
