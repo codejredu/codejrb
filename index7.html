@@ -97,10 +97,18 @@
             background-position: center;
             border-radius: 12px;
         }
-        .sprite-wrapper {
+         .sprite-container {
             position: absolute;
             top: 50%;
             left: 50%;
+            width: 1px;
+            height: 1px;
+            visibility: hidden; /* Hide the container itself */
+        }
+        .sprite-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 80px; /* Base size */
             height: 80px; /* Base size */
             background-color: transparent;
@@ -108,11 +116,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s ease-out, clip-path 0.2s ease-out;
+            transform-origin: center center;
             z-index: 10;
             opacity: 1;
             cursor: grab;
+            visibility: visible; /* Make the wrapper visible */
+            transform: translate(-50%, -50%); /* Center the wrapper on the container's point */
         }
         .sprite-wrapper:active {
             cursor: grabbing;
@@ -1126,62 +1135,29 @@
                 const spriteData = sprites[spriteId];
                 if (!spriteData) return;
 
-                const spriteEl = document.getElementById(spriteData.id);
-                if (!spriteEl) return;
+                const container = document.getElementById(`container-${spriteData.id}`);
+                const wrapper = document.getElementById(spriteData.id);
+                
+                if (container && wrapper) {
+                    const rect = stageArea.getBoundingClientRect();
+                    const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
+                    const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
+                    
+                    const baseSize = 80;
+                    const newSize = baseSize * (spriteData.size / 100);
 
-                const rect = stageArea.getBoundingClientRect();
-                const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
-                const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
-                
-                const baseSize = 80;
-                const newSize = baseSize * (spriteData.size / 100);
+                    // Apply styles to the main wrapper inside the container
+                    wrapper.style.width = `${newSize}px`;
+                    wrapper.style.height = `${newSize}px`;
+                    wrapper.style.opacity = spriteData.opacity;
+                    
+                    // Position the container, and rotate the wrapper
+                    container.style.transform = `translate(${stageX}px, ${stageY}px)`;
+                    wrapper.style.transform = `translate(-50%, -50%) rotate(${spriteData.direction - 90}deg)`;
 
-                // חישוב גבולות הבמה ביחס לדמות
-                const halfWidth = STAGE_WIDTH / 2;
-                const halfHeight = STAGE_HEIGHT / 2;
-                
-                // חישוב איזה חלק של הדמות צריך להיות נראה
-                let clipTop = 0, clipRight = 100, clipBottom = 100, clipLeft = 0;
-                
-                // בדיקה אם הדמות יוצאת מהגבולות ויצירת clip path מתאים
-                if (spriteData.x + newSize/2 > halfWidth) {
-                    // יוצאת מימין
-                    const overflowRight = (spriteData.x + newSize/2 - halfWidth) / newSize * 100;
-                    clipRight = Math.max(0, 100 - overflowRight);
+                    // After any visual update, check for collisions
+                    checkCollisions();
                 }
-                
-                if (spriteData.x - newSize/2 < -halfWidth) {
-                    // יוצאת משמאל
-                    const overflowLeft = (-halfWidth - (spriteData.x - newSize/2)) / newSize * 100;
-                    clipLeft = Math.min(100, overflowLeft);
-                }
-                
-                if (spriteData.y + newSize/2 > halfHeight) {
-                    // יוצאת מלמעלה
-                    const overflowTop = (spriteData.y + newSize/2 - halfHeight) / newSize * 100;
-                    clipTop = Math.min(100, overflowTop);
-                }
-                
-                if (spriteData.y - newSize/2 < -halfHeight) {
-                    // יוצאת מלמטה
-                    const overflowBottom = (-halfHeight - (spriteData.y - newSize/2)) / newSize * 100;
-                    clipBottom = Math.max(0, 100 - overflowBottom);
-                }
-
-                // יישום העדכונים
-                spriteEl.style.width = `${newSize}px`;
-                spriteEl.style.height = `${newSize}px`;
-                spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${spriteData.direction - 90}deg)`;
-                spriteEl.style.opacity = spriteData.opacity;
-                
-                // יישום clipping אם הדמות יוצאת מהגבולות
-                if (clipTop > 0 || clipRight < 100 || clipBottom < 100 || clipLeft > 0) {
-                    spriteEl.style.clipPath = `inset(${clipTop}% ${100-clipRight}% ${100-clipBottom}% ${clipLeft}%)`;
-                } else {
-                    spriteEl.style.clipPath = 'none';
-                }
-
-                checkCollisions();
             };
             
             const updatePropertiesPanel = () => {
@@ -1232,29 +1208,45 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                const spriteOnStage = document.createElement('div');
-                spriteOnStage.classList.add('sprite-wrapper');
-                spriteOnStage.id = id;
-                spriteOnStage.innerHTML = `
+                // New structure with a container for seamless wrapping
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `
                     <img src="${imageUrl}" alt="${name}">
                     <div class="speech-bubble"></div>
                 `;
-                stageArea.appendChild(spriteOnStage);
+
+                // Create clones for wrapping effect
+                const clone1 = mainSprite.cloneNode(true);
+                const clone2 = mainSprite.cloneNode(true);
+                const clone3 = mainSprite.cloneNode(true);
+
+                spriteContainer.appendChild(mainSprite);
+                spriteContainer.appendChild(clone1);
+                spriteContainer.appendChild(clone2);
+                spriteContainer.appendChild(clone3);
+                
+                stageArea.appendChild(spriteContainer);
+                
+                const allWrappers = [mainSprite, clone1, clone2, clone3];
+                allWrappers.forEach(wrapper => {
+                    wrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (justDragged) return;
+                        handleSpriteClick(id);
+                    });
+                    wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                    wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
+                });
                 
                 spriteCard.addEventListener('click', () => {
                     setActiveSprite(id);
                 });
-
-                spriteOnStage.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent stage click from also firing
-                    if (justDragged) {
-                        return;
-                    }
-                    handleSpriteClick(id); // Corrected function name
-                });
-
-                spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
-                spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, id));
                 spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteSprite(id);
@@ -1266,8 +1258,8 @@
             };
 
             const deleteSprite = (id) => {
-                document.getElementById(id).remove();
-                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`).remove();
+                document.getElementById(`container-${id}`)?.remove();
+                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
                 
                 delete sprites[id];
 
@@ -1278,7 +1270,6 @@
                     if (firstSpriteId) {
                         setActiveSprite(firstSpriteId);
                     } else {
-                        // No sprites left, hide panel
                         updatePropertiesPanel();
                     }
                 }
@@ -1393,7 +1384,7 @@
                     }
 
                     const spriteData = sprites[dragSpriteId];
-                    document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out, clip-path 0.2s ease-out';
+                    document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out';
                     updatePropertiesPanel(); // Final update
                     log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
                 }
@@ -1618,4 +1609,1523 @@
                         const spriteHalfWidth = spriteLogicalWidth / 2;
                         const spriteHalfHeight = spriteLogicalHeight / 2;
 
-                        // טיפול בעקיפה חלקה - ציר X (שמאל-
+                        if (sprite.x - spriteHalfWidth > halfWidth) {
+                            sprite.x = -halfWidth - spriteHalfWidth;
+                        }
+                        if (sprite.x + spriteHalfWidth < -halfWidth) {
+                            sprite.x = halfWidth + spriteHalfWidth;
+                        }
+                        if (sprite.y - spriteHalfHeight > halfHeight) {
+                            sprite.y = -halfHeight - spriteHalfHeight;
+                        }
+                        if (sprite.y + spriteHalfHeight < -halfHeight) {
+                            sprite.y = halfHeight + spriteHalfHeight;
+                        }
+
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' זזה ' + (${steps}) + ' צעדים.');
+                        // A minimal delay to allow UI to render in fast loops without being noticeable.
+                        await new Promise(resolve => {
+                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 10);
+                            const checkCancelId = setInterval(() => {
+                                if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
+                            }, 10);
+                        });
+                    }
+                `;
+            };
+            Blockly.Blocks['motion_turn_right_degrees'] = {
+                init: function() {
+                    this.appendValueInput("DEGREES").setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 34, 34, { alt: "turn right icon", flipRtl: "false" }))
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#4C97FF");
+                    this.setTooltip("סובב את הדמות ימינה.");
+                }
+            };
+            Blockly.JavaScript['motion_turn_right_degrees'] = function(block) {
+                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
+                return `
+                    if (sprite) {
+                         sprite.direction += (${degrees});
+                         updateSpriteAppearance(sprite.id);
+                         window.updateActiveSpritePanel();
+                        log(sprite.name + ' הסתובבה ימינה ב-' + (${degrees}) + ' מעלות.');
+                    }
+                `;
+            };
+            Blockly.Blocks['motion_turn_left_degrees'] = {
+                init: function() {
+                    this.appendValueInput("DEGREES").setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }));
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#4C97FF");
+                    this.setTooltip("סובב את הדמות שמאלה.");
+                }
+            };
+            Blockly.JavaScript['motion_turn_left_degrees'] = function(block) {
+                const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
+                return `
+                    if (sprite) {
+                        sprite.direction -= (${degrees});
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' הסתובבה שמאלה ב-' + (${degrees}) + ' מעלות.');
+                    }
+                `;
+            };
+            
+            Blockly.Blocks['motion_set_direction'] = {
+                init: function() {
+                    const angleValidator = (newValue) => {
+                         if (getActiveSprite()) {
+                            let sprite = getActiveSprite();
+                            sprite.direction = Number(newValue);
+                            updateSpriteAppearance(sprite.id);
+                            updatePropertiesPanel();
+                        }
+                        return newValue;
+                    };
+
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 34, 34, { alt: "compass icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0')
+                        .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#4C97FF");
+                    this.setTooltip("קבע את כיוון הדמות.");
+                }
+            };
+            Blockly.JavaScript['motion_set_direction'] = function(block) {
+                const degrees = block.getFieldValue('DEGREES');
+                return `
+                    if (sprite) {
+                        sprite.direction = ${degrees};
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' קבעה כיוון ל-' + ${degrees} + ' מעלות.');
+                    }
+                `;
+            };
+            
+            Blockly.Blocks['looks_say_for_secs'] = {
+                init: function() {
+                    this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 34, 34, { alt: "say icon", flipRtl: "false" }));
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT);
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("גרום לדמות לומר הודעה למשך מספר שניות.");
+                }
+            };
+            Blockly.JavaScript['looks_say_for_secs'] = function(block) {
+                const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "''";
+                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2';
+                return `
+                    if (sprite) {
+                        const spriteEl = document.getElementById(sprite.id);
+                        const bubble = spriteEl.querySelector('.speech-bubble');
+                        bubble.textContent = ${message};
+                        bubble.classList.add('visible');
+                        log(sprite.name + ' אומרת: ' + ${message});
+
+                        await new Promise(resolve => {
+                            const timeoutId = setTimeout(() => {
+                                bubble.classList.remove('visible');
+                                clearInterval(checkCancelId);
+                                resolve();
+                            }, (${secs}) * 1000);
+                            const checkCancelId = setInterval(() => {
+                                if (getExecutionCancelled()) {
+                                    clearTimeout(timeoutId);
+                                    clearInterval(checkCancelId);
+                                    bubble.classList.remove('visible');
+                                    resolve();
+                                }
+                            }, 50);
+                        });
+                    }
+                `;
+            };
+            Blockly.Blocks['looks_say'] = {
+                init: function() {
+                    this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 34, 34, { alt: "say icon", flipRtl: "false" }));
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("גרום לדמות לומר הודעה.");
+                }
+            };
+            Blockly.JavaScript['looks_say'] = function(block) {
+                const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "''";
+                return `
+                    if (sprite) {
+                        const spriteEl = document.getElementById(sprite.id);
+                        const bubble = spriteEl.querySelector('.speech-bubble');
+                        bubble.textContent = ${message};
+                        bubble.classList.add('visible');
+                        log(sprite.name + ' אומרת: ' + ${message});
+                    }
+                `;
+            };
+            Blockly.Blocks['looks_show'] = {
+                init: function() {
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 34, 34, { alt: "show icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("הצג את הדמות.");
+                }
+            };
+            Blockly.JavaScript['looks_show'] = function(block) {
+                return `
+                    if (sprite) {
+                        sprite.opacity = 1;
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' הוצגה.');
+                    }
+                `;
+            };
+            Blockly.Blocks['looks_hide'] = {
+                init: function() {
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 34, 34, { alt: "hide icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("הסתר את הדמות.");
+                }
+            };
+            Blockly.JavaScript['looks_hide'] = function(block) {
+                return `
+                    if (sprite) {
+                        sprite.opacity = 0;
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' הוסתרה.');
+                    }
+                `;
+            };
+            
+            // Custom field for backdrop selection
+            class FieldBackdrop extends Blockly.FieldDropdown {
+                constructor() {
+                    // We pass a function that will be called by Blockly when it needs the options.
+                    super(FieldBackdrop.generateOptions);
+                }
+
+                static generateOptions() {
+                    const backdropElements = document.querySelectorAll('#backdrops-list .backdrop-card');
+                    if (!backdropElements || backdropElements.length === 0) {
+                        return [['(אין רקעים)', 'NONE']];
+                    }
+                    
+                    const options = Array.from(backdropElements).map((card) => {
+                        const url = card.dataset.url;
+                        const name = url.substring(url.lastIndexOf('/') + 1).replace(/\.(svg|png|jpg|jpeg)$/i, '');
+                        return [
+                            {
+                                src: url,
+                                width: 48, // Thumbnail width
+                                height: 36, // Thumbnail height
+                                alt: name,
+                            },
+                            url // The value for this option is the URL string
+                        ];
+                    });
+                    
+                    return options.length > 0 ? options : [['(אין רקעים)', 'NONE']];
+                }
+
+                // Override to show image in the block itself
+                initView() {
+                    super.initView();
+                    this.imageElement_ = Blockly.utils.dom.createSvgElement('image', {
+                        'height': '36px',
+                        'width': '48px',
+                        'y': -10, // Adjust vertical position
+                        'x': 5
+                    }, this.fieldGroup_);
+                    this.updateImageView_();
+                }
+
+                doValueUpdate_(newValue) {
+                    super.doValueUpdate_(newValue);
+                    this.updateImageView_();
+                }
+
+                updateImageView_() {
+                    if (this.value_ && this.imageElement_ && this.value_ !== 'NONE') {
+                        this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', this.value_);
+                         if (this.textElement_) {
+                           this.textElement_.style.display = 'none';
+                        }
+                    } else if (this.imageElement_) {
+                        this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '');
+                         if (this.textElement_) {
+                           this.textElement_.style.display = 'block';
+                        }
+                    }
+                }
+            }
+            Blockly.fieldRegistry.register('field_backdrop', FieldBackdrop);
+
+            Blockly.Blocks['looks_switch_backdrop'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/bg/bgimage.svg", 34, 34, "*"))
+                        .appendField(new FieldBackdrop(), 'BACKDROP');
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("משנה את הרקע של הבמה.");
+                }
+            };
+             Blockly.JavaScript['looks_switch_backdrop'] = function(block) {
+                const backdropUrl = block.getFieldValue('BACKDROP');
+                if (backdropUrl && backdropUrl !== 'NONE') {
+                    const safeUrl = backdropUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    return `
+                        window.switchBackdrop('${safeUrl}');
+                        await new Promise(r => setTimeout(r, 20)); // Short delay for rendering
+                    `;
+                }
+                return ''; // Do nothing if no backdrop is selected
+            };
+
+
+            
+            Blockly.Blocks['control_wait_secs'] = {
+                init: function() {
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/wait.png", 34, 34, "*"));
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#FF6B1A");
+                    this.setTooltip("המתן למשך מספר שניות.");
+                }
+            };
+            Blockly.JavaScript['control_wait_secs'] = function(block) {
+                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                return `
+                    log('המתנה של ' + (${secs}) + ' שניות...');
+                    await new Promise(resolve => {
+                        const timeoutId = setTimeout(() => {
+                            clearInterval(checkCancelId);
+                            resolve();
+                        }, (${secs}) * 1000);
+                        const checkCancelId = setInterval(() => {
+                            if (getExecutionCancelled()) {
+                                clearTimeout(timeoutId);
+                                clearInterval(checkCancelId);
+                                resolve();
+                            }
+                        }, 50);
+                    });
+                `;
+            };
+
+            Blockly.Blocks['control_repeat_times'] = {
+                init: function() {
+                    this.appendValueInput("TIMES")
+                        .setCheck("Number")
+                        .appendField("חזור")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
+                    this.appendDummyInput().appendField("פעמים");
+                    this.setInputsInline(true);
+                    this.appendStatementInput("DO").setCheck(null);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#FF6B1A");
+                    this.setTooltip("חזור על הבלוקים שבפנים מספר פעמים.");
+                }
+            };
+            Blockly.JavaScript['control_repeat_times'] = function(block) {
+                const times = Blockly.JavaScript.valueToCode(block, 'TIMES', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+                const branch = Blockly.JavaScript.statementToCode(block, 'DO');
+                return `
+                    for (let i = 0; i < (${times}); i++) {
+                        if (getExecutionCancelled()) break;
+                        log('חזרה מספר: ' + (i + 1));
+                        ${branch}
+                        if (getExecutionCancelled()) break;
+                    }
+                `;
+            };
+
+            Blockly.Blocks['control_forever'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField("לעולמים")
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*"));
+                    this.appendStatementInput("DO").setCheck(null);
+                    this.setPreviousStatement(true, null);
+                    this.setColour("#FF6B1A");
+                    this.setTooltip("חזור על הבלוקים שבפנים לנצח.");
+                }
+            };
+            Blockly.JavaScript['control_forever'] = function(block) {
+                const branch = Blockly.JavaScript.statementToCode(block, 'DO');
+                return `
+                    while(!getExecutionCancelled()) {
+                        ${branch}
+                        await new Promise(r => setTimeout(r, 10)); // Yield to event loop
+                    }
+                `;
+            };
+            Blockly.Blocks['motion_go_to_xy'] = {
+                init: function() {
+                    this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("x:");
+                    this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("y:");
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#4C97FF");
+                    this.setTooltip("הזז את הדמות למיקום ספציפי על הבמה.");
+                }
+            };
+            Blockly.JavaScript['motion_go_to_xy'] = function(block) {
+                const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                return `
+                    if (sprite) {
+                        sprite.x = (${x});
+                        sprite.y = (${y});
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' עברה למיקום: ' + sprite.x.toFixed(0) + ', ' + sprite.y.toFixed(0));
+                    }
+                `;
+            };
+            Blockly.Blocks['motion_glide_to_xy'] = {
+                init: function() {
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("גלוש");
+                    this.appendDummyInput().appendField("שניות למיקום");
+                    this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("x:");
+                    this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("y:");
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#4C97FF");
+                    this.setTooltip("החלק את הדמות בצורה חלקה למיקום ספציפי.");
+                }
+            };
+            Blockly.JavaScript['motion_glide_to_xy'] = function(block) {
+                const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+                const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+                return `
+                    if (sprite) {
+                        await new Promise(resolve => {
+                            const startX = sprite.x;
+                            const startY = sprite.y;
+                            const endX = (${x});
+                            const endY = (${y});
+                            const duration = (${secs}) * 1000;
+                            const startTime = Date.now();
+                            
+                            const animate = () => {
+                                if (getExecutionCancelled()) { resolve(); return; }
+                                const elapsed = Date.now() - startTime;
+                                const progress = Math.min(elapsed / duration, 1);
+                                
+                                sprite.x = startX + (endX - startX) * progress;
+                                sprite.y = startY + (endY - startY) * progress;
+                                
+                                updateSpriteAppearance(sprite.id);
+                                window.updateActiveSpritePanel();
+                                
+                                if (progress < 1) {
+                                    requestAnimationFrame(animate);
+                                } else {
+                                    log(sprite.name + ' סיימה לגלוש.');
+                                    resolve();
+                                }
+                            };
+                            animate();
+                        });
+                    }
+                `;
+            };
+
+            Blockly.Blocks['motion_jump'] = {
+                init: function() {
+                    this.appendValueInput("HEIGHT")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test//assets/blocklyicon/jump.svg", 34, 34, { alt: "jump icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#4C97FF");
+                    this.setTooltip("גורם לדמות לקפוץ לגובה מסוים.");
+                }
+            };
+
+            Blockly.JavaScript['motion_jump'] = function(block) {
+                const height = Blockly.JavaScript.valueToCode(block, 'HEIGHT', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+                return `
+                    if (sprite) {
+                        await new Promise(resolve => {
+                            const JUMP_HEIGHT = (${height});
+                            const DURATION = 500;
+                            const startY = sprite.y;
+                            const startTime = Date.now();
+
+                            const animateJump = () => {
+                                if (getExecutionCancelled()) { resolve(); return; }
+                                const elapsed = Date.now() - startTime;
+                                const progress = Math.min(elapsed / DURATION, 1);
+                                
+                                const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
+                                sprite.y = startY + parabolicProgress;
+
+                                updateSpriteAppearance(sprite.id);
+                                window.updateActiveSpritePanel();
+                                
+                                if (progress < 1) {
+                                    requestAnimationFrame(animateJump);
+                                } else {
+                                    log(sprite.name + ' סיימה לקפוץ.');
+                                    resolve();
+                                }
+                            };
+                            log(sprite.name + ' מתחילה לקפוץ...');
+                            animateJump();
+                        });
+                    }
+                `;
+            };
+
+            Blockly.Blocks['operator_add'] = {
+                init: function() {
+                    this.setOutput(true, "Number");
+                    this.setColour("#40BF4A");
+                    this.setTooltip("החזרת סכום שני מספרים.");
+                    this.appendValueInput("B").setCheck("Number");
+                    this.appendDummyInput().appendField('+');
+                    this.appendValueInput("A").setCheck("Number");
+                    this.setInputsInline(true);
+                }
+            };
+            Blockly.JavaScript['operator_add'] = function(block) {
+                const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_ADDITION) || '0';
+                const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_ADDITION) || '0';
+                const code = `(${a} + ${b})`;
+                return [code, Blockly.JavaScript.ORDER_ADDITION];
+            };
+
+            Blockly.Blocks['operator_subtract'] = {
+                init: function() {
+                    this.setOutput(true, "Number");
+                    this.setColour("#40BF4A");
+                    this.setTooltip("החזרת ההפרש בין שני מספרים.");
+                    this.appendValueInput("B").setCheck("Number");
+                    this.appendDummyInput().appendField('-');
+                    this.appendValueInput("A").setCheck("Number");
+                    this.setInputsInline(true);
+                }
+            };
+            Blockly.JavaScript['operator_subtract'] = function(block) {
+                const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
+                const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
+                const code = `(${a} - ${b})`;
+                return [code, Blockly.JavaScript.ORDER_SUBTRACTION];
+            };
+
+            Blockly.Blocks['operator_multiply'] = {
+                init: function() {
+                    this.setOutput(true, "Number");
+                    this.setColour("#40BF4A");
+                    this.setTooltip("החזרת המכפלה של שני מספרים.");
+                    this.appendValueInput("B").setCheck("Number");
+                    this.appendDummyInput().appendField('*');
+                    this.appendValueInput("A").setCheck("Number");
+                    this.setInputsInline(true);
+                }
+            };
+            Blockly.JavaScript['operator_multiply'] = function(block) {
+                const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
+                const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
+                const code = `(${a} * ${b})`;
+                return [code, Blockly.JavaScript.ORDER_MULTIPLICATION];
+            };
+
+            Blockly.Blocks['operator_divide'] = {
+                init: function() {
+                    this.setOutput(true, "Number");
+                    this.setColour("#40BF4A");
+                    this.setTooltip("החזרת תוצאת החילוק של שני מספרים.");
+                    this.appendValueInput("B").setCheck("Number");
+                    this.appendDummyInput().appendField('/');
+                    this.appendValueInput("A").setCheck("Number");
+                    this.setInputsInline(true);
+                }
+            };
+            Blockly.JavaScript['operator_divide'] = function(block) {
+                const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_DIVISION) || '0';
+                const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_DIVISION) || '1';
+                const code = `(${a} / ${b})`;
+                return [code, Blockly.JavaScript.ORDER_DIVISION];
+            };
+
+            Blockly.Blocks['operator_random_number'] = {
+                init: function() {
+                    this.appendDummyInput().appendField("מספר אקראי בין");
+                    this.appendDummyInput().appendField(new FieldCustomNumber(1), "FROM");
+                    this.appendDummyInput().appendField("ל-");
+                    this.appendDummyInput().appendField(new FieldCustomNumber(10), "TO");
+                    this.setInputsInline(true);
+                    this.setOutput(true, "Number");
+                    this.setColour("#40BF4A");
+                    this.setTooltip("החזרת מספר שלם אקראי בין שני מספרים.");
+                }
+            };
+            Blockly.JavaScript['operator_random_number'] = function(block) {
+                const from = block.getFieldValue('FROM');
+                const to = block.getFieldValue('TO');
+                const code = `Math.floor(Math.random() * (${to} - ${from} + 1)) + ${from}`;
+                return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+            };
+            
+            Blockly.Blocks['sound_play_until_done'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/play_sound.svg", 34, 34, "*"))
+                        .appendField('\u00A0\u00A0')
+                        .appendField(new Blockly.FieldDropdown([
+                            ["מחיאות כפיים", "APPLAUSE"],
+                            ["קפיצה", "BOING"],
+                            ["ציוץ", "TWEET"]
+                        ]), "SOUND");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#CF63CF");
+                    this.setTooltip("מנגן צליל ומחכה לסיומו.");
+                    this.setHelpUrl("");
+                }
+            };
+
+            Blockly.JavaScript['sound_play_until_done'] = function(block) {
+                const sound = block.getFieldValue('SOUND');
+                // Placeholder for actual sound playing logic
+                return `log('מנגן צליל: ${sound}'); await new Promise(r => setTimeout(r, 1000));`;
+            };
+
+            
+            // Configure Blockly's angle picker to match Scratch
+            // 0 is up, clockwise
+            Blockly.FieldAngle.OFFSET = 90;
+            Blockly.FieldAngle.CLOCKWISE = true;
+            
+            workspace = Blockly.inject('blockly-area', {
+                toolbox: document.getElementById('toolbox'),
+                rtl: true,
+                zoom: {
+                    controls: true,
+                    wheel: true,
+                    startScale: 1.0,
+                    maxScale: 3,
+                    minScale: 0.3,
+                    scaleSpeed: 1.2
+                }
+            });
+
+            const getExecutionCancelled = () => executionCancelled;
+
+            function showBlockValue(block) {
+                // Generate code for the single block
+                const codeArray = Blockly.JavaScript.blockToCode(block);
+                if (!codeArray || typeof codeArray[0] !== 'string') return;
+
+                const expression = codeArray[0];
+                let value;
+                try {
+                    // Safely evaluate the expression
+                    value = new Function('return ' + expression)();
+                    // Round if it's a number with many decimals
+                    if (typeof value === 'number') {
+                        value = Math.round(value * 1000) / 1000;
+                    }
+                } catch (e) {
+                    console.log("Could not evaluate block value:", e);
+                    value = '?'; // Show a question mark on error
+                }
+
+                // Create and position the bubble
+                const bubble = document.createElement('div');
+                bubble.className = 'value-bubble';
+                bubble.textContent = value;
+                document.body.appendChild(bubble);
+
+                const rect = block.getSvgRoot().getBoundingClientRect();
+                
+                // Position bubble centered above the block
+                bubble.style.left = `${rect.left + rect.width / 2}px`;
+                bubble.style.top = `${rect.top}px`;
+
+                // Fade out and remove the bubble
+                setTimeout(() => {
+                    bubble.style.opacity = '0';
+                    setTimeout(() => {
+                        if (bubble.parentElement) {
+                            bubble.remove();
+                        }
+                    }, 400); // Wait for fade-out animation
+                }, 1200); // Display for 1.2 seconds
+            }
+
+            async function runScriptStack(startBlock) {
+                if (isRunning || !startBlock) return;
+                saveActiveSpriteWorkspace();
+
+                const sprite = getActiveSprite();
+                if (!sprite) {
+                    log("No active sprite to run script.");
+                    return;
+                }
+
+                isRunning = true;
+                executionCancelled = false;
+                log(`מריץ תסריט בודד מסוג ${startBlock.type} עבור ${sprite.name}.`);
+
+                let code = '';
+                let currentBlock = startBlock.getNextBlock();
+                while (currentBlock) {
+                    if (getExecutionCancelled()) break;
+                    code += Blockly.JavaScript.blockToCode(currentBlock);
+                    code += `if (getExecutionCancelled()) return;\n`;
+                    currentBlock = currentBlock.getNextBlock();
+                }
+                
+                if (code) {
+                    try {
+                        await executeScript(code, sprite);
+                    } catch (e) {
+                        log('שגיאה בהרצת תסריט: ' + e);
+                    } finally {
+                        isRunning = false;
+                        log('התסריט סיים.');
+                    }
+                } else {
+                     log('לא נמצאו בלוקים להרצה מתחת לבלוק האירוע.');
+                     isRunning = false;
+                }
+            }
+
+
+            async function executeBlock(blockId) {
+                const block = workspace.getBlockById(blockId);
+                if (!block || block.type.startsWith('event_')) return;
+                
+                log(`מפעיל בלוק בודד: ${block.type}`);
+                
+                const code = Blockly.JavaScript.blockToCode(block);
+                isRunning = true;
+                executionCancelled = false;
+                await executeScript(code, getActiveSprite());
+                isRunning = false;
+            }
+            
+            const blocklyDiv = document.getElementById('blockly-area');
+            blocklyDiv.addEventListener('click', (event) => {
+                if (isRunning) return;
+                const blocklyBlockSvg = event.target.closest('.blocklyDraggable');
+                if (blocklyBlockSvg) {
+                    const blockId = blocklyBlockSvg.getAttribute('data-id');
+                    if (blockId) {
+                        const block = workspace.getBlockById(blockId);
+                        if (!block) return;
+
+                        // If it's a top-level hat block
+                        if (block.previousConnection === null && block.getParent() === null) {
+                            if (block.type === 'event_when_flag_clicked') {
+                                log('לחיצה על בלוק הדגל הירוק, מפעיל את כל התסריטים.');
+                                runCode();
+                                return; // Handled
+                            }
+                            if (block.type === 'event_when_sprite_clicked' || block.type === 'event_when_bump') {
+                                runScriptStack(block);
+                                return; // Handled
+                            }
+                        }
+                        
+                        // If it's a statement block (that can be run alone)
+                        if (!block.outputConnection && block.getParent() === null) {
+                             executeBlock(blockId);
+                        } 
+                        // If it's a value/reporter block
+                        else if (block.outputConnection) {
+                            showBlockValue(block);
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('run-button').addEventListener('click', runCode);
+            document.getElementById('reset-button').addEventListener('click', stopAllScripts);
+            
+            fullscreenButton.addEventListener('click', () => {
+                containerWrapper.classList.toggle('stage-expanded');
+                const isExpanded = containerWrapper.classList.contains('stage-expanded');
+                
+                enterFullscreenIcon.classList.toggle('hidden', isExpanded);
+                exitFullscreenIcon.classList.toggle('hidden', !isExpanded);
+                
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize')); 
+                }, 300);
+            });
+
+            async function executeScript(code, sprite) {
+                if (code && !getExecutionCancelled()) {
+                    try {
+                        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+                        const f = new AsyncFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
+                        await f(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
+                    } catch (e) {
+                        log(`שגיאת ריצה בתסריט: ${e}`);
+                    }
+                }
+            }
+
+            function saveActiveSpriteWorkspace() {
+                 if (activeSpriteId && sprites[activeSpriteId]) {
+                    const dom = Blockly.Xml.workspaceToDom(workspace);
+                    sprites[activeSpriteId].workspaceXml = Blockly.Xml.domToText(dom);
+                }
+            }
+            
+            async function runCode() {
+                if (isRunning) {
+                    log('תסריט כבר רץ. לחץ על עצור לפני הפעלה מחדש.');
+                    return;
+                }
+                saveActiveSpriteWorkspace();
+
+                isRunning = true;
+                executionCancelled = false;
+                
+                log('התסריט הופעל.');
+
+                const scriptPromises = Object.values(sprites).map(sprite => {
+                    if (sprite.workspaceXml) {
+                        const tempWorkspace = new Blockly.Workspace();
+                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                        const topBlocks = tempWorkspace.getTopBlocks(true);
+                        const flagClickScripts = topBlocks.filter(block => block.type === 'event_when_flag_clicked');
+                        
+                        return flagClickScripts.map(startBlock => {
+                            let code = '';
+                            let currentBlock = startBlock.getNextBlock();
+                            while(currentBlock) {
+                                code += Blockly.JavaScript.blockToCode(currentBlock);
+                                code += `if (getExecutionCancelled()) return;\n`;
+                                currentBlock = currentBlock.getNextBlock();
+                            }
+                            return executeScript(code, sprite);
+                        });
+                    }
+                    return [];
+                }).flat();
+
+                if(scriptPromises.length === 0) {
+                     log('לא נמצאו תסריטים שמתחילים בדגל ירוק.');
+                     isRunning = false;
+                     return;
+                }
+
+                try {
+                    await Promise.all(scriptPromises);
+                    if (!getExecutionCancelled()) {
+                        log('כל התסריטים של הדגל הירוק הסתיימו.');
+                    }
+                } catch (e) {
+                    log('שגיאה כללית בהרצת תסריטים במקביל: ' + e);
+                } finally {
+                    isRunning = false;
+                }
+            }
+            
+            window.addEventListener('kidi-broadcast', (e) => {
+                const message = e.detail.message;
+                log(`התקבל מסר: ${message}`);
+                runBroadcastScripts(message);
+            });
+
+            async function runBroadcastScripts(message) {
+                // This function starts new scripts but does not set the global isRunning flag.
+                // The flag is managed by the user-initiated events (click, key press).
+                
+                const scriptPromises = Object.values(sprites).map(sprite => {
+                    if (!sprite.workspaceXml) return [];
+                    
+                    const tempWorkspace = new Blockly.Workspace();
+                    try {
+                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                        const topBlocks = tempWorkspace.getTopBlocks(true);
+                        
+                        const matchingHatBlocks = topBlocks.filter(block => 
+                            block.type === 'event_when_broadcast_received' && 
+                            block.getFieldValue('MESSAGE') === message
+                        );
+                        
+                        const spritePromises = matchingHatBlocks.map(startBlock => {
+                            let code = '';
+                            let currentBlock = startBlock.getNextBlock();
+                            while (currentBlock) {
+                                code += Blockly.JavaScript.blockToCode(currentBlock);
+                                code += `if (getExecutionCancelled()) return;\n`;
+                                currentBlock = currentBlock.getNextBlock();
+                            }
+                            return executeScript(code, sprite); 
+                        });
+                        
+                        tempWorkspace.dispose();
+                        return spritePromises;
+                    } catch (err) {
+                        console.error("Error processing workspace for broadcast:", err);
+                        tempWorkspace.dispose();
+                        return [];
+                    }
+                }).flat();
+
+                if (scriptPromises.length > 0) {
+                    log(`מפעיל ${scriptPromises.length} תסריטים עבור מסר "${message}"`);
+                    // We don't await the promises here, allowing them to run in the background.
+                    // This makes 'broadcast' a non-waiting call.
+                    Promise.all(scriptPromises).catch(err => {
+                        console.error("Error running broadcast scripts:", err);
+                    });
+                } else {
+                    log(`לא נמצאו תסריטים עבור מסר "${message}"`);
+                }
+            }
+
+
+            async function handleSpriteClick(spriteId) {
+                if (isRunning) return;
+                saveActiveSpriteWorkspace();
+                
+                const sprite = sprites[spriteId];
+                if (!sprite || !sprite.workspaceXml) return;
+
+                log(`קליק על ${sprite.name}. מריץ תסריטים.`);
+                isRunning = true;
+                executionCancelled = false;
+
+                const tempWorkspace = new Blockly.Workspace();
+                Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                const topBlocks = tempWorkspace.getTopBlocks(true);
+                const clickScripts = topBlocks.filter(block => block.type === 'event_when_sprite_clicked');
+
+                const scriptPromises = clickScripts.map(startBlock => {
+                    let code = '';
+                    let currentBlock = startBlock.getNextBlock();
+                    while (currentBlock) {
+                        code += Blockly.JavaScript.blockToCode(currentBlock);
+                        code += `if (getExecutionCancelled()) return;\n`;
+                        currentBlock = currentBlock.getNextBlock();
+                    }
+                    return executeScript(code, sprite);
+                });
+                
+                tempWorkspace.dispose();
+
+                if (scriptPromises.length > 0) {
+                    try {
+                        await Promise.all(scriptPromises);
+                        if (!getExecutionCancelled()) {
+                            log(`התסריטים של ${sprite.name} הסתיימו.`);
+                        }
+                    } catch (e) {
+                        log('שגיאה בהרצת תסריט קליק: ' + e);
+                    } finally {
+                        isRunning = false;
+                    }
+                } else {
+                    isRunning = false;
+                }
+            }
+            
+             // --- Collision Detection and Handling ---
+            function checkCollisions() {
+                if (isLoadingProject) return; // Don't check for collisions while loading a project
+
+                const spriteIds = Object.keys(sprites);
+                if (spriteIds.length < 2) return;
+
+                for (let i = 0; i < spriteIds.length; i++) {
+                    for (let j = i + 1; j < spriteIds.length; j++) {
+                        const id1 = spriteIds[i];
+                        const id2 = spriteIds[j];
+                        
+                        const el1 = document.getElementById(id1);
+                        const el2 = document.getElementById(id2);
+                        
+                        if (!el1 || !el2 || sprites[id1].opacity === 0 || sprites[id2].opacity === 0) continue;
+                        
+                        const rect1 = el1.getBoundingClientRect();
+                        const rect2 = el2.getBoundingClientRect();
+
+                        const isColliding = !(rect1.right < rect2.left || 
+                                              rect1.left > rect2.right || 
+                                              rect1.bottom < rect2.top || 
+                                              rect1.top > rect2.bottom);
+                        
+                        // Use a sorted key to represent the pair, ensuring (A,B) is the same as (B,A)
+                        const collisionKey = [id1, id2].sort().join('-');
+
+                        if (isColliding) {
+                            if (!collisionState.has(collisionKey)) {
+                                // New collision detected
+                                collisionState.add(collisionKey);
+                                log(`התנגשות בין ${sprites[id1].name} ל-${sprites[id2].name}`);
+                                triggerBumpScripts(id1, id2);
+                            }
+                        } else {
+                            if (collisionState.has(collisionKey)) {
+                                // Sprites have separated
+                                collisionState.delete(collisionKey);
+                                log(`${sprites[id1].name} ו-${sprites[id2].name} נפרדו.`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            async function triggerBumpScripts(id1, id2) {
+                // This function can be triggered anytime, even when other scripts are running.
+                // It should not set the global `isRunning` flag, to allow concurrency.
+                saveActiveSpriteWorkspace();
+                
+                const sprite1 = sprites[id1];
+                const sprite2 = sprites[id2];
+                
+                const wasCancelled = executionCancelled;
+                executionCancelled = false;
+
+                const runForSprite = (sprite) => {
+                    if (!sprite.workspaceXml) return null;
+                    const tempWorkspace = new Blockly.Workspace();
+                    let code = '';
+                    try {
+                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                        const bumpScript = tempWorkspace.getTopBlocks(true).find(block => block.type === 'event_when_bump');
+                        
+                        if (bumpScript) {
+                            let currentBlock = bumpScript.getNextBlock();
+                            while (currentBlock) {
+                                code += Blockly.JavaScript.blockToCode(currentBlock);
+                                code += `if (getExecutionCancelled()) return;\n`;
+                                currentBlock = currentBlock.getNextBlock();
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error processing bump script workspace", e);
+                    } finally {
+                        tempWorkspace.dispose();
+                    }
+                    return code ? executeScript(code, sprite) : null;
+                };
+
+                const promise1 = runForSprite(sprite1);
+                const promise2 = runForSprite(sprite2);
+
+                Promise.all([promise1, promise2].filter(p => p !== null)).then(() => {
+                    executionCancelled = wasCancelled;
+                }).catch(err => {
+                    console.error("שגיאה בהרצת תסריט התנגשות:", err);
+                    executionCancelled = wasCancelled;
+                });
+            }
+
+
+            async function handleKeyPress(event) {
+                if (isRunning) return;
+                saveActiveSpriteWorkspace();
+                
+                const keyMap = { 'SPACE': ' ', 'UP': 'ArrowUp', 'DOWN': 'ArrowDown', 'RIGHT': 'ArrowRight', 'LEFT': 'ArrowLeft' };
+                const pressedKey = event.key;
+                
+                isRunning = true;
+                executionCancelled = false;
+
+                const scriptPromises = Object.values(sprites).map(sprite => {
+                    if (sprite.workspaceXml) {
+                        const tempWorkspace = new Blockly.Workspace();
+                        let promises = [];
+                        try {
+                            Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                            const topBlocks = tempWorkspace.getTopBlocks(true);
+                            
+                            promises = topBlocks.filter(block => block.type === 'event_when_key_pressed' && keyMap[block.getFieldValue('KEY')] === pressedKey)
+                                .map(startBlock => {
+                                    let code = '';
+                                    let currentBlock = startBlock.getNextBlock();
+                                    while(currentBlock) {
+                                        code += Blockly.JavaScript.blockToCode(currentBlock);
+                                        code += `if (getExecutionCancelled()) return;\n`;
+                                        currentBlock = currentBlock.getNextBlock();
+                                    }
+                                    return executeScript(code, sprite);
+                                });
+                        } catch(e) {
+                            console.error("Error in handleKeyPress workspace processing:", e);
+                        } finally {
+                            tempWorkspace.dispose();
+                        }
+                        return promises;
+                    }
+                    return [];
+                }).flat();
+
+                if (scriptPromises.length > 0) {
+                    event.preventDefault(); 
+                    log(`מקש נלחץ: ${pressedKey}. מריץ ${scriptPromises.length} תסריטים.`);
+                    await Promise.all(scriptPromises);
+                }
+                
+                isRunning = false;
+            }
+            document.addEventListener('keydown', handleKeyPress);
+
+            function stopAllScripts() {
+                log('לחצן עצור נלחץ.');
+                executionCancelled = true;
+                
+                setTimeout(() => {
+                    // Hide any visible speech bubbles when stopping
+                    Object.values(sprites).forEach(sprite => {
+                        const bubble = document.querySelector(`#container-${sprite.id} .speech-bubble`);
+                        if (bubble) bubble.classList.remove('visible');
+                    });
+                    log('כל התסריטים נעצרו.');
+                    isRunning = false; // Allow new run
+                }, 50);
+            }
+            
+            function createDefaultBackdrop() {
+                const defaultBackdrop = document.createElement('div');
+                defaultBackdrop.classList.add('backdrop-card');
+                defaultBackdrop.style.backgroundImage = 'url("https://codejredu.github.io/test/assets/bg/farm.svg")';
+                defaultBackdrop.dataset.url = "https://codejredu.github.io/test/assets/bg/farm.svg";
+                defaultBackdrop.classList.add('selected');
+                backdropsList.appendChild(defaultBackdrop);
+                document.getElementById('stage-area').style.backgroundImage = `url("https://codejredu.github.io/test/assets/bg/farm.svg")`;
+            }
+
+            function createDefaultSprite() {
+                const defaultSprite = createNewSprite('חתול', 'https://codejredu.github.io/claudejr/GingerCat.svg', 0, 0);
+            }
+
+            function handleBackdropSelection(e) {
+                const url = e.target.dataset.url;
+                if (url) {
+                   window.switchBackdrop(url);
+                }
+            }
+
+            function handleGallerySelection(e) {
+                const url = e.target.src;
+                if (url) {
+                    const newBackdropCard = document.createElement('div');
+                    newBackdropCard.classList.add('backdrop-card');
+                    newBackdropCard.style.backgroundImage = `url("${url}")`;
+                    newBackdropCard.dataset.url = url;
+                    
+                    backdropsList.appendChild(newBackdropCard);
+
+                    backgroundGallery.classList.remove('visible');
+                }
+            }
+
+            function handleSpriteGallerySelection(e) {
+                const target = e.target;
+                if (target.tagName === 'IMG' && target.classList.contains('thumbnail')) {
+                    const url = target.src;
+                    const name = target.alt || 'דמות חדשה';
+                    createNewSprite(name, url, 0, 0);
+                    spriteGallery.classList.remove('visible');
+                }
+            }
+            
+            // Number Pad Logic
+            const numberPad = document.getElementById('number-pad-container');
+            const numberPadDisplay = document.getElementById('number-pad-display');
+            const numberPadGrid = numberPad.querySelector('.number-pad-grid');
+            const numberPadDone = document.getElementById('number-pad-done');
+            
+            numberPadGrid.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const value = e.target.dataset.value;
+                    if (value === 'backspace') {
+                        numberPadDisplay.textContent = numberPadDisplay.textContent.slice(0, -1);
+                    } else {
+                        // Prevent multiple decimals
+                        if (value === '.' && numberPadDisplay.textContent.includes('.')) return;
+                        numberPadDisplay.textContent += value;
+                    }
+                }
+            });
+
+            numberPadDone.addEventListener('click', () => {
+                const field = numberPad.currentField;
+                if (field) {
+                    let newValue = parseFloat(numberPadDisplay.textContent);
+                    if (isNaN(newValue)) {
+                        newValue = 0;
+                    }
+                    field.setValue(newValue);
+                }
+                numberPad.style.display = 'none';
+                numberPad.currentField = null;
+            });
+            
+            // Hide number pad when clicking outside
+            document.addEventListener('click', (e) => {
+                // If the click is not on the number pad and not on a blockly field
+                if (numberPad.style.display === 'block' && !numberPad.contains(e.target) && !e.target.closest('.blocklyText')) {
+                    numberPadDone.click();
+                }
+            }, true);
+            
+            // --- Save/Load Project Logic ---
+            const saveProject = () => {
+                if (activeSpriteId && sprites[activeSpriteId]) {
+                    const dom = Blockly.Xml.workspaceToDom(workspace);
+                    sprites[activeSpriteId].workspaceXml = Blockly.Xml.domToText(dom);
+                }
+                const backdrops = Array.from(document.querySelectorAll('#backdrops-list .backdrop-card')).map(card => card.dataset.url);
+                const currentBackdrop = stageArea.style.backgroundImage.replace(/url\((['"])?(.*?)\1\)/, '$2');
+
+                const projectData = {
+                    sprites: sprites,
+                    backdrops: backdrops,
+                    currentBackdrop: currentBackdrop
+                };
+
+                const dataStr = JSON.stringify(projectData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: "application/json"});
+                const url = URL.createObjectURL(dataBlob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'kidi-project.kidi';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                log('הפרויקט נשמר.');
+            };
+
+            const loadSpriteFromData = (spriteData) => {
+                const { id, name, imageUrl, x, y, direction, opacity, size } = spriteData;
+
+                spriteData.size = size || 100;
+                sprites[id] = spriteData;
+
+                const spriteCard = document.createElement('div');
+                spriteCard.classList.add('sprite-card');
+                spriteCard.dataset.spriteId = id;
+                spriteCard.innerHTML = `
+                    <img src="${imageUrl}" alt="${name}">
+                    <div class="delete-button">X</div>
+                `;
+                spritesList.appendChild(spriteCard);
+
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
+                const clone1 = mainSprite.cloneNode(true);
+                const clone2 = mainSprite.cloneNode(true);
+                const clone3 = mainSprite.cloneNode(true);
+                spriteContainer.appendChild(mainSprite);
+                spriteContainer.appendChild(clone1);
+                spriteContainer.appendChild(clone2);
+                spriteContainer.appendChild(clone3);
+                stageArea.appendChild(spriteContainer);
+                
+                const allWrappers = [mainSprite, clone1, clone2, clone3];
+                allWrappers.forEach(wrapper => {
+                    wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
+                    wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                    wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
+                });
+                
+                spriteCard.addEventListener('click', () => setActiveSprite(id));
+                spriteCard.querySelector('.delete-button').addEventListener('click', (e) => { e.stopPropagation(); deleteSprite(id); });
+
+                updateSpriteAppearance(id);
+            };
+
+            const loadProject = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                isLoadingProject = true; // Set flag before loading
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const projectData = JSON.parse(event.target.result);
+
+                        if (!projectData.sprites || !projectData.backdrops) {
+                            throw new Error("קובץ פרויקט לא תקין.");
+                        }
+                        
+                        stopAllScripts();
+                        Object.keys(sprites).forEach(id => {
+                            document.getElementById(`container-${id}`)?.remove();
+                            document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
+                        });
+
+                        sprites = {};
+                        activeSpriteId = null;
+                        workspace.clear();
+                        backdropsList.innerHTML = '';
+                        
+                        projectData.backdrops.forEach(url => {
+                            const newBackdropCard = document.createElement('div');
+                            newBackdropCard.classList.add('backdrop-card');
+                            newBackdropCard.style.backgroundImage = `url("${url}")`;
+                            newBackdropCard.dataset.url = url;
+                            backdropsList.appendChild(newBackdropCard);
+                        });
+
+                        window.switchBackdrop(projectData.currentBackdrop);
+
+                        Object.values(projectData.sprites).forEach(loadSpriteFromData);
+                        
+                        const firstSpriteId = Object.keys(projectData.sprites)[0];
+                        if (firstSpriteId) {
+                            setActiveSprite(firstSpriteId);
+                        }
+                        
+                        log('הפרויקט נטען בהצלחה.');
+
+                    } catch (error) {
+                        console.error("שגיאה בטעינת הפרויקט:", error);
+                    } finally {
+                        e.target.value = null;
+                        setTimeout(() => { isLoadingProject = false; }, 100); // Unset flag after a short delay
+                    }
+                };
+                 reader.onerror = () => {
+                    console.error("שגיאה בקריאת הקובץ.");
+                    isLoadingProject = false; // Unset flag on error
+                };
+                reader.readAsText(file);
+            };
+
+            saveButton.addEventListener('click', saveProject);
+            loadButton.addEventListener('click', () => loadInput.click());
+            loadInput.addEventListener('change', loadProject);
+
+
+            // --- Properties Panel Listeners ---
+            function setupPropertiesPanelListeners() {
+                propName.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.name = e.target.value;
+                        // Name is not displayed on card anymore, so no update needed there.
+                    }
+                });
+                propX.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.x = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                propY.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.y = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                propSize.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.size = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                
+                // For manually typing a value
+                propDirection.addEventListener('change', (e) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.direction = Number(e.target.value);
+                        updateSpriteAppearance(sprite.id);
+                    }
+                });
+                
+                // For opening the custom angle picker
+                propDirection.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sprite = getActiveSprite();
+                    if (!sprite) return;
+                    
+                    anglePickerWidget.style.display = 'flex'; // Display first to get its dimensions
+
+                    const inputRect = propDirection.getBoundingClientRect();
+                    const widgetWidth = anglePickerWidget.offsetWidth;
+                    const widgetHeight = anglePickerWidget.offsetHeight;
+
+                    // Attempt to position it to the left of the input field (preferred for RTL)
+                    let left = inputRect.left - widgetWidth - 10; // 10px gap
+                    let top = inputRect.top + (inputRect.height / 2) - (widgetHeight / 2);
+
+                    // Boundary check: If it goes off-screen to the left, position it below instead.
+                    if (left < 5) { 
+                        left = inputRect.left + (inputRect.width / 2) - (widgetWidth / 2);
+                        top = inputRect.bottom + 5;
+                    }
+                     if (top < 5) {
+                        top = 5;
+                    }
+                    if (top + widgetHeight > window.innerHeight) {
+                        top = window.innerHeight - widgetHeight - 5;
+                    }
+
+                    anglePickerWidget.style.top = `${top}px`;
+                    anglePickerWidget.style.left = `${left}px`;
+                    
+                    anglePickerHandle.style.transform = `rotate(${sprite.direction - 90}deg)`;
+                });
+
+                propShow.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.opacity = 1;
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+                propHide.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.opacity = 0;
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+            }
+            
+            // --- Custom Angle Picker Logic ---
+            let isDraggingAngle = false;
+
+            const updateAngleFromEvent = (e) => {
+                 const sprite = getActiveSprite();
+                 if (!sprite) return;
+
+                const dialRect = anglePickerDial.getBoundingClientRect();
+                const centerX = dialRect.left + dialRect.width / 2;
+                const centerY = dialRect.top + dialRect.height / 2;
+                
+                const pointer = e.touches ? e.touches[0] : e;
+
+                const deltaX = pointer.clientX - centerX;
+                const deltaY = pointer.clientY - centerY;
+                
+                // Calculate angle: 0 is up, clockwise
+                let degrees = Math.atan2(deltaX, -deltaY) * (180 / Math.PI);
+                if (degrees < 0) {
+                    degrees += 360;
+                }
+                degrees = Math.round(degrees);
+                if (degrees === 360) degrees = 0;
+
+                // Update everything
+                sprite.direction = degrees;
+                propDirection.value = degrees;
+                anglePickerHandle.style.transform = `rotate(${degrees - 90}deg)`;
+                updateSpriteAppearance(sprite.id);
+            };
+
+            anglePickerDial.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDraggingAngle = true;
+                updateAngleFromEvent(e);
+            });
+            anglePickerDial.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                isDraggingAngle = true;
+                updateAngleFromEvent(e);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDraggingAngle) {
+                    updateAngleFromEvent(e);
+                }
+            });
+            document.addEventListener('touchmove', (e) => {
+                if (isDraggingAngle) {
+                    updateAngleFromEvent(e);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDraggingAngle = false;
+            });
+             document.addEventListener('touchend', () => {
+                isDraggingAngle = false;
+            });
+
+            // Hide picker when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!anglePickerWidget.contains(e.target) && e.target !== propDirection) {
+                    anglePickerWidget.style.display = 'none';
+                }
+            });
+
+            // --- Initial Setup ---
+            createDefaultBackdrop();
+            createDefaultSprite();
+            setupPropertiesPanelListeners();
+
+            backdropsList.addEventListener('click', handleBackdropSelection);
+            
+            addBackdropButton.addEventListener('click', () => {
+                backgroundGallery.classList.add('visible');
+            });
+            
+            closeGalleryButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                spriteGallery.classList.remove('visible');
+            });
+            
+            thumbnailsGrid.addEventListener('click', handleGallerySelection);
+            
+            addSpriteButton.addEventListener('click', () => {
+                spriteGallery.classList.add('visible');
+            });
+
+            closeSpriteGalleryButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                spriteGallery.classList.remove('visible');
+            });
+
+            spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
+        });
+    </script>
+</body>
+</html>
+
