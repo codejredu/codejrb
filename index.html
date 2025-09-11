@@ -109,7 +109,7 @@
             justify-content: center;
             align-items: center;
             transform: translate(-50%, -50%);
-            transition: transform 0.1s ease-out;
+            transition: transform 0.1s ease-out, clip-path 0.2s ease-out;
             z-index: 10;
             opacity: 1;
             cursor: grab;
@@ -277,7 +277,7 @@
         }
         .thumbnail-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             gap: 0.5rem;
         }
         @media (min-width: 768px) {
@@ -699,6 +699,23 @@
                         <img src="https://codejredu.github.io/claudejr/Flower.svg" alt="Flower" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Monkey.svg" alt="Monkey" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Crocodile.svg" alt="Crocodile" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/waman dance.gif" alt="Waman Dance" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/CAR.gif" alt="Car" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/Hedgehog.gif" alt="Hedgehog" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/KIDWALK.gif" alt="Kid Walk" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bee.gif" alt="Bee" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bird2.gif" alt="Bird 2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/birdred.gif" alt="Red Bird" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bycycle.gif" alt="Bicycle" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/car1.gif" alt="Car 1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/dance.gif" alt="Dance" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/dog.gif" alt="Dog" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/fox.gif" alt="Fox" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/gitarwaman.gif" alt="Guitar Woman" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/horse.gif" alt="Horse" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/kidwalk1.gif" alt="Kid Walk 1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/mouse.gif" alt="Mouse" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/ostrich.gif" alt="Ostrich" class="thumbnail">
                     </div>
                 </div>
             </div>
@@ -789,6 +806,7 @@
             <block type="event_when_flag_clicked"></block>
             <block type="event_when_sprite_clicked"></block>
             <block type="event_when_key_pressed"></block>
+            <block type="event_when_bump"></block>
             <block type="event_broadcast"></block>
             <block type="event_when_broadcast_received"></block>
         </category>
@@ -911,29 +929,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-             // START OF CUSTOM RENDERER FOR LOOP BLOCKS
-            class CustomConstantProvider extends Blockly.zelos.ConstantProvider {
-                constructor() {
-                    super();
-                    this.STATEMENT_INPUT_MIN_HEIGHT = 48;
-                }
-            }
-
-            class CustomRenderer extends Blockly.zelos.Renderer {
-                constructor(name) {
-                    super(name);
-                }
-                makeConstants_() {
-                    return new CustomConstantProvider();
-                }
-            }
-            Blockly.registry.register(
-                Blockly.registry.Type.RENDERER,
-                'custom_renderer',
-                CustomRenderer
-            );
-            // END OF CUSTOM RENDERER
-
              // START OF CUSTOM TOOLBOX RENDERER
             class KidiToolboxCategory extends Blockly.ToolboxCategory {
                 createDom_() {
@@ -1019,8 +1014,10 @@
             let activeSpriteId = null;
             let executionCancelled = false;
             let isRunning = false;
+            let isLoadingProject = false; // Flag to prevent events during load
             let justDragged = false;
             let dragStartX, dragStartY;
+            let collisionState = new Set(); // Stores pairs of collided sprites
 
             // Custom field for messages
             const messageOptions = [
@@ -1130,19 +1127,61 @@
                 if (!spriteData) return;
 
                 const spriteEl = document.getElementById(spriteData.id);
-                if (spriteEl) {
-                    const rect = stageArea.getBoundingClientRect();
-                    const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
-                    const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
-                    
-                    const baseSize = 80;
-                    const newSize = baseSize * (spriteData.size / 100);
+                if (!spriteEl) return;
 
-                    spriteEl.style.width = `${newSize}px`;
-                    spriteEl.style.height = `${newSize}px`;
-                    spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${spriteData.direction - 90}deg)`;
-                    spriteEl.style.opacity = spriteData.opacity;
+                const rect = stageArea.getBoundingClientRect();
+                const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
+                const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
+                
+                const baseSize = 80;
+                const newSize = baseSize * (spriteData.size / 100);
+
+                // חישוב גבולות הבמה ביחס לדמות
+                const halfWidth = STAGE_WIDTH / 2;
+                const halfHeight = STAGE_HEIGHT / 2;
+                
+                // חישוב איזה חלק של הדמות צריך להיות נראה
+                let clipTop = 0, clipRight = 100, clipBottom = 100, clipLeft = 0;
+                
+                // בדיקה אם הדמות יוצאת מהגבולות ויצירת clip path מתאים
+                if (spriteData.x + newSize/2 > halfWidth) {
+                    // יוצאת מימין
+                    const overflowRight = (spriteData.x + newSize/2 - halfWidth) / newSize * 100;
+                    clipRight = Math.max(0, 100 - overflowRight);
                 }
+                
+                if (spriteData.x - newSize/2 < -halfWidth) {
+                    // יוצאת משמאל
+                    const overflowLeft = (-halfWidth - (spriteData.x - newSize/2)) / newSize * 100;
+                    clipLeft = Math.min(100, overflowLeft);
+                }
+                
+                if (spriteData.y + newSize/2 > halfHeight) {
+                    // יוצאת מלמעלה
+                    const overflowTop = (spriteData.y + newSize/2 - halfHeight) / newSize * 100;
+                    clipTop = Math.min(100, overflowTop);
+                }
+                
+                if (spriteData.y - newSize/2 < -halfHeight) {
+                    // יוצאת מלמטה
+                    const overflowBottom = (-halfHeight - (spriteData.y - newSize/2)) / newSize * 100;
+                    clipBottom = Math.max(0, 100 - overflowBottom);
+                }
+
+                // יישום העדכונים
+                spriteEl.style.width = `${newSize}px`;
+                spriteEl.style.height = `${newSize}px`;
+                spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${spriteData.direction - 90}deg)`;
+                spriteEl.style.opacity = spriteData.opacity;
+                
+                // יישום clipping אם הדמות יוצאת מהגבולות
+                if (clipTop > 0 || clipRight < 100 || clipBottom < 100 || clipLeft > 0) {
+                    spriteEl.style.clipPath = `inset(${clipTop}% ${100-clipRight}% ${100-clipBottom}% ${clipLeft}%)`;
+                } else {
+                    spriteEl.style.clipPath = 'none';
+                }
+
+                checkCollisions();
             };
             
             const updatePropertiesPanel = () => {
@@ -1354,7 +1393,7 @@
                     }
 
                     const spriteData = sprites[dragSpriteId];
-                    document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out';
+                    document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out, clip-path 0.2s ease-out';
                     updatePropertiesPanel(); // Final update
                     log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
                 }
@@ -1505,6 +1544,18 @@
                 }
             };
             Blockly.JavaScript['event_when_key_pressed'] = function(block) { return ''; };
+            
+            Blockly.Blocks['event_when_bump'] = {
+                init: function() {
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/collision.svg", 48, 48, "*"));
+                    this.setNextStatement(true, null);
+                    this.setColour("#FFD95A");
+                    this.setTooltip("התחל את התסריט כאשר דמות זו נוגעת בדמות אחרת.");
+                }
+            };
+            Blockly.JavaScript['event_when_bump'] = function(block) { return ''; };
+
 
             Blockly.Blocks['event_broadcast'] = {
                 init: function() {
@@ -1560,6 +1611,31 @@
                         sprite.x += (${steps}) * Math.sin(radians);
                         sprite.y += (${steps}) * Math.cos(radians);
                         
+                        const halfWidth = ${STAGE_WIDTH / 2};
+                        const halfHeight = ${STAGE_HEIGHT / 2};
+                        const spriteLogicalWidth = 80 * (sprite.size / 100);
+                        const spriteLogicalHeight = 80 * (sprite.size / 100);
+                        const spriteHalfWidth = spriteLogicalWidth / 2;
+                        const spriteHalfHeight = spriteLogicalHeight / 2;
+
+                        // טיפול בעקיפה חלקה - ציר X (שמאל-ימין)
+                        if (sprite.x - spriteHalfWidth > halfWidth + spriteHalfWidth) {
+                            // הדמות יצאה לגמרי מהצד הימני - העבר אותה לצד השמאלי
+                            sprite.x = -halfWidth - spriteHalfWidth;
+                        } else if (sprite.x + spriteHalfWidth < -halfWidth - spriteHalfWidth) {
+                            // הדמות יצאה לגמרי מהצד השמאלי - העבר אותה לצד הימני
+                            sprite.x = halfWidth + spriteHalfWidth;
+                        }
+
+                        // טיפול בעקיפה חלקה - ציר Y (למעלה-למטה)
+                        if (sprite.y - spriteHalfHeight > halfHeight + spriteHalfHeight) {
+                            // הדמות יצאה לגמרי מלמעלה - העבר אותה למטה
+                            sprite.y = -halfHeight - spriteHalfHeight;
+                        } else if (sprite.y + spriteHalfHeight < -halfHeight - spriteHalfHeight) {
+                            // הדמות יצאה לגמרי מלמטה - העבר אותה למעלה
+                            sprite.y = halfHeight + spriteHalfHeight;
+                        }
+
                         updateSpriteAppearance(sprite.id);
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' זזה ' + (${steps}) + ' צעדים.');
@@ -1841,7 +1917,6 @@
                 return ''; // Do nothing if no backdrop is selected
             };
 
-
             
             Blockly.Blocks['control_wait_secs'] = {
                 init: function() {
@@ -1879,7 +1954,7 @@
                         .setCheck("Number")
                         .appendField('\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
-                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -2168,7 +2243,6 @@
             
             workspace = Blockly.inject('blockly-area', {
                 toolbox: document.getElementById('toolbox'),
-                renderer: 'custom_renderer',
                 rtl: true,
                 zoom: {
                     controls: true,
@@ -2293,7 +2367,7 @@
                                 runCode();
                                 return; // Handled
                             }
-                            if (block.type === 'event_when_sprite_clicked') {
+                            if (block.type === 'event_when_sprite_clicked' || block.type === 'event_when_bump') {
                                 runScriptStack(block);
                                 return; // Handled
                             }
@@ -2496,6 +2570,99 @@
                     isRunning = false;
                 }
             }
+            
+             // --- Collision Detection and Handling ---
+            function checkCollisions() {
+                if (isLoadingProject) return; // Don't check for collisions while loading a project
+
+                const spriteIds = Object.keys(sprites);
+                if (spriteIds.length < 2) return;
+
+                for (let i = 0; i < spriteIds.length; i++) {
+                    for (let j = i + 1; j < spriteIds.length; j++) {
+                        const id1 = spriteIds[i];
+                        const id2 = spriteIds[j];
+                        
+                        const el1 = document.getElementById(id1);
+                        const el2 = document.getElementById(id2);
+                        
+                        if (!el1 || !el2 || sprites[id1].opacity === 0 || sprites[id2].opacity === 0) continue;
+                        
+                        const rect1 = el1.getBoundingClientRect();
+                        const rect2 = el2.getBoundingClientRect();
+
+                        const isColliding = !(rect1.right < rect2.left || 
+                                              rect1.left > rect2.right || 
+                                              rect1.bottom < rect2.top || 
+                                              rect1.top > rect2.bottom);
+                        
+                        // Use a sorted key to represent the pair, ensuring (A,B) is the same as (B,A)
+                        const collisionKey = [id1, id2].sort().join('-');
+
+                        if (isColliding) {
+                            if (!collisionState.has(collisionKey)) {
+                                // New collision detected
+                                collisionState.add(collisionKey);
+                                log(`התנגשות בין ${sprites[id1].name} ל-${sprites[id2].name}`);
+                                triggerBumpScripts(id1, id2);
+                            }
+                        } else {
+                            if (collisionState.has(collisionKey)) {
+                                // Sprites have separated
+                                collisionState.delete(collisionKey);
+                                log(`${sprites[id1].name} ו-${sprites[id2].name} נפרדו.`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            async function triggerBumpScripts(id1, id2) {
+                // This function can be triggered anytime, even when other scripts are running.
+                // It should not set the global `isRunning` flag, to allow concurrency.
+                saveActiveSpriteWorkspace();
+                
+                const sprite1 = sprites[id1];
+                const sprite2 = sprites[id2];
+                
+                const wasCancelled = executionCancelled;
+                executionCancelled = false;
+
+                const runForSprite = (sprite) => {
+                    if (!sprite.workspaceXml) return null;
+                    const tempWorkspace = new Blockly.Workspace();
+                    let code = '';
+                    try {
+                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                        const bumpScript = tempWorkspace.getTopBlocks(true).find(block => block.type === 'event_when_bump');
+                        
+                        if (bumpScript) {
+                            let currentBlock = bumpScript.getNextBlock();
+                            while (currentBlock) {
+                                code += Blockly.JavaScript.blockToCode(currentBlock);
+                                code += `if (getExecutionCancelled()) return;\n`;
+                                currentBlock = currentBlock.getNextBlock();
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error processing bump script workspace", e);
+                    } finally {
+                        tempWorkspace.dispose();
+                    }
+                    return code ? executeScript(code, sprite) : null;
+                };
+
+                const promise1 = runForSprite(sprite1);
+                const promise2 = runForSprite(sprite2);
+
+                Promise.all([promise1, promise2].filter(p => p !== null)).then(() => {
+                    executionCancelled = wasCancelled;
+                }).catch(err => {
+                    console.error("שגיאה בהרצת תסריט התנגשות:", err);
+                    executionCancelled = wasCancelled;
+                });
+            }
+
 
             async function handleKeyPress(event) {
                 if (isRunning) return;
@@ -2510,20 +2677,28 @@
                 const scriptPromises = Object.values(sprites).map(sprite => {
                     if (sprite.workspaceXml) {
                         const tempWorkspace = new Blockly.Workspace();
-                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
-                        const topBlocks = tempWorkspace.getTopBlocks(true);
-                        
-                        return topBlocks.filter(block => block.type === 'event_when_key_pressed' && keyMap[block.getFieldValue('KEY')] === pressedKey)
-                            .map(startBlock => {
-                                let code = '';
-                                let currentBlock = startBlock.getNextBlock();
-                                while(currentBlock) {
-                                    code += Blockly.JavaScript.blockToCode(currentBlock);
-                                    code += `if (getExecutionCancelled()) return;\n`;
-                                    currentBlock = currentBlock.getNextBlock();
-                                }
-                                return executeScript(code, sprite);
-                            });
+                        let promises = [];
+                        try {
+                            Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                            const topBlocks = tempWorkspace.getTopBlocks(true);
+                            
+                            promises = topBlocks.filter(block => block.type === 'event_when_key_pressed' && keyMap[block.getFieldValue('KEY')] === pressedKey)
+                                .map(startBlock => {
+                                    let code = '';
+                                    let currentBlock = startBlock.getNextBlock();
+                                    while(currentBlock) {
+                                        code += Blockly.JavaScript.blockToCode(currentBlock);
+                                        code += `if (getExecutionCancelled()) return;\n`;
+                                        currentBlock = currentBlock.getNextBlock();
+                                    }
+                                    return executeScript(code, sprite);
+                                });
+                        } catch(e) {
+                            console.error("Error in handleKeyPress workspace processing:", e);
+                        } finally {
+                            tempWorkspace.dispose();
+                        }
+                        return promises;
                     }
                     return [];
                 }).flat();
@@ -2701,6 +2876,7 @@
             const loadProject = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+                isLoadingProject = true; // Set flag before loading
 
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -2745,9 +2921,14 @@
                         console.error("שגיאה בטעינת הפרויקט:", error);
                     } finally {
                         e.target.value = null;
+                        setTimeout(() => { isLoadingProject = false; }, 100); // Unset flag after a short delay
                     }
                 };
-                reader.readText(file);
+                 reader.onerror = () => {
+                    console.error("שגיאה בקריאת הקובץ.");
+                    isLoadingProject = false; // Unset flag on error
+                };
+                reader.readAsText(file);
             };
 
             saveButton.addEventListener('click', saveProject);
@@ -2946,4 +3127,3 @@
     </script>
 </body>
 </html>
-
