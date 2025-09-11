@@ -97,10 +97,18 @@
             background-position: center;
             border-radius: 12px;
         }
-        .sprite-wrapper {
+         .sprite-container {
             position: absolute;
             top: 50%;
             left: 50%;
+            width: 1px;
+            height: 1px;
+            visibility: hidden; /* Hide the container itself */
+        }
+        .sprite-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 80px; /* Base size */
             height: 80px; /* Base size */
             background-color: transparent;
@@ -108,11 +116,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s ease-out, clip-path 0.2s ease-out;
+            transform-origin: center center;
             z-index: 10;
             opacity: 1;
             cursor: grab;
+            visibility: visible; /* Make the wrapper visible */
+            transform: translate(-50%, -50%); /* Center the wrapper on the container's point */
         }
         .sprite-wrapper:active {
             cursor: grabbing;
@@ -1126,62 +1135,29 @@
                 const spriteData = sprites[spriteId];
                 if (!spriteData) return;
 
-                const spriteEl = document.getElementById(spriteData.id);
-                if (!spriteEl) return;
+                const container = document.getElementById(`container-${spriteData.id}`);
+                const wrapper = document.getElementById(spriteData.id);
+                
+                if (container && wrapper) {
+                    const rect = stageArea.getBoundingClientRect();
+                    const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
+                    const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
+                    
+                    const baseSize = 80;
+                    const newSize = baseSize * (spriteData.size / 100);
 
-                const rect = stageArea.getBoundingClientRect();
-                const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
-                const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
-                
-                const baseSize = 80;
-                const newSize = baseSize * (spriteData.size / 100);
+                    // Apply styles to the main wrapper inside the container
+                    wrapper.style.width = `${newSize}px`;
+                    wrapper.style.height = `${newSize}px`;
+                    wrapper.style.opacity = spriteData.opacity;
+                    
+                    // Position the container, and rotate the wrapper
+                    container.style.transform = `translate(${stageX}px, ${stageY}px)`;
+                    wrapper.style.transform = `translate(-50%, -50%) rotate(${spriteData.direction - 90}deg)`;
 
-                // חישוב גבולות הבמה ביחס לדמות
-                const halfWidth = STAGE_WIDTH / 2;
-                const halfHeight = STAGE_HEIGHT / 2;
-                
-                // חישוב איזה חלק של הדמות צריך להיות נראה
-                let clipTop = 0, clipRight = 100, clipBottom = 100, clipLeft = 0;
-                
-                // בדיקה אם הדמות יוצאת מהגבולות ויצירת clip path מתאים
-                if (spriteData.x + newSize/2 > halfWidth) {
-                    // יוצאת מימין
-                    const overflowRight = (spriteData.x + newSize/2 - halfWidth) / newSize * 100;
-                    clipRight = Math.max(0, 100 - overflowRight);
+                    // After any visual update, check for collisions
+                    checkCollisions();
                 }
-                
-                if (spriteData.x - newSize/2 < -halfWidth) {
-                    // יוצאת משמאל
-                    const overflowLeft = (-halfWidth - (spriteData.x - newSize/2)) / newSize * 100;
-                    clipLeft = Math.min(100, overflowLeft);
-                }
-                
-                if (spriteData.y + newSize/2 > halfHeight) {
-                    // יוצאת מלמעלה
-                    const overflowTop = (spriteData.y + newSize/2 - halfHeight) / newSize * 100;
-                    clipTop = Math.min(100, overflowTop);
-                }
-                
-                if (spriteData.y - newSize/2 < -halfHeight) {
-                    // יוצאת מלמטה
-                    const overflowBottom = (-halfHeight - (spriteData.y - newSize/2)) / newSize * 100;
-                    clipBottom = Math.max(0, 100 - overflowBottom);
-                }
-
-                // יישום העדכונים
-                spriteEl.style.width = `${newSize}px`;
-                spriteEl.style.height = `${newSize}px`;
-                spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${spriteData.direction - 90}deg)`;
-                spriteEl.style.opacity = spriteData.opacity;
-                
-                // יישום clipping אם הדמות יוצאת מהגבולות
-                if (clipTop > 0 || clipRight < 100 || clipBottom < 100 || clipLeft > 0) {
-                    spriteEl.style.clipPath = `inset(${clipTop}% ${100-clipRight}% ${100-clipBottom}% ${clipLeft}%)`;
-                } else {
-                    spriteEl.style.clipPath = 'none';
-                }
-
-                checkCollisions();
             };
             
             const updatePropertiesPanel = () => {
@@ -1232,29 +1208,45 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                const spriteOnStage = document.createElement('div');
-                spriteOnStage.classList.add('sprite-wrapper');
-                spriteOnStage.id = id;
-                spriteOnStage.innerHTML = `
+                // New structure with a container for seamless wrapping
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `
                     <img src="${imageUrl}" alt="${name}">
                     <div class="speech-bubble"></div>
                 `;
-                stageArea.appendChild(spriteOnStage);
+
+                // Create clones for wrapping effect
+                const clone1 = mainSprite.cloneNode(true);
+                const clone2 = mainSprite.cloneNode(true);
+                const clone3 = mainSprite.cloneNode(true);
+
+                spriteContainer.appendChild(mainSprite);
+                spriteContainer.appendChild(clone1);
+                spriteContainer.appendChild(clone2);
+                spriteContainer.appendChild(clone3);
+                
+                stageArea.appendChild(spriteContainer);
+                
+                const allWrappers = [mainSprite, clone1, clone2, clone3];
+                allWrappers.forEach(wrapper => {
+                    wrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (justDragged) return;
+                        handleSpriteClick(id);
+                    });
+                    wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                    wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
+                });
                 
                 spriteCard.addEventListener('click', () => {
                     setActiveSprite(id);
                 });
-
-                spriteOnStage.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent stage click from also firing
-                    if (justDragged) {
-                        return;
-                    }
-                    handleSpriteClick(id); // Corrected function name
-                });
-
-                spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
-                spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, id));
                 spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteSprite(id);
@@ -1266,8 +1258,8 @@
             };
 
             const deleteSprite = (id) => {
-                document.getElementById(id).remove();
-                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`).remove();
+                document.getElementById(`container-${id}`)?.remove();
+                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
                 
                 delete sprites[id];
 
@@ -1278,7 +1270,6 @@
                     if (firstSpriteId) {
                         setActiveSprite(firstSpriteId);
                     } else {
-                        // No sprites left, hide panel
                         updatePropertiesPanel();
                     }
                 }
@@ -1393,7 +1384,7 @@
                     }
 
                     const spriteData = sprites[dragSpriteId];
-                    document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out, clip-path 0.2s ease-out';
+                    document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out';
                     updatePropertiesPanel(); // Final update
                     log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
                 }
@@ -1618,32 +1609,28 @@
                         const spriteHalfWidth = spriteLogicalWidth / 2;
                         const spriteHalfHeight = spriteLogicalHeight / 2;
 
-                        // טיפול בעקיפה חלקה - ציר X (שמאל-ימין)
-                        if (sprite.x - spriteHalfWidth > halfWidth + spriteHalfWidth) {
-                            // הדמות יצאה לגמרי מהצד הימני - העבר אותה לצד השמאלי
+                        if (sprite.x - spriteHalfWidth > halfWidth) {
                             sprite.x = -halfWidth - spriteHalfWidth;
-                        } else if (sprite.x + spriteHalfWidth < -halfWidth - spriteHalfWidth) {
-                            // הדמות יצאה לגמרי מהצד השמאלי - העבר אותה לצד הימני
+                        }
+                        if (sprite.x + spriteHalfWidth < -halfWidth) {
                             sprite.x = halfWidth + spriteHalfWidth;
                         }
-
-                        // טיפול בעקיפה חלקה - ציר Y (למעלה-למטה)
-                        if (sprite.y - spriteHalfHeight > halfHeight + spriteHalfHeight) {
-                            // הדמות יצאה לגמרי מלמעלה - העבר אותה למטה
+                        if (sprite.y - spriteHalfHeight > halfHeight) {
                             sprite.y = -halfHeight - spriteHalfHeight;
-                        } else if (sprite.y + spriteHalfHeight < -halfHeight - spriteHalfHeight) {
-                            // הדמות יצאה לגמרי מלמטה - העבר אותה למעלה
+                        }
+                        if (sprite.y + spriteHalfHeight < -halfHeight) {
                             sprite.y = halfHeight + spriteHalfHeight;
                         }
 
                         updateSpriteAppearance(sprite.id);
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' זזה ' + (${steps}) + ' צעדים.');
+                        // A minimal delay to allow UI to render in fast loops without being noticeable.
                         await new Promise(resolve => {
-                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 50);
+                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 10);
                             const checkCancelId = setInterval(() => {
                                 if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
-                            }, 50);
+                            }, 10);
                         });
                     }
                 `;
@@ -1917,6 +1904,7 @@
                 return ''; // Do nothing if no backdrop is selected
             };
 
+
             
             Blockly.Blocks['control_wait_secs'] = {
                 init: function() {
@@ -1952,9 +1940,9 @@
                 init: function() {
                     this.appendValueInput("TIMES")
                         .setCheck("Number")
-                        .appendField('\u00A0\u00A0\u00A0\u00A0')
+                        .appendField("חזור")
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
-                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField("פעמים");
                     this.setInputsInline(true);
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -1979,7 +1967,7 @@
             Blockly.Blocks['control_forever'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
+                        .appendField("לעולמים")
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*"));
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -2720,7 +2708,7 @@
                 setTimeout(() => {
                     // Hide any visible speech bubbles when stopping
                     Object.values(sprites).forEach(sprite => {
-                        const bubble = document.querySelector(`#${sprite.id} .speech-bubble`);
+                        const bubble = document.querySelector(`#container-${sprite.id} .speech-bubble`);
                         if (bubble) bubble.classList.remove('visible');
                     });
                     log('כל התסריטים נעצרו.');
@@ -2857,19 +2845,32 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                const spriteOnStage = document.createElement('div');
-                spriteOnStage.classList.add('sprite-wrapper');
-                spriteOnStage.id = id;
-                spriteOnStage.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
-                stageArea.appendChild(spriteOnStage);
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
+                const clone1 = mainSprite.cloneNode(true);
+                const clone2 = mainSprite.cloneNode(true);
+                const clone3 = mainSprite.cloneNode(true);
+                spriteContainer.appendChild(mainSprite);
+                spriteContainer.appendChild(clone1);
+                spriteContainer.appendChild(clone2);
+                spriteContainer.appendChild(clone3);
+                stageArea.appendChild(spriteContainer);
+                
+                const allWrappers = [mainSprite, clone1, clone2, clone3];
+                allWrappers.forEach(wrapper => {
+                    wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
+                    wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                    wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
+                });
                 
                 spriteCard.addEventListener('click', () => setActiveSprite(id));
-                spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
-                spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, id));
-                spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    deleteSprite(id);
-                });
+                spriteCard.querySelector('.delete-button').addEventListener('click', (e) => { e.stopPropagation(); deleteSprite(id); });
+
                 updateSpriteAppearance(id);
             };
 
@@ -2889,7 +2890,7 @@
                         
                         stopAllScripts();
                         Object.keys(sprites).forEach(id => {
-                            document.getElementById(id)?.remove();
+                            document.getElementById(`container-${id}`)?.remove();
                             document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
                         });
 
@@ -3108,7 +3109,7 @@
             
             closeGalleryButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                backgroundGallery.classList.remove('visible');
+                spriteGallery.classList.remove('visible');
             });
             
             thumbnailsGrid.addEventListener('click', handleGallerySelection);
@@ -3127,3 +3128,4 @@
     </script>
 </body>
 </html>
+
