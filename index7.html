@@ -2322,10 +2322,10 @@
 
             Blockly.Blocks['operator_random_number'] = {
                 init: function() {
-                    this.appendDummyInput().appendField("מספר אקראי בין");
-                    this.appendDummyInput().appendField(new FieldCustomNumber(1), "FROM");
-                    this.appendDummyInput().appendField("ל-");
-                    this.appendDummyInput().appendField(new FieldCustomNumber(10), "TO");
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/random.svg", 34, 34, "*"))
+                        .appendField(new FieldCustomNumber(1), "FROM")
+                        .appendField(new FieldCustomNumber(10), "TO");
                     this.setInputsInline(true);
                     this.setOutput(true, "Number");
                     this.setColour("#40BF4A");
