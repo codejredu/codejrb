@@ -1616,13 +1616,6 @@
                         updateSpriteAppearance(sprite.id);
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' זזה ' + (${steps}) + ' צעדים.');
-                        // A minimal delay to allow UI to render in fast loops without being noticeable.
-                        await new Promise(resolve => {
-                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 10);
-                            const checkCancelId = setInterval(() => {
-                                if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
-                            }, 10);
-                        });
                     }
                 `;
             };
@@ -1951,6 +1944,7 @@
                         log('חזרה מספר: ' + (i + 1));
                         ${branch}
                         if (getExecutionCancelled()) break;
+                        await new Promise(r => setTimeout(r, 33));
                     }
                 `;
             };
@@ -1971,7 +1965,7 @@
                 return `
                     while(!getExecutionCancelled()) {
                         ${branch}
-                        await new Promise(r => setTimeout(r, 10)); // Yield to event loop
+                        await new Promise(r => setTimeout(r, 33)); // Yield to event loop at ~30 FPS
                     }
                 `;
             };
@@ -2230,7 +2224,9 @@
                     maxScale: 3,
                     minScale: 0.3,
                     scaleSpeed: 1.2
-                }
+                },
+                renderer: 'zelos',
+                theme: Blockly.Themes.Scratch
             });
 
             const getExecutionCancelled = () => executionCancelled;
