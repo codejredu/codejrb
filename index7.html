@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -331,7 +332,7 @@
         }
         /* Colorful Number Pad Styles */
         .number-pad-container {
-            position: absolute;
+            position: fixed; /* Use fixed positioning for viewport-relative logic */
             z-index: 10000;
             background-color: #f0f4f8;
             border: 2px solid #a5b4fc;
@@ -1469,6 +1470,59 @@
                 Blockly.svgResize(workspace);
             });
             
+            function positionNumberPad(field) {
+                const numberPad = document.getElementById('number-pad-container');
+                if (!field || numberPad.style.display !== 'block') {
+                    return;
+                }
+
+                // Make pad temporarily visible but transparent to measure its dimensions
+                numberPad.style.visibility = 'hidden';
+                const padRect = numberPad.getBoundingClientRect();
+                
+                const blockSvg = field.getSourceBlock().getSvgRoot();
+                const blockBounds = blockSvg.getBoundingClientRect();
+
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const margin = 5; // Margin from screen edges
+
+                // --- Vertical Positioning ---
+                let finalTop;
+                // Try positioning below first
+                if (blockBounds.bottom + padRect.height + margin < viewportHeight) {
+                    finalTop = blockBounds.bottom + margin;
+                } 
+                // If not enough space below, try positioning above
+                else if (blockBounds.top - padRect.height - margin > 0) {
+                    finalTop = blockBounds.top - padRect.height - margin;
+                } 
+                // If no space above either, position it as best as possible (e.g., at the top)
+                else {
+                    finalTop = margin;
+                }
+
+                // --- Horizontal Positioning ---
+                let finalLeft;
+                // Start by aligning with the block's left edge
+                finalLeft = blockBounds.left;
+                
+                // If it overflows right, align to the right edge of the screen
+                if (finalLeft + padRect.width + margin > viewportWidth) {
+                     finalLeft = viewportWidth - padRect.width - margin;
+                }
+                
+                // Ensure it doesn't go off the left edge
+                if (finalLeft < margin) {
+                    finalLeft = margin;
+                }
+
+                numberPad.style.top = `${finalTop}px`;
+                numberPad.style.left = `${finalLeft}px`;
+                
+                numberPad.style.visibility = 'visible';
+            }
+            
             // Custom Field for Number Pad
             class FieldCustomNumber extends Blockly.FieldNumber {
                 constructor(value, min, max, precision, validator) {
@@ -1480,26 +1534,12 @@
                     const numberPadDisplay = document.getElementById('number-pad-display');
                     
                     numberPad.currentField = this;
-                    numberPadDisplay.textContent = this.getValue();
+                    numberPadDisplay.textContent = this.getValue() || '0';
 
-                    const blockSvg = this.getSourceBlock().getSvgRoot();
-                    const blockBounds = blockSvg.getBoundingClientRect();
-                    
+                    // Show pad to start calculations
                     numberPad.style.display = 'block';
                     
-                    let top = blockBounds.bottom + 5;
-                    let left = blockBounds.left;
-
-                    const workspaceBounds = document.getElementById('blockly-area').getBoundingClientRect();
-                    if (left + numberPad.offsetWidth > workspaceBounds.right) {
-                        left = workspaceBounds.right - numberPad.offsetWidth - 5;
-                    }
-                    if (left < workspaceBounds.left) {
-                        left = workspaceBounds.left + 5;
-                    }
-                    
-                    numberPad.style.top = `${top}px`;
-                    numberPad.style.left = `${left}px`;
+                    positionNumberPad(this);
                 }
             }
             Blockly.fieldRegistry.register('field_custom_number', FieldCustomNumber);
@@ -2345,6 +2385,18 @@
                 },
                 renderer: 'zelos',
                 theme: Blockly.Themes.Scratch
+            });
+
+            workspace.addChangeListener((event) => {
+                if (event.type === Blockly.Events.BLOCK_MOVE) {
+                    const numberPad = document.getElementById('number-pad-container');
+                    if (numberPad.style.display === 'block' && numberPad.currentField) {
+                        const fieldBlockId = numberPad.currentField.getSourceBlock().id;
+                        if (event.blockId === fieldBlockId) {
+                            positionNumberPad(numberPad.currentField);
+                        }
+                    }
+                }
             });
 
             const getExecutionCancelled = () => executionCancelled;
