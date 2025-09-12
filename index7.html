@@ -296,7 +296,12 @@
         }
         .thumbnail {
             width: 100%;
-            height: auto;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            padding: 4px;
+            box-sizing: border-box;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -673,7 +678,7 @@
 
             <div class="section">
                 <div class="section-header">
-                    <h2></h2>
+                    <h2>דמויות</h2>
                     <div id="add-sprite-button" class="plus-button">+</div>
                 </div>
                 <div id="sprites-carousel-wrapper" class="relative mt-4">
