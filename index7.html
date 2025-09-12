@@ -97,7 +97,7 @@
             background-position: center;
             border-radius: 12px;
         }
-         .sprite-container {
+        .sprite-container {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -1136,25 +1136,28 @@
                 if (!spriteData) return;
 
                 const container = document.getElementById(`container-${spriteData.id}`);
-                const wrapper = document.getElementById(spriteData.id);
+                const wrapper = container.querySelector('.sprite-wrapper');
                 
                 if (container && wrapper) {
                     const rect = stageArea.getBoundingClientRect();
-                    const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
-                    const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
+                    const stageToSpriteX = STAGE_WIDTH / rect.width;
+                    const stageToSpriteY = STAGE_HEIGHT / rect.height;
+
+                    const stageX = spriteData.x / stageToSpriteX;
+                    const stageY = -spriteData.y / stageToSpriteY;
                     
                     const baseSize = 80;
                     const newSize = baseSize * (spriteData.size / 100);
 
-                    // Apply styles to the main wrapper inside the container
+                    // Apply styles to the single wrapper
                     wrapper.style.width = `${newSize}px`;
                     wrapper.style.height = `${newSize}px`;
                     wrapper.style.opacity = spriteData.opacity;
-                    
-                    // Position the container, and rotate the wrapper
-                    container.style.transform = `translate(${stageX}px, ${stageY}px)`;
                     wrapper.style.transform = `translate(-50%, -50%) rotate(${spriteData.direction - 90}deg)`;
-
+                    
+                    // Position the main container which holds the wrapper
+                    container.style.transform = `translate(${stageX}px, ${stageY}px)`;
+                    
                     // After any visual update, check for collisions
                     checkCollisions();
                 }
@@ -1208,7 +1211,6 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                // New structure with a container for seamless wrapping
                 const spriteContainer = document.createElement('div');
                 spriteContainer.id = `container-${id}`;
                 spriteContainer.classList.add('sprite-container');
@@ -1220,29 +1222,18 @@
                     <img src="${imageUrl}" alt="${name}">
                     <div class="speech-bubble"></div>
                 `;
-
-                // Create clones for wrapping effect
-                const clone1 = mainSprite.cloneNode(true);
-                const clone2 = mainSprite.cloneNode(true);
-                const clone3 = mainSprite.cloneNode(true);
-
-                spriteContainer.appendChild(mainSprite);
-                spriteContainer.appendChild(clone1);
-                spriteContainer.appendChild(clone2);
-                spriteContainer.appendChild(clone3);
                 
+                spriteContainer.appendChild(mainSprite);
                 stageArea.appendChild(spriteContainer);
                 
-                const allWrappers = [mainSprite, clone1, clone2, clone3];
-                allWrappers.forEach(wrapper => {
-                    wrapper.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (justDragged) return;
-                        handleSpriteClick(id);
-                    });
-                    wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
-                    wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
+                const wrapper = spriteContainer.querySelector('.sprite-wrapper');
+                wrapper.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (justDragged) return;
+                    handleSpriteClick(id);
                 });
+                wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
                 
                 spriteCard.addEventListener('click', () => {
                     setActiveSprite(id);
@@ -1940,9 +1931,9 @@
                 init: function() {
                     this.appendValueInput("TIMES")
                         .setCheck("Number")
-                        .appendField("חזור")
+                        .appendField('\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
-                    this.appendDummyInput().appendField("פעמים");
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -1967,7 +1958,7 @@
             Blockly.Blocks['control_forever'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField("לעולמים")
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*"));
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -2852,21 +2843,14 @@
                 mainSprite.classList.add('sprite-wrapper');
                 mainSprite.id = id;
                 mainSprite.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
-                const clone1 = mainSprite.cloneNode(true);
-                const clone2 = mainSprite.cloneNode(true);
-                const clone3 = mainSprite.cloneNode(true);
+                
                 spriteContainer.appendChild(mainSprite);
-                spriteContainer.appendChild(clone1);
-                spriteContainer.appendChild(clone2);
-                spriteContainer.appendChild(clone3);
                 stageArea.appendChild(spriteContainer);
                 
-                const allWrappers = [mainSprite, clone1, clone2, clone3];
-                allWrappers.forEach(wrapper => {
-                    wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
-                    wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
-                    wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
-                });
+                const wrapper = spriteContainer.querySelector('.sprite-wrapper');
+                wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
+                wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
                 
                 spriteCard.addEventListener('click', () => setActiveSprite(id));
                 spriteCard.querySelector('.delete-button').addEventListener('click', (e) => { e.stopPropagation(); deleteSprite(id); });
@@ -3109,7 +3093,7 @@
             
             closeGalleryButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                spriteGallery.classList.remove('visible');
+                backgroundGallery.classList.remove('visible');
             });
             
             thumbnailsGrid.addEventListener('click', handleGallerySelection);
@@ -3128,4 +3112,3 @@
     </script>
 </body>
 </html>
-
