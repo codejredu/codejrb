@@ -917,8 +917,20 @@
             </block>
             <block type="looks_show"></block>
             <block type="looks_hide"></block>
-            <block type="looks_grow"></block>
-            <block type="looks_shrink"></block>
+            <block type="looks_grow">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_shrink">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
             <block type="looks_switch_backdrop"></block>
         </category>
         <category 
@@ -1870,10 +1882,10 @@
 
             Blockly.Blocks['looks_grow'] = {
                 init: function() {
-                    this.appendDummyInput()
-                        .appendField('\u00A0\u00A0\u00A0')
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/increase.svg", 34, 34, "*"))
-                        .appendField('\u00A0\u00A0\u00A0');
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/increase.svg", 34, 34, "*"));
+                    this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1881,9 +1893,10 @@
                 }
             };
             Blockly.JavaScript['looks_grow'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
                 return `
                     if (sprite) {
-                        sprite.size += 10;
+                        sprite.size += Number(${size});
                         updateSpriteAppearance(sprite.id);
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' גדלה לגודל ' + sprite.size);
@@ -1894,10 +1907,10 @@
             
             Blockly.Blocks['looks_shrink'] = {
                 init: function() {
-                    this.appendDummyInput()
-                        .appendField('\u00A0\u00A0\u00A0')
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/decrease.svg", 34, 34, "*"))
-                        .appendField('\u00A0\u00A0\u00A0');
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/decrease.svg", 34, 34, "*"));
+                    this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1905,9 +1918,10 @@
                 }
             };
             Blockly.JavaScript['looks_shrink'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
                 return `
                     if (sprite) {
-                        sprite.size = Math.max(5, sprite.size - 10); // Don't let size go below 5
+                        sprite.size = Math.max(5, sprite.size - Number(${size})); // Don't let size go below 5
                         updateSpriteAppearance(sprite.id);
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' קטנה לגודל ' + sprite.size);
