@@ -559,7 +559,7 @@
             justify-content: center !important;
             border-bottom: 1px solid #e0e0e0;
             padding: 4px 0 !important;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, border-right-color 0.2s;
             border-right: 5px solid transparent; /* Prepare for selected state */
         }
         .blocklyTreeLabel {
@@ -592,6 +592,10 @@
             pointer-events: none; /* So it doesn't interfere with future clicks */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transform: translate(-50%, -110%); /* Center horizontally and place above */
+        }
+        .blocklyTreeRow.kidi-category-selected {
+            background-color: var(--category-bg-color);
+            border-right-color: var(--category-color);
         }
     </style>
 </head>
@@ -817,7 +821,7 @@
     <xml id="toolbox" style="display: none">
         <category 
             name="להפעיל" 
-            colour="#FFD95A" 
+            colour="#FFE75A" 
             icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFC107'><path d='M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z'/></svg>">
             <block type="event_when_flag_clicked"></block>
             <block type="event_when_sprite_clicked"></block>
@@ -992,25 +996,21 @@
                             const icon = document.createElement('img');
                             icon.src = iconUri;
                             icon.className = 'kidi-category-icon';
-                            // Prepend the icon to the label div
                             label.insertBefore(icon, label.firstChild);
                         }
                     }
+                    
+                    // Store colors in CSS variables on the element itself for the new CSS rule to use
+                    this.rowDiv_.style.setProperty('--category-color', this.colour_);
+                    this.rowDiv_.style.setProperty('--category-bg-color', hexToRgba(this.colour_, 0.15));
+                    
                     return this.rowDiv_;
                 }
                 
                 setSelected(isSelected) {
                     super.setSelected(isSelected);
-                    if (isSelected) {
-                        // Apply our custom style: a border with the category's color
-                        this.rowDiv_.style.borderRightColor = this.colour_;
-                        // Apply a light tint of the category color as the background
-                        this.rowDiv_.style.backgroundColor = hexToRgba(this.colour_, 0.15); 
-                    } else {
-                        // Remove our custom styles
-                        this.rowDiv_.style.borderRightColor = 'transparent';
-                        this.rowDiv_.style.backgroundColor = 'transparent'; // Reset background
-                    }
+                    // Just toggle a class. The CSS will handle the styling.
+                    this.rowDiv_.classList.toggle('kidi-category-selected', isSelected);
                 }
             }
 
@@ -1598,7 +1598,7 @@
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 35, 35, { alt: "green flag", flipRtl: "false" }))
                         .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
                     this.setHelpUrl("");
                 }
@@ -1611,7 +1611,7 @@
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 35, 35, "*"))
                         .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר לוחצים על הדמות.");
                     this.setHelpUrl("");
                 }
@@ -1671,7 +1671,7 @@
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 35, 35, { alt: "keyboard icon", flipRtl: "false" }))
                         .appendField(new Blockly.FieldDropdown(keyOptions), "KEY");
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("הפעל את התסריט כאשר המקש הנבחר נלחץ.");
                     this.setHelpUrl("");
                 }
@@ -1684,7 +1684,7 @@
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/collision.svg", 35, 35, "*"))
                         .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר דמות זו נוגעת בדמות אחרת.");
                 }
             };
@@ -1699,7 +1699,7 @@
                         .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("שולח מסר לכל הדמויות.");
                 }
             };
@@ -1721,7 +1721,7 @@
                         .appendField(new FieldMessage(), 'MESSAGE')
                         .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("מתחיל תסריט כאשר מתקבל מסר ספציפי.");
                 }
             };
@@ -2425,6 +2425,15 @@
                 renderer: 'zelos',
                 theme: Blockly.Themes.Scratch
             });
+            
+            const toolbox = workspace.getToolbox();
+            if (toolbox) {
+                // Prevent the toolbox from clearing the category selection when the workspace is clicked.
+                // This keeps the currently selected category visually highlighted.
+                toolbox.clearSelection = () => {
+                    // Do nothing, overriding the default behavior.
+                };
+            }
 
             workspace.addChangeListener((event) => {
                 if (event.type === Blockly.Events.BLOCK_MOVE) {
