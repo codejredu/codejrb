@@ -600,7 +600,7 @@
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-    <div id="project-controls" class="w-full bg-violet-100 shadow-md p-2 flex justify-between items-center fixed top-0 left-0 z-50" dir="rtl">
+    <div id="project-controls" class="w-full shadow-md p-2 flex justify-between items-center fixed top-0 left-0 z-50" style="background-color: #855CD6;" dir="rtl">
         <div class="flex items-center gap-4">
             <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -617,7 +617,7 @@
             </button>
             <input type="file" id="load-input" class="hidden" accept=".kidi, .json">
         </div>
-        <h1 class="text-2xl font-bold text-indigo-600 px-4">קודקידי</h1>
+        <h1 class="text-2xl font-bold text-white px-4">קודקידי</h1>
     </div>
 
 
@@ -1696,7 +1696,7 @@
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/send.svg", 35, 35, "*"))
                         .appendField(new FieldMessage(), 'MESSAGE')
-                        .appendField('\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#FFE75A");
@@ -1719,7 +1719,7 @@
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/receive.svg", 35, 35, "*"))
                         .appendField(new FieldMessage(), 'MESSAGE')
-                        .appendField('\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
                     this.setColour("#FFE75A");
                     this.setTooltip("מתחיל תסריט כאשר מתקבל מסר ספציפי.");
@@ -1731,7 +1731,7 @@
                 init: function() {
                     this.appendValueInput("STEPS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 34, 34, "*"))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1778,7 +1778,7 @@
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 34, 34, { alt: "turn right icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1802,7 +1802,7 @@
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1837,7 +1837,7 @@
 
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 34, 34, { alt: "compass icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -2246,7 +2246,7 @@
                     this.appendValueInput("HEIGHT")
                         .setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test//assets/blocklyicon/jump.svg", 34, 34, { alt: "jump icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
