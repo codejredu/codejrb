@@ -1730,7 +1730,8 @@
             Blockly.Blocks['motion_move_steps'] = {
                 init: function() {
                     this.appendValueInput("STEPS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 34, 34, "*"));
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 34, 34, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1777,6 +1778,7 @@
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 34, 34, { alt: "turn right icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1799,7 +1801,8 @@
             Blockly.Blocks['motion_turn_left_degrees'] = {
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }));
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1834,7 +1837,7 @@
 
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 34, 34, { alt: "compass icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
