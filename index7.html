@@ -246,7 +246,8 @@
             opacity: 0;
             transition: opacity 0.2s;
         }
-        .sprite-card:hover .delete-button {
+        .sprite-card:hover .delete-button,
+        .backdrop-card:hover .delete-button {
             visibility: visible;
             opacity: 1;
         }
@@ -260,6 +261,7 @@
             background-position: center;
             transition: border-color 0.2s;
             flex-shrink: 0;
+            position: relative;
         }
         .backdrop-card.selected {
             border-color: #4C97FF;
@@ -717,6 +719,17 @@
                     <button class="close-gallery-button" id="close-sprite-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית דמויות</h2>
                     <div id="sprite-thumbnails-grid" class="thumbnail-grid">
+                        <label for="sprite-upload-input" class="thumbnail flex items-center justify-center bg-blue-500 hover:bg-blue-600 transition-colors">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M15 8h.01"></path>
+                                <path d="M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5"></path>
+                                <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l3 3"></path>
+                                <path d="M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54"></path>
+                                <path d="M19 22v-6"></path>
+                                <path d="M22 19l-3 -3l-3 3"></path>
+                             </svg>
+                        </label>
                         <img src="https://codejredu.github.io/claudejr/Chick.svg" alt="Chick" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Rabbit.svg" alt="Rabbit" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Beetle.svg" alt="Beetle" class="thumbnail">
@@ -759,6 +772,7 @@
                         <img src="https://codejredu.github.io/test/assets/ani/mouse.gif" alt="Mouse" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/ani/ostrich.gif" alt="Ostrich" class="thumbnail">
                     </div>
+                    <input type="file" id="sprite-upload-input" class="hidden" accept="image/png, image/jpeg, image/gif, image/svg+xml">
                 </div>
             </div>
 
@@ -776,6 +790,17 @@
                     <button class="close-gallery-button" id="close-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית רקעים</h2>
                     <div id="thumbnails-grid" class="thumbnail-grid">
+                        <label for="backdrop-upload-input" class="thumbnail flex items-center justify-center bg-blue-500 hover:bg-blue-600 transition-colors">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M15 8h.01"></path>
+                                <path d="M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5"></path>
+                                <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l3 3"></path>
+                                <path d="M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54"></path>
+                                <path d="M19 22v-6"></path>
+                                <path d="M22 19l-3 -3l-3 3"></path>
+                             </svg>
+                        </label>
                         <img src="https://codejredu.github.io/test/assets/bg/Amphitheater.svg" alt="Amphitheater" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon.svg" alt="canyon" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon1.svg" alt="canyon1" class="thumbnail">
@@ -806,6 +831,7 @@
                         <img src="https://codejredu.github.io/test/assets/bg/winter2.svg" alt="winter2" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/under.svg" alt="under" class="thumbnail">
                     </div>
+                    <input type="file" id="backdrop-upload-input" class="hidden" accept="image/png, image/jpeg, image/gif, image/svg+xml">
                 </div>
             </div>
         </div>
@@ -1065,9 +1091,11 @@
             const backgroundGallery = document.getElementById('background-gallery');
             const closeGalleryButton = document.getElementById('close-gallery-button');
             const thumbnailsGrid = document.getElementById('thumbnails-grid');
+            const backdropUploadInput = document.getElementById('backdrop-upload-input');
             const spriteGallery = document.getElementById('sprite-gallery');
             const closeSpriteGalleryButton = document.getElementById('close-sprite-gallery-button');
             const spriteThumbnailsGrid = document.getElementById('sprite-thumbnails-grid');
+            const spriteUploadInput = document.getElementById('sprite-upload-input');
             
             const fullscreenButton = document.getElementById('fullscreen-button');
             const enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
@@ -2862,15 +2890,55 @@
                 });
                 log('כל התסריטים נעצרו.');
             }
+
+            function deleteBackdrop(cardElement) {
+                const urlToDelete = cardElement.dataset.url;
+                const currentBackdropUrl = stageArea.style.backgroundImage.replace(/url\((['"])?(.*?)\1\)/, '$2');
+
+                const allBackdrops = document.querySelectorAll('#backdrops-list .backdrop-card');
+                if (allBackdrops.length <= 1) {
+                    alert("לא ניתן למחוק את הרקע האחרון.");
+                    return;
+                }
+
+                cardElement.remove();
+
+                if (urlToDelete === currentBackdropUrl) {
+                    const firstRemainingBackdrop = document.querySelector('#backdrops-list .backdrop-card');
+                    if (firstRemainingBackdrop) {
+                        window.switchBackdrop(firstRemainingBackdrop.dataset.url);
+                    } else {
+                        stageArea.style.backgroundImage = 'none';
+                    }
+                }
+                 Blockly.getMainWorkspace().refreshToolboxSelection();
+            }
+            
+            function createBackdropCard(url) {
+                const card = document.createElement('div');
+                card.classList.add('backdrop-card');
+                card.style.backgroundImage = `url("${url}")`;
+                card.dataset.url = url;
+
+                const deleteBtn = document.createElement('div');
+                deleteBtn.classList.add('delete-button');
+                deleteBtn.textContent = 'X';
+                card.appendChild(deleteBtn);
+
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteBackdrop(card);
+                });
+
+                backdropsList.appendChild(card);
+                return card;
+            }
             
             function createDefaultBackdrop() {
-                const defaultBackdrop = document.createElement('div');
-                defaultBackdrop.classList.add('backdrop-card');
-                defaultBackdrop.style.backgroundImage = 'url("https://codejredu.github.io/test/assets/bg/farm.svg")';
-                defaultBackdrop.dataset.url = "https://codejredu.github.io/test/assets/bg/farm.svg";
-                defaultBackdrop.classList.add('selected');
-                backdropsList.appendChild(defaultBackdrop);
-                document.getElementById('stage-area').style.backgroundImage = `url("https://codejredu.github.io/test/assets/bg/farm.svg")`;
+                const url = "https://codejredu.github.io/test/assets/bg/farm.svg";
+                const card = createBackdropCard(url);
+                card.classList.add('selected');
+                stageArea.style.backgroundImage = `url("${url}")`;
             }
 
             function createDefaultSprite() {
@@ -2878,22 +2946,20 @@
             }
 
             function handleBackdropSelection(e) {
-                const url = e.target.dataset.url;
-                if (url) {
-                   window.switchBackdrop(url);
+                const card = e.target.closest('.backdrop-card');
+                if (card && e.target !== card.querySelector('.delete-button')) {
+                    const url = card.dataset.url;
+                    if (url) {
+                       window.switchBackdrop(url);
+                    }
                 }
             }
 
             function handleGallerySelection(e) {
                 const url = e.target.src;
                 if (url) {
-                    const newBackdropCard = document.createElement('div');
-                    newBackdropCard.classList.add('backdrop-card');
-                    newBackdropCard.style.backgroundImage = `url("${url}")`;
-                    newBackdropCard.dataset.url = url;
-                    
-                    backdropsList.appendChild(newBackdropCard);
-
+                    const newCard = createBackdropCard(url);
+                    window.switchBackdrop(url);
                     backgroundGallery.classList.remove('visible');
                 }
             }
@@ -3002,7 +3068,7 @@
                 mainSprite.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
                 
                 spriteContainer.appendChild(mainSprite);
-                stageArea.appendChild(spriteContainer);
+                stageArea.appendChild(mainSprite);
                 
                 const wrapper = spriteContainer.querySelector('.sprite-wrapper');
                 wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
@@ -3040,13 +3106,7 @@
                         workspace.clear();
                         backdropsList.innerHTML = '';
                         
-                        projectData.backdrops.forEach(url => {
-                            const newBackdropCard = document.createElement('div');
-                            newBackdropCard.classList.add('backdrop-card');
-                            newBackdropCard.style.backgroundImage = `url("${url}")`;
-                            newBackdropCard.dataset.url = url;
-                            backdropsList.appendChild(newBackdropCard);
-                        });
+                        projectData.backdrops.forEach(createBackdropCard);
 
                         window.switchBackdrop(projectData.currentBackdrop);
 
@@ -3281,6 +3341,24 @@
             
             thumbnailsGrid.addEventListener('click', handleGallerySelection);
             
+            backdropUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    const card = createBackdropCard(imageUrl);
+                    window.switchBackdrop(imageUrl);
+                    backgroundGallery.classList.remove('visible');
+                };
+                reader.readAsDataURL(file);
+
+                e.target.value = null; 
+            });
+
             addSpriteButton.addEventListener('click', () => {
                 spriteGallery.classList.add('visible');
             });
@@ -3291,6 +3369,25 @@
             });
 
             spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
+
+            spriteUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    const imageName = file.name.split('.').slice(0, -1).join('.') || 'דמות שהועלתה';
+                    
+                    createNewSprite(imageName, imageUrl);
+                    spriteGallery.classList.remove('visible');
+                };
+                reader.readAsDataURL(file);
+
+                e.target.value = null; 
+            });
         });
     </script>
 </body>
