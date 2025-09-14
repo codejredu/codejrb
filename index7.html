@@ -740,6 +740,7 @@
                         <img src="https://codejredu.github.io/claudejr/Flower.svg" alt="Flower" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Monkey.svg" alt="Monkey" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Crocodile.svg" alt="Crocodile" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/falcon.svg" alt="Falcon" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/ani/waman dance.gif" alt="Waman Dance" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/ani/CAR.gif" alt="Car" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/ani/Hedgehog.gif" alt="Hedgehog" class="thumbnail">
@@ -1289,9 +1290,10 @@
                     let rotationTransform = '';
                     switch(spriteData.rotationStyle) {
                         case 'left-right':
-                            // Normalize direction to 0-360
                             const normalizedDir = ((spriteData.direction % 360) + 360) % 360;
-                            const isFlipped = normalizedDir > 90 && normalizedDir < 270;
+                            // The sprite should face right for directions 0-179 and left for 180-359.
+                            // This is achieved by flipping it horizontally when the direction is 180 or more.
+                            const isFlipped = normalizedDir >= 180;
                             rotationTransform = isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
                             break;
                         case 'dont-rotate':
