@@ -97,10 +97,18 @@
             background-position: center;
             border-radius: 12px;
         }
-        .sprite-wrapper {
+        .sprite-container {
             position: absolute;
             top: 50%;
             left: 50%;
+            width: 1px;
+            height: 1px;
+            visibility: hidden; /* Hide the container itself */
+        }
+        .sprite-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 80px; /* Base size */
             height: 80px; /* Base size */
             background-color: transparent;
@@ -108,11 +116,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s ease-out;
+            transform-origin: center center;
             z-index: 10;
             opacity: 1;
             cursor: grab;
+            visibility: visible; /* Make the wrapper visible */
+            transform: translate(-50%, -50%); /* Center the wrapper on the container's point */
         }
         .sprite-wrapper:active {
             cursor: grabbing;
@@ -192,6 +201,10 @@
             align-items: center;
             font-size: 1.5rem;
             cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .plus-button:hover {
+            background-color: #3b82f6;
         }
         
         .sprite-card {
@@ -237,7 +250,8 @@
             opacity: 0;
             transition: opacity 0.2s;
         }
-        .sprite-card:hover .delete-button {
+        .sprite-card:hover .delete-button,
+        .backdrop-card:hover .delete-button {
             visibility: visible;
             opacity: 1;
         }
@@ -251,6 +265,7 @@
             background-position: center;
             transition: border-color 0.2s;
             flex-shrink: 0;
+            position: relative;
         }
         .backdrop-card.selected {
             border-color: #4C97FF;
@@ -277,17 +292,18 @@
         }
         .thumbnail-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            grid-template-columns: repeat(auto-fit, 80px);
             gap: 0.5rem;
-        }
-        @media (min-width: 768px) {
-            .thumbnail-grid {
-                grid-template-columns: repeat(5, minmax(0, 1fr));
-            }
+            justify-content: center;
         }
         .thumbnail {
             width: 100%;
-            height: auto;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            padding: 4px;
+            box-sizing: border-box;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -317,7 +333,7 @@
         }
         /* Colorful Number Pad Styles */
         .number-pad-container {
-            position: absolute;
+            position: fixed; /* Use fixed positioning for viewport-relative logic */
             z-index: 10000;
             background-color: #f0f4f8;
             border: 2px solid #a5b4fc;
@@ -394,11 +410,11 @@
         }
 
         /* Sprite Properties Panel */
-        #prop-show.active, #prop-hide.active {
+        #prop-show.active, #prop-hide.active, #prop-rotation-style button.active {
             background-color: #60a5fa; /* bg-blue-400 */
             color: white;
         }
-        #prop-show, #prop-hide {
+        #prop-show, #prop-hide, #prop-rotation-style button {
             transition: background-color 0.2s, color 0.2s;
         }
         #prop-direction {
@@ -545,6 +561,8 @@
             justify-content: center !important;
             border-bottom: 1px solid #e0e0e0;
             padding: 4px 0 !important;
+            transition: background-color 0.2s, border-right-color 0.2s;
+            border-right: 5px solid transparent; /* Prepare for selected state */
         }
         .blocklyTreeLabel {
             display: flex;
@@ -556,9 +574,6 @@
             font-weight: bold;
             color: #5f6368;
             font-size: 13px;
-        }
-        .blocklyTreeRow.blocklyTreeSelected {
-            background-color: #e4f2ff !important;
         }
         .kidi-category-icon {
             width: 28px;
@@ -580,24 +595,31 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transform: translate(-50%, -110%); /* Center horizontally and place above */
         }
+        .blocklyTreeRow.kidi-category-selected {
+            background-color: var(--category-bg-color);
+            border-right-color: var(--category-color);
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-    <div id="project-controls" class="w-full bg-white shadow-md p-2 flex justify-start items-center gap-4 fixed top-0 left-0 z-50" dir="rtl">
-        <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM5 4a1 1 0 011-1h8a1 1 0 011 1v1h-2V5H7v1H5V4z"/>
-                <path fill-rule="evenodd" d="M3 13a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1-3a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
-            </svg>
-            <span>שמור פרויקט</span>
-        </button>
-        <button id="load-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-            </svg>
-            <span>טען פרויקט</span>
-        </button>
-        <input type="file" id="load-input" class="hidden" accept=".kidi, .json">
+    <div id="project-controls" class="w-full shadow-md p-2 flex justify-between items-center fixed top-0 left-0 z-50" style="background-color: #855CD6;" dir="rtl">
+        <div class="flex items-center gap-4">
+            <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM5 4a1 1 0 011-1h8a1 1 0 011 1v1h-2V5H7v1H5V4z"/>
+                    <path fill-rule="evenodd" d="M3 13a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1-3a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
+                </svg>
+                <span>שמור פרויקט</span>
+            </button>
+            <button id="load-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                </svg>
+                <span>טען פרויקט</span>
+            </button>
+            <input type="file" id="load-input" class="hidden" accept=".kidi, .json">
+        </div>
+        <h1 class="text-2xl font-bold text-white px-4">קודקידי</h1>
     </div>
 
 
@@ -659,13 +681,39 @@
                             </button>
                         </div>
                     </div>
+                    <div class="flex items-center gap-2">
+                        <label class="font-medium">סיבוב:</label>
+                        <div id="prop-rotation-style" class="flex bg-gray-200 rounded-lg p-0.5">
+                            <button id="rotation-all-around" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="לכל הכיוונים">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M23 4v6h-6" />
+                                </svg>
+                            </button>
+                            <button id="rotation-left-right" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="שמאל-ימין">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18m-7 4l4-4m0 0l-4-4m4 4H3" />
+                                </svg>
+                            </button>
+                            <button id="rotation-dont-rotate" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="ללא סיבוב">
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 3h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="section">
                 <div class="section-header">
-                    <h2></h2>
-                    <div id="add-sprite-button" class="plus-button">+</div>
+                    <h2>דמויות</h2>
+                    <div class="flex items-center gap-2">
+                        <div id="add-sprite-button" class="plus-button">+</div>
+                        <div id="open-ai-modal-button" class="plus-button" title="צור דמות עם AI">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        </div>
+                    </div>
                 </div>
                 <div id="sprites-carousel-wrapper" class="relative mt-4">
                      <div id="sprites-list" class="flex items-center gap-4">
@@ -676,6 +724,17 @@
                     <button class="close-gallery-button" id="close-sprite-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית דמויות</h2>
                     <div id="sprite-thumbnails-grid" class="thumbnail-grid">
+                        <label for="sprite-upload-input" class="thumbnail flex items-center justify-center bg-blue-500 hover:bg-blue-600 transition-colors">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M15 8h.01"></path>
+                                <path d="M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5"></path>
+                                <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l3 3"></path>
+                                <path d="M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54"></path>
+                                <path d="M19 22v-6"></path>
+                                <path d="M22 19l-3 -3l-3 3"></path>
+                             </svg>
+                        </label>
                         <img src="https://codejredu.github.io/claudejr/Chick.svg" alt="Chick" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Rabbit.svg" alt="Rabbit" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Beetle.svg" alt="Beetle" class="thumbnail">
@@ -699,7 +758,26 @@
                         <img src="https://codejredu.github.io/claudejr/Flower.svg" alt="Flower" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Monkey.svg" alt="Monkey" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Crocodile.svg" alt="Crocodile" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/falcon.svg" alt="Falcon" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/waman dance.gif" alt="Waman Dance" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/CAR.gif" alt="Car" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/Hedgehog.gif" alt="Hedgehog" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/KIDWALK.gif" alt="Kid Walk" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bee.gif" alt="Bee" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bird2.gif" alt="Bird 2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/birdred.gif" alt="Red Bird" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bycycle.gif" alt="Bicycle" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/car1.gif" alt="Car 1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/dance.gif" alt="Dance" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/dog.gif" alt="Dog" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/fox.gif" alt="Fox" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/gitarwaman.gif" alt="Guitar Woman" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/horse.gif" alt="Horse" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/kidwalk1.gif" alt="Kid Walk 1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/mouse.gif" alt="Mouse" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/ostrich.gif" alt="Ostrich" class="thumbnail">
                     </div>
+                    <input type="file" id="sprite-upload-input" class="hidden" accept="image/png, image/jpeg, image/gif, image/svg+xml">
                 </div>
             </div>
 
@@ -717,6 +795,17 @@
                     <button class="close-gallery-button" id="close-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית רקעים</h2>
                     <div id="thumbnails-grid" class="thumbnail-grid">
+                        <label for="backdrop-upload-input" class="thumbnail flex items-center justify-center bg-blue-500 hover:bg-blue-600 transition-colors">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M15 8h.01"></path>
+                                <path d="M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5"></path>
+                                <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l3 3"></path>
+                                <path d="M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54"></path>
+                                <path d="M19 22v-6"></path>
+                                <path d="M22 19l-3 -3l-3 3"></path>
+                             </svg>
+                        </label>
                         <img src="https://codejredu.github.io/test/assets/bg/Amphitheater.svg" alt="Amphitheater" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon.svg" alt="canyon" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon1.svg" alt="canyon1" class="thumbnail">
@@ -747,6 +836,7 @@
                         <img src="https://codejredu.github.io/test/assets/bg/winter2.svg" alt="winter2" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/under.svg" alt="under" class="thumbnail">
                     </div>
+                    <input type="file" id="backdrop-upload-input" class="hidden" accept="image/png, image/jpeg, image/gif, image/svg+xml">
                 </div>
             </div>
         </div>
@@ -780,11 +870,44 @@
             <div id="angle-picker-handle"></div>
         </div>
     </div>
+
+    <!-- AI Sprite Generation Modal -->
+    <div id="ai-sprite-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-[60]">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg text-right">
+            <div class="flex justify-between items-center mb-4">
+                <button id="ai-modal-close-button" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                <h2 class="text-2xl font-bold">יצירת דמות עם AI</h2>
+            </div>
+            <div id="ai-modal-content">
+                <div id="ai-modal-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
+                    <strong class="font-bold">שגיאה!</strong>
+                    <span class="block sm:inline" id="ai-error-message"></span>
+                </div>
+                <p class="mb-3 text-gray-600">תאר את הדמות שברצונך ליצור. לדוגמה: "ארנב חמוד עם משקפי שמש".</p>
+                <textarea id="ai-prompt-input" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 transition" rows="3" placeholder="...תיאור הדמות"></textarea>
+                <button id="ai-generate-button" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-transform transform hover:scale-105">
+                    <span>צור דמות</span>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                </button>
+            </div>
+            <div id="ai-modal-loading" class="hidden text-center py-8">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500 mx-auto"></div>
+                <p class="mt-4 text-gray-700 font-semibold">הקסם קורה... הבינה המלאכותית מציירת את הדמות שלך.</p>
+            </div>
+            <div id="ai-modal-result" class="hidden text-center">
+                 <img id="ai-result-image" src="" alt="Generated Sprite" class="max-w-xs mx-auto my-4 border-2 border-gray-300 rounded-lg p-1 bg-gray-100">
+                 <div class="flex gap-4">
+                    <button id="ai-add-button" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">הוסף לפרויקט</button>
+                    <button id="ai-retry-button" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">נסה שוב</button>
+                 </div>
+            </div>
+        </div>
+    </div>
     
     <xml id="toolbox" style="display: none">
         <category 
             name="להפעיל" 
-            colour="#FFD95A" 
+            colour="#FFE75A" 
             icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFC107'><path d='M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z'/></svg>">
             <block type="event_when_flag_clicked"></block>
             <block type="event_when_sprite_clicked"></block>
@@ -886,6 +1009,27 @@
             </block>
             <block type="looks_show"></block>
             <block type="looks_hide"></block>
+            <block type="looks_grow">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_shrink">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_set_size">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
             <block type="looks_switch_backdrop"></block>
         </category>
         <category 
@@ -913,6 +1057,27 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
              // START OF CUSTOM TOOLBOX RENDERER
+
+            /**
+             * Helper function to convert a hex color to an rgba string.
+             * @param {string} hex The hex color string (e.g., "#FF6B1A").
+             * @param {number} alpha The alpha transparency (0.0 to 1.0).
+             * @returns {string} The rgba color string.
+             */
+            function hexToRgba(hex, alpha) {
+                let r = 0, g = 0, b = 0;
+                if (hex.length == 4) { // 3-digit hex
+                    r = parseInt(hex[1] + hex[1], 16);
+                    g = parseInt(hex[2] + hex[2], 16);
+                    b = parseInt(hex[3] + hex[3], 16);
+                } else if (hex.length == 7) { // 6-digit hex
+                    r = parseInt(hex.substring(1, 3), 16);
+                    g = parseInt(hex.substring(3, 5), 16);
+                    b = parseInt(hex.substring(5, 7), 16);
+                }
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+
             class KidiToolboxCategory extends Blockly.ToolboxCategory {
                 createDom_() {
                     super.createDom_(); // Let the parent class create the basic structure
@@ -924,11 +1089,21 @@
                             const icon = document.createElement('img');
                             icon.src = iconUri;
                             icon.className = 'kidi-category-icon';
-                            // Prepend the icon to the label div
                             label.insertBefore(icon, label.firstChild);
                         }
                     }
+                    
+                    // Store colors in CSS variables on the element itself for the new CSS rule to use
+                    this.rowDiv_.style.setProperty('--category-color', this.colour_);
+                    this.rowDiv_.style.setProperty('--category-bg-color', hexToRgba(this.colour_, 0.08));
+                    
                     return this.rowDiv_;
+                }
+                
+                setSelected(isSelected) {
+                    super.setSelected(isSelected);
+                    // Just toggle a class. The CSS will handle the styling.
+                    this.rowDiv_.classList.toggle('kidi-category-selected', isSelected);
                 }
             }
 
@@ -961,9 +1136,11 @@
             const backgroundGallery = document.getElementById('background-gallery');
             const closeGalleryButton = document.getElementById('close-gallery-button');
             const thumbnailsGrid = document.getElementById('thumbnails-grid');
+            const backdropUploadInput = document.getElementById('backdrop-upload-input');
             const spriteGallery = document.getElementById('sprite-gallery');
             const closeSpriteGalleryButton = document.getElementById('close-sprite-gallery-button');
             const spriteThumbnailsGrid = document.getElementById('sprite-thumbnails-grid');
+            const spriteUploadInput = document.getElementById('sprite-upload-input');
             
             const fullscreenButton = document.getElementById('fullscreen-button');
             const enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
@@ -983,6 +1160,9 @@
             const propHide = document.getElementById('prop-hide');
             const propSize = document.getElementById('prop-size');
             const propDirection = document.getElementById('prop-direction');
+            const propRotationAllAround = document.getElementById('rotation-all-around');
+            const propRotationLeftRight = document.getElementById('rotation-left-right');
+            const propRotationDontRotate = document.getElementById('rotation-dont-rotate');
             
             // Angle Picker elements
             const anglePickerWidget = document.getElementById('angle-picker-widget');
@@ -996,11 +1176,67 @@
             let sprites = {};
             let activeSpriteId = null;
             let executionCancelled = false;
-            let isRunning = false;
             let isLoadingProject = false; // Flag to prevent events during load
             let justDragged = false;
             let dragStartX, dragStartY;
             let collisionState = new Set(); // Stores pairs of collided sprites
+            let scriptRunner = null;
+            
+            // --- Frame-Based Script Execution Engine (like Scratch) ---
+            class ScriptRunner {
+                constructor() {
+                    this.threads = [];
+                    this.isRunning = false;
+                    this.animationFrameId = null;
+                    log('מנוע ריצה חדש נוצר.');
+                }
+
+                add(generator) {
+                    this.threads.push(generator);
+                    if (!this.isRunning) {
+                        this.start();
+                    }
+                }
+
+                start() {
+                    if (this.isRunning) return;
+                    this.isRunning = true;
+                    executionCancelled = false;
+                    log('מנוע ריצה התחיל.');
+                    this.tick();
+                }
+
+                stop() {
+                    if (this.animationFrameId) {
+                        cancelAnimationFrame(this.animationFrameId);
+                    }
+                    this.isRunning = false;
+                    this.threads = [];
+                    this.animationFrameId = null;
+                    executionCancelled = true;
+                    log('מנוע ריצה נעצר.');
+                }
+
+                tick() {
+                    if (!this.isRunning) return;
+
+                    // Run one step of each generator
+                    for (let i = this.threads.length - 1; i >= 0; i--) {
+                        const generator = this.threads[i];
+                        const result = generator.next();
+                        if (result.done) {
+                            this.threads.splice(i, 1);
+                        }
+                    }
+                    
+                    if (this.threads.length > 0) {
+                        this.animationFrameId = requestAnimationFrame(() => this.tick());
+                    } else {
+                        log('כל התסריטים הסתיימו.');
+                        this.stop(); 
+                    }
+                }
+            }
 
             // Custom field for messages
             const messageOptions = [
@@ -1109,20 +1345,49 @@
                 const spriteData = sprites[spriteId];
                 if (!spriteData) return;
 
-                const spriteEl = document.getElementById(spriteData.id);
-                if (spriteEl) {
+                const container = document.getElementById(`container-${spriteData.id}`);
+                const wrapper = container.querySelector('.sprite-wrapper');
+                
+                if (container && wrapper) {
                     const rect = stageArea.getBoundingClientRect();
-                    const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
-                    const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
+                    const stageToSpriteX = STAGE_WIDTH / rect.width;
+                    const stageToSpriteY = STAGE_HEIGHT / rect.height;
+
+                    const stageX = spriteData.x / stageToSpriteX;
+                    const stageY = -spriteData.y / stageToSpriteY;
                     
                     const baseSize = 80;
                     const newSize = baseSize * (spriteData.size / 100);
 
-                    spriteEl.style.width = `${newSize}px`;
-                    spriteEl.style.height = `${newSize}px`;
-                    spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${spriteData.direction - 90}deg)`;
-                    spriteEl.style.opacity = spriteData.opacity;
+                    // --- Rotation Logic ---
+                    let rotationTransform = '';
+                    switch(spriteData.rotationStyle) {
+                        case 'left-right':
+                            const normalizedDir = ((spriteData.direction % 360) + 360) % 360;
+                            // The sprite should face right for directions 0-179 and left for 180-359.
+                            // This is achieved by flipping it horizontally when the direction is 180 or more.
+                            const isFlipped = normalizedDir >= 180;
+                            rotationTransform = isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
+                            break;
+                        case 'dont-rotate':
+                            rotationTransform = ''; // No rotation at all
+                            break;
+                        case 'all-around':
+                        default:
+                            rotationTransform = `rotate(${spriteData.direction - 90}deg)`;
+                            break;
+                    }
+                    // --- End Rotation Logic ---
 
+                    // Apply styles to the single wrapper
+                    wrapper.style.width = `${newSize}px`;
+                    wrapper.style.height = `${newSize}px`;
+                    wrapper.style.opacity = spriteData.opacity;
+                    wrapper.style.transform = `translate(-50%, -50%) ${rotationTransform}`;
+                    
+                    // Position the main container which holds the wrapper
+                    container.style.transform = `translate(${stageX}px, ${stageY}px)`;
+                    
                     // After any visual update, check for collisions
                     checkCollisions();
                 }
@@ -1146,6 +1411,12 @@
                         propShow.classList.remove('active');
                         propHide.classList.add('active');
                     }
+                    
+                    // Update rotation style buttons
+                    propRotationAllAround.classList.toggle('active', sprite.rotationStyle === 'all-around');
+                    propRotationLeftRight.classList.toggle('active', sprite.rotationStyle === 'left-right');
+                    propRotationDontRotate.classList.toggle('active', sprite.rotationStyle === 'dont-rotate');
+
                 } else {
                     propertiesPanel.classList.add('hidden');
                 }
@@ -1162,6 +1433,7 @@
                     direction: 90,
                     opacity: 1,
                     size: 100,
+                    rotationStyle: 'all-around', // Default rotation style
                     workspaceXml: null
                 };
                 
@@ -1176,29 +1448,33 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                const spriteOnStage = document.createElement('div');
-                spriteOnStage.classList.add('sprite-wrapper');
-                spriteOnStage.id = id;
-                spriteOnStage.innerHTML = `
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `
                     <img src="${imageUrl}" alt="${name}">
                     <div class="speech-bubble"></div>
                 `;
-                stageArea.appendChild(spriteOnStage);
+                
+                spriteContainer.appendChild(mainSprite);
+                stageArea.appendChild(spriteContainer);
+                
+                const wrapper = spriteContainer.querySelector('.sprite-wrapper');
+                wrapper.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (justDragged) return;
+                    handleSpriteClick(id);
+                });
+                wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
                 
                 spriteCard.addEventListener('click', () => {
                     setActiveSprite(id);
                 });
-
-                spriteOnStage.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent stage click from also firing
-                    if (justDragged) {
-                        return;
-                    }
-                    handleSpriteClick(id); // Corrected function name
-                });
-
-                spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
-                spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, id));
                 spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteSprite(id);
@@ -1210,8 +1486,8 @@
             };
 
             const deleteSprite = (id) => {
-                document.getElementById(id).remove();
-                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`).remove();
+                document.getElementById(`container-${id}`)?.remove();
+                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
                 
                 delete sprites[id];
 
@@ -1222,7 +1498,6 @@
                     if (firstSpriteId) {
                         setActiveSprite(firstSpriteId);
                     } else {
-                        // No sprites left, hide panel
                         updatePropertiesPanel();
                     }
                 }
@@ -1230,7 +1505,7 @@
             };
             
             const setActiveSprite = (spriteId) => {
-                if (isRunning || activeSpriteId === spriteId) return;
+                if (scriptRunner && scriptRunner.isRunning || activeSpriteId === spriteId) return;
 
                 // 1. Save current workspace
                 if (activeSpriteId && sprites[activeSpriteId]) {
@@ -1289,7 +1564,7 @@
                 e.preventDefault();
                 isDragging = true;
                 dragSpriteId = spriteId;
-                const spriteData = sprites[spriteId];
+                const spriteData = sprites[dragSpriteId];
 
                 setActiveSprite(spriteId);
                 const { x, y } = getPointerPosition(e);
@@ -1356,6 +1631,59 @@
                 Blockly.svgResize(workspace);
             });
             
+            function positionNumberPad(field) {
+                const numberPad = document.getElementById('number-pad-container');
+                if (!field || numberPad.style.display !== 'block') {
+                    return;
+                }
+
+                // Make pad temporarily visible but transparent to measure its dimensions
+                numberPad.style.visibility = 'hidden';
+                const padRect = numberPad.getBoundingClientRect();
+                
+                const blockSvg = field.getSourceBlock().getSvgRoot();
+                const blockBounds = blockSvg.getBoundingClientRect();
+
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const margin = 5; // Margin from screen edges
+
+                // --- Vertical Positioning ---
+                let finalTop;
+                // Try positioning below first
+                if (blockBounds.bottom + padRect.height + margin < viewportHeight) {
+                    finalTop = blockBounds.bottom + margin;
+                } 
+                // If not enough space below, try positioning above
+                else if (blockBounds.top - padRect.height - margin > 0) {
+                    finalTop = blockBounds.top - padRect.height - margin;
+                } 
+                // If no space above either, position it as best as possible (e.g., at the top)
+                else {
+                    finalTop = margin;
+                }
+
+                // --- Horizontal Positioning ---
+                let finalLeft;
+                // Start by aligning with the block's left edge
+                finalLeft = blockBounds.left;
+                
+                // If it overflows right, align to the right edge of the screen
+                if (finalLeft + padRect.width + margin > viewportWidth) {
+                     finalLeft = viewportWidth - padRect.width - margin;
+                }
+                
+                // Ensure it doesn't go off the left edge
+                if (finalLeft < margin) {
+                    finalLeft = margin;
+                }
+
+                numberPad.style.top = `${finalTop}px`;
+                numberPad.style.left = `${finalLeft}px`;
+                
+                numberPad.style.visibility = 'visible';
+            }
+            
             // Custom Field for Number Pad
             class FieldCustomNumber extends Blockly.FieldNumber {
                 constructor(value, min, max, precision, validator) {
@@ -1367,26 +1695,12 @@
                     const numberPadDisplay = document.getElementById('number-pad-display');
                     
                     numberPad.currentField = this;
-                    numberPadDisplay.textContent = this.getValue();
+                    numberPadDisplay.textContent = this.getValue() || '0';
 
-                    const blockSvg = this.getSourceBlock().getSvgRoot();
-                    const blockBounds = blockSvg.getBoundingClientRect();
-                    
+                    // Show pad to start calculations
                     numberPad.style.display = 'block';
                     
-                    let top = blockBounds.bottom + 5;
-                    let left = blockBounds.left;
-
-                    const workspaceBounds = document.getElementById('blockly-area').getBoundingClientRect();
-                    if (left + numberPad.offsetWidth > workspaceBounds.right) {
-                        left = workspaceBounds.right - numberPad.offsetWidth - 5;
-                    }
-                    if (left < workspaceBounds.left) {
-                        left = workspaceBounds.left + 5;
-                    }
-                    
-                    numberPad.style.top = `${top}px`;
-                    numberPad.style.left = `${left}px`;
+                    positionNumberPad(this);
                 }
             }
             Blockly.fieldRegistry.register('field_custom_number', FieldCustomNumber);
@@ -1406,10 +1720,10 @@
             Blockly.Blocks['event_when_flag_clicked'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 48, 48, { alt: "green flag", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 35, 35, { alt: "green flag", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
                     this.setHelpUrl("");
                 }
@@ -1419,10 +1733,10 @@
             Blockly.Blocks['event_when_sprite_clicked'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 48, 48, "*"))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 35, 35, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר לוחצים על הדמות.");
                     this.setHelpUrl("");
                 }
@@ -1479,10 +1793,10 @@
                         ]
                     ];
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 36, 36, { alt: "keyboard icon", flipRtl: "false" }))
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 35, 35, { alt: "keyboard icon", flipRtl: "false" }))
                         .appendField(new Blockly.FieldDropdown(keyOptions), "KEY");
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("הפעל את התסריט כאשר המקש הנבחר נלחץ.");
                     this.setHelpUrl("");
                 }
@@ -1492,9 +1806,10 @@
             Blockly.Blocks['event_when_bump'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/collision.svg", 48, 48, "*"));
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/collision.svg", 35, 35, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר דמות זו נוגעת בדמות אחרת.");
                 }
             };
@@ -1504,11 +1819,12 @@
             Blockly.Blocks['event_broadcast'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/send.svg", 34, 34, "*"))
-                        .appendField(new FieldMessage(), 'MESSAGE');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/send.svg", 35, 35, "*"))
+                        .appendField(new FieldMessage(), 'MESSAGE')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("שולח מסר לכל הדמויות.");
                 }
             };
@@ -1517,20 +1833,20 @@
                 const message = block.getFieldValue('MESSAGE');
                 return `
                     log('משדר מסר: ${message}');
-                    setTimeout(() => {
-                        const event = new CustomEvent('kidi-broadcast', { detail: { message: '${message}' } });
-                        window.dispatchEvent(event);
-                    }, 0);
+                    const event = new CustomEvent('kidi-broadcast', { detail: { message: '${message}' } });
+                    window.dispatchEvent(event);
+                    yield;
                 `;
             };
 
             Blockly.Blocks['event_when_broadcast_received'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/receive.svg", 34, 34, "*"))
-                        .appendField(new FieldMessage(), 'MESSAGE');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/receive.svg", 35, 35, "*"))
+                        .appendField(new FieldMessage(), 'MESSAGE')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("מתחיל תסריט כאשר מתקבל מסר ספציפי.");
                 }
             };
@@ -1539,7 +1855,8 @@
             Blockly.Blocks['motion_move_steps'] = {
                 init: function() {
                     this.appendValueInput("STEPS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 34, 34, "*"));
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 34, 34, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1555,22 +1872,38 @@
                         sprite.x += (${steps}) * Math.sin(radians);
                         sprite.y += (${steps}) * Math.cos(radians);
                         
+                        const halfWidth = ${STAGE_WIDTH / 2};
+                        const halfHeight = ${STAGE_HEIGHT / 2};
+                        const spriteLogicalWidth = 80 * (sprite.size / 100);
+                        const spriteLogicalHeight = 80 * (sprite.size / 100);
+                        const spriteHalfWidth = spriteLogicalWidth / 2;
+                        const spriteHalfHeight = spriteLogicalHeight / 2;
+
+                        if (sprite.x - spriteHalfWidth > halfWidth) {
+                            sprite.x = -halfWidth - spriteHalfWidth;
+                        }
+                        if (sprite.x + spriteHalfWidth < -halfWidth) {
+                            sprite.x = halfWidth + spriteHalfWidth;
+                        }
+                        if (sprite.y - spriteHalfHeight > halfHeight) {
+                            sprite.y = -halfHeight - spriteHalfHeight;
+                        }
+                        if (sprite.y + spriteHalfHeight < -halfHeight) {
+                            sprite.y = halfHeight + spriteHalfHeight;
+                        }
+
                         updateSpriteAppearance(sprite.id);
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' זזה ' + (${steps}) + ' צעדים.');
-                        await new Promise(resolve => {
-                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 50);
-                            const checkCancelId = setInterval(() => {
-                                if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
-                            }, 50);
-                        });
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['motion_turn_right_degrees'] = {
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 34, 34, { alt: "turn right icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1587,12 +1920,14 @@
                          window.updateActiveSpritePanel();
                         log(sprite.name + ' הסתובבה ימינה ב-' + (${degrees}) + ' מעלות.');
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['motion_turn_left_degrees'] = {
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }));
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1609,6 +1944,7 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' הסתובבה שמאלה ב-' + (${degrees}) + ' מעלות.');
                     }
+                    yield;
                 `;
             };
             
@@ -1626,7 +1962,7 @@
 
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 34, 34, { alt: "compass icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -1644,6 +1980,7 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' קבעה כיוון ל-' + ${degrees} + ' מעלות.');
                     }
+                    yield;
                 `;
             };
             
@@ -1665,26 +2002,22 @@
                 return `
                     if (sprite) {
                         const spriteEl = document.getElementById(sprite.id);
-                        const bubble = spriteEl.querySelector('.speech-bubble');
-                        bubble.textContent = ${message};
-                        bubble.classList.add('visible');
-                        log(sprite.name + ' אומרת: ' + ${message});
+                        if (spriteEl) {
+                            const bubble = spriteEl.querySelector('.speech-bubble');
+                            bubble.textContent = ${message};
+                            bubble.classList.add('visible');
+                            log(sprite.name + ' אומרת: ' + ${message});
+                            
+                            const endTime = Date.now() + (${secs}) * 1000;
+                            while (Date.now() < endTime) {
+                                if (getExecutionCancelled()) break;
+                                yield;
+                            }
 
-                        await new Promise(resolve => {
-                            const timeoutId = setTimeout(() => {
-                                bubble.classList.remove('visible');
-                                clearInterval(checkCancelId);
-                                resolve();
-                            }, (${secs}) * 1000);
-                            const checkCancelId = setInterval(() => {
-                                if (getExecutionCancelled()) {
-                                    clearTimeout(timeoutId);
-                                    clearInterval(checkCancelId);
-                                    bubble.classList.remove('visible');
-                                    resolve();
-                                }
-                            }, 50);
-                        });
+                            if (!getExecutionCancelled()) {
+                                 bubble.classList.remove('visible');
+                            }
+                        }
                     }
                 `;
             };
@@ -1704,16 +2037,18 @@
                 return `
                     if (sprite) {
                         const spriteEl = document.getElementById(sprite.id);
-                        const bubble = spriteEl.querySelector('.speech-bubble');
-                        bubble.textContent = ${message};
-                        bubble.classList.add('visible');
-                        log(sprite.name + ' אומרת: ' + ${message});
+                        if (spriteEl) {
+                           const bubble = spriteEl.querySelector('.speech-bubble');
+                           bubble.textContent = ${message};
+                           bubble.classList.add('visible');
+                           log(sprite.name + ' אומרת: ' + ${message});
+                        }
                     }
                 `;
             };
             Blockly.Blocks['looks_show'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 34, 34, { alt: "show icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 34, 34, { alt: "show icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1728,11 +2063,12 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' הוצגה.');
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['looks_hide'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 34, 34, { alt: "hide icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 34, 34, { alt: "hide icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1747,9 +2083,88 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' הוסתרה.');
                     }
+                    yield;
+                `;
+            };
+
+            Blockly.Blocks['looks_grow'] = {
+                init: function() {
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/increase.svg", 34, 34, "*"));
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("הגדל את הדמות.");
+                }
+            };
+            Blockly.JavaScript['looks_grow'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+                return `
+                    if (sprite) {
+                        sprite.size += Number(${size});
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' גדלה לגודל ' + sprite.size);
+                    }
+                    yield;
                 `;
             };
             
+            Blockly.Blocks['looks_shrink'] = {
+                init: function() {
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/decrease.svg", 34, 34, "*"));
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("הקטן את הדמות.");
+                }
+            };
+            Blockly.JavaScript['looks_shrink'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+                return `
+                    if (sprite) {
+                        sprite.size = Math.max(5, sprite.size - Number(${size})); // Don't let size go below 5
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' קטנה לגודל ' + sprite.size);
+                    }
+                    yield;
+                `;
+            };
+
+            Blockly.Blocks['looks_set_size'] = {
+                init: function() {
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/equal.svg", 34, 34, "*"));
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("קובע את גודל הדמות באחוזים.");
+                }
+            };
+            Blockly.JavaScript['looks_set_size'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+                return `
+                    if (sprite) {
+                        sprite.size = Math.max(5, Number(${size})); // Don't let size go below 5
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' קבע גודל ל-' + sprite.size);
+                    }
+                    yield;
+                `;
+            };
+
             // Custom field for backdrop selection
             class FieldBackdrop extends Blockly.FieldDropdown {
                 constructor() {
@@ -1830,7 +2245,7 @@
                     const safeUrl = backdropUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
                     return `
                         window.switchBackdrop('${safeUrl}');
-                        await new Promise(r => setTimeout(r, 20)); // Short delay for rendering
+                        yield;
                     `;
                 }
                 return ''; // Do nothing if no backdrop is selected
@@ -1840,7 +2255,7 @@
             
             Blockly.Blocks['control_wait_secs'] = {
                 init: function() {
-                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/wait.png", 34, 34, "*"));
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/wait.svg", 34, 34, "*"));
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1852,19 +2267,11 @@
                 const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
                 return `
                     log('המתנה של ' + (${secs}) + ' שניות...');
-                    await new Promise(resolve => {
-                        const timeoutId = setTimeout(() => {
-                            clearInterval(checkCancelId);
-                            resolve();
-                        }, (${secs}) * 1000);
-                        const checkCancelId = setInterval(() => {
-                            if (getExecutionCancelled()) {
-                                clearTimeout(timeoutId);
-                                clearInterval(checkCancelId);
-                                resolve();
-                            }
-                        }, 50);
-                    });
+                    const endTime = Date.now() + (${secs}) * 1000;
+                    while (Date.now() < endTime) {
+                        if (getExecutionCancelled()) break;
+                        yield;
+                    }
                 `;
             };
 
@@ -1874,7 +2281,7 @@
                         .setCheck("Number")
                         .appendField('\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
-                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -1892,6 +2299,7 @@
                         log('חזרה מספר: ' + (i + 1));
                         ${branch}
                         if (getExecutionCancelled()) break;
+                        yield;
                     }
                 `;
             };
@@ -1900,7 +2308,7 @@
                 init: function() {
                     this.appendDummyInput()
                         .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*"));
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/forever.svg", 36, 36, "*"));
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
                     this.setColour("#FF6B1A");
@@ -1912,7 +2320,7 @@
                 return `
                     while(!getExecutionCancelled()) {
                         ${branch}
-                        await new Promise(r => setTimeout(r, 10)); // Yield to event loop
+                        yield;
                     }
                 `;
             };
@@ -1938,6 +2346,7 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' עברה למיקום: ' + sprite.x.toFixed(0) + ', ' + sprite.y.toFixed(0));
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['motion_glide_to_xy'] = {
@@ -1959,34 +2368,28 @@
                 const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
                 return `
                     if (sprite) {
-                        await new Promise(resolve => {
-                            const startX = sprite.x;
-                            const startY = sprite.y;
-                            const endX = (${x});
-                            const endY = (${y});
-                            const duration = (${secs}) * 1000;
-                            const startTime = Date.now();
-                            
-                            const animate = () => {
-                                if (getExecutionCancelled()) { resolve(); return; }
-                                const elapsed = Date.now() - startTime;
-                                const progress = Math.min(elapsed / duration, 1);
-                                
-                                sprite.x = startX + (endX - startX) * progress;
-                                sprite.y = startY + (endY - startY) * progress;
-                                
-                                updateSpriteAppearance(sprite.id);
-                                window.updateActiveSpritePanel();
-                                
-                                if (progress < 1) {
-                                    requestAnimationFrame(animate);
-                                } else {
-                                    log(sprite.name + ' סיימה לגלוש.');
-                                    resolve();
-                                }
-                            };
-                            animate();
-                        });
+                        const startX = sprite.x;
+                        const startY = sprite.y;
+                        const endX = (${x});
+                        const endY = (${y});
+                        const durationTicks = Math.max(1, Math.round((${secs}) * 30)); // 30 FPS target
+
+                        for (let i = 0; i <= durationTicks; i++) {
+                             if (getExecutionCancelled()) break;
+                             const progress = i / durationTicks;
+                             sprite.x = startX + (endX - startX) * progress;
+                             sprite.y = startY + (endY - startY) * progress;
+                             updateSpriteAppearance(sprite.id);
+                             window.updateActiveSpritePanel();
+                             yield;
+                        }
+                        if (!getExecutionCancelled()) {
+                            sprite.x = endX;
+                            sprite.y = endY;
+                            updateSpriteAppearance(sprite.id);
+                            window.updateActiveSpritePanel();
+                            log(sprite.name + ' סיימה לגלוש.');
+                        }
                     }
                 `;
             };
@@ -1996,7 +2399,7 @@
                     this.appendValueInput("HEIGHT")
                         .setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test//assets/blocklyicon/jump.svg", 34, 34, { alt: "jump icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -2009,33 +2412,30 @@
                 const height = Blockly.JavaScript.valueToCode(block, 'HEIGHT', Blockly.JavaScript.ORDER_ATOMIC) || '100';
                 return `
                     if (sprite) {
-                        await new Promise(resolve => {
-                            const JUMP_HEIGHT = (${height});
-                            const DURATION = 500;
-                            const startY = sprite.y;
-                            const startTime = Date.now();
+                        const JUMP_HEIGHT = (${height});
+                        const DURATION_TICKS = 15; // Approx 500ms at 30fps
+                        const startY = sprite.y;
+                        log(sprite.name + ' מתחילה לקפוץ...');
 
-                            const animateJump = () => {
-                                if (getExecutionCancelled()) { resolve(); return; }
-                                const elapsed = Date.now() - startTime;
-                                const progress = Math.min(elapsed / DURATION, 1);
-                                
-                                const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
-                                sprite.y = startY + parabolicProgress;
-
-                                updateSpriteAppearance(sprite.id);
-                                window.updateActiveSpritePanel();
-                                
-                                if (progress < 1) {
-                                    requestAnimationFrame(animateJump);
-                                } else {
-                                    log(sprite.name + ' סיימה לקפוץ.');
-                                    resolve();
-                                }
-                            };
-                            log(sprite.name + ' מתחילה לקפוץ...');
-                            animateJump();
-                        });
+                        for (let i = 0; i <= DURATION_TICKS; i++) {
+                            if (getExecutionCancelled()) {
+                                sprite.y = startY;
+                                break;
+                            }
+                            const progress = i / DURATION_TICKS;
+                            const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
+                            sprite.y = startY + parabolicProgress;
+                            
+                            updateSpriteAppearance(sprite.id);
+                            window.updateActiveSpritePanel();
+                            yield;
+                        }
+                        if (!getExecutionCancelled()) {
+                            sprite.y = startY;
+                            updateSpriteAppearance(sprite.id);
+                            window.updateActiveSpritePanel();
+                            log(sprite.name + ' סיימה לקפוץ.');
+                        }
                     }
                 `;
             };
@@ -2114,10 +2514,10 @@
 
             Blockly.Blocks['operator_random_number'] = {
                 init: function() {
-                    this.appendDummyInput().appendField("מספר אקראי בין");
-                    this.appendDummyInput().appendField(new FieldCustomNumber(1), "FROM");
-                    this.appendDummyInput().appendField("ל-");
-                    this.appendDummyInput().appendField(new FieldCustomNumber(10), "TO");
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/random.svg", 34, 34, "*"))
+                        .appendField(new FieldCustomNumber(1), "FROM")
+                        .appendField(new FieldCustomNumber(10), "TO");
                     this.setInputsInline(true);
                     this.setOutput(true, "Number");
                     this.setColour("#40BF4A");
@@ -2151,8 +2551,14 @@
 
             Blockly.JavaScript['sound_play_until_done'] = function(block) {
                 const sound = block.getFieldValue('SOUND');
-                // Placeholder for actual sound playing logic
-                return `log('מנגן צליל: ${sound}'); await new Promise(r => setTimeout(r, 1000));`;
+                return `
+                    log('מנגן צליל: ${sound}'); 
+                    const waitTime = Date.now() + 1000;
+                    while (Date.now() < waitTime) {
+                        if (getExecutionCancelled()) break;
+                        yield;
+                    }
+                `;
             };
 
             
@@ -2171,6 +2577,29 @@
                     maxScale: 3,
                     minScale: 0.3,
                     scaleSpeed: 1.2
+                },
+                renderer: 'zelos',
+                theme: Blockly.Themes.Scratch
+            });
+            
+            const toolbox = workspace.getToolbox();
+            if (toolbox) {
+                // Prevent the toolbox from clearing the category selection when the workspace is clicked.
+                // This keeps the currently selected category visually highlighted.
+                toolbox.clearSelection = () => {
+                    // Do nothing, overriding the default behavior.
+                };
+            }
+
+            workspace.addChangeListener((event) => {
+                if (event.type === Blockly.Events.BLOCK_MOVE) {
+                    const numberPad = document.getElementById('number-pad-container');
+                    if (numberPad.style.display === 'block' && numberPad.currentField) {
+                        const fieldBlockId = numberPad.currentField.getSourceBlock().id;
+                        if (event.blockId === fieldBlockId) {
+                            positionNumberPad(numberPad.currentField);
+                        }
+                    }
                 }
             });
 
@@ -2218,61 +2647,61 @@
                 }, 1200); // Display for 1.2 seconds
             }
 
-            async function runScriptStack(startBlock) {
-                if (isRunning || !startBlock) return;
-                saveActiveSpriteWorkspace();
+            function createGeneratorForStack(startBlock, sprite) {
+                let code = '';
+                let currentBlock = startBlock.getNextBlock();
+                while (currentBlock) {
+                    code += Blockly.JavaScript.blockToCode(currentBlock);
+                    if (getExecutionCancelled()) break;
+                    currentBlock = currentBlock.getNextBlock();
+                }
 
+                if (!code) return null;
+
+                const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
+                const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
+                
+                return func(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
+            }
+
+            function runScriptStack(startBlock) {
+                saveActiveSpriteWorkspace();
                 const sprite = getActiveSprite();
                 if (!sprite) {
                     log("No active sprite to run script.");
                     return;
                 }
-
-                isRunning = true;
-                executionCancelled = false;
-                log(`מריץ תסריט בודד מסוג ${startBlock.type} עבור ${sprite.name}.`);
-
-                let code = '';
-                let currentBlock = startBlock.getNextBlock();
-                while (currentBlock) {
-                    if (getExecutionCancelled()) break;
-                    code += Blockly.JavaScript.blockToCode(currentBlock);
-                    code += `if (getExecutionCancelled()) return;\n`;
-                    currentBlock = currentBlock.getNextBlock();
-                }
                 
-                if (code) {
-                    try {
-                        await executeScript(code, sprite);
-                    } catch (e) {
-                        log('שגיאה בהרצת תסריט: ' + e);
-                    } finally {
-                        isRunning = false;
-                        log('התסריט סיים.');
+                const generator = createGeneratorForStack(startBlock, sprite);
+                if (generator) {
+                    if (!scriptRunner || !scriptRunner.isRunning) {
+                         scriptRunner = new ScriptRunner();
                     }
-                } else {
-                     log('לא נמצאו בלוקים להרצה מתחת לבלוק האירוע.');
-                     isRunning = false;
+                    scriptRunner.add(generator);
                 }
             }
 
-
-            async function executeBlock(blockId) {
+            function executeBlock(blockId) {
                 const block = workspace.getBlockById(blockId);
                 if (!block || block.type.startsWith('event_')) return;
                 
                 log(`מפעיל בלוק בודד: ${block.type}`);
                 
                 const code = Blockly.JavaScript.blockToCode(block);
-                isRunning = true;
-                executionCancelled = false;
-                await executeScript(code, getActiveSprite());
-                isRunning = false;
+                const sprite = getActiveSprite();
+                const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
+                const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
+                const generator = func(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
+                
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
+                scriptRunner.add(generator);
             }
             
             const blocklyDiv = document.getElementById('blockly-area');
             blocklyDiv.addEventListener('click', (event) => {
-                if (isRunning) return;
+                if (scriptRunner && scriptRunner.isRunning) return;
                 const blocklyBlockSvg = event.target.closest('.blocklyDraggable');
                 if (blocklyBlockSvg) {
                     const blockId = blocklyBlockSvg.getAttribute('data-id');
@@ -2280,24 +2709,21 @@
                         const block = workspace.getBlockById(blockId);
                         if (!block) return;
 
-                        // If it's a top-level hat block
                         if (block.previousConnection === null && block.getParent() === null) {
                             if (block.type === 'event_when_flag_clicked') {
                                 log('לחיצה על בלוק הדגל הירוק, מפעיל את כל התסריטים.');
                                 runCode();
-                                return; // Handled
+                                return;
                             }
-                            if (block.type === 'event_when_sprite_clicked' || block.type === 'event_when_bump') {
+                            if (['event_when_sprite_clicked', 'event_when_bump', 'event_when_key_pressed'].includes(block.type)) {
                                 runScriptStack(block);
-                                return; // Handled
+                                return; 
                             }
                         }
                         
-                        // If it's a statement block (that can be run alone)
                         if (!block.outputConnection && block.getParent() === null) {
                              executeBlock(blockId);
                         } 
-                        // If it's a value/reporter block
                         else if (block.outputConnection) {
                             showBlockValue(block);
                         }
@@ -2320,17 +2746,6 @@
                 }, 300);
             });
 
-            async function executeScript(code, sprite) {
-                if (code && !getExecutionCancelled()) {
-                    try {
-                        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                        const f = new AsyncFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
-                        await f(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
-                    } catch (e) {
-                        log(`שגיאת ריצה בתסריט: ${e}`);
-                    }
-                }
-            }
 
             function saveActiveSpriteWorkspace() {
                  if (activeSpriteId && sprites[activeSpriteId]) {
@@ -2339,54 +2754,38 @@
                 }
             }
             
-            async function runCode() {
-                if (isRunning) {
+            function runCode() {
+                if (scriptRunner && scriptRunner.isRunning) {
                     log('תסריט כבר רץ. לחץ על עצור לפני הפעלה מחדש.');
                     return;
                 }
                 saveActiveSpriteWorkspace();
-
-                isRunning = true;
-                executionCancelled = false;
+                scriptRunner = new ScriptRunner();
                 
                 log('התסריט הופעל.');
 
-                const scriptPromises = Object.values(sprites).map(sprite => {
+                let scriptsFound = false;
+                Object.values(sprites).forEach(sprite => {
                     if (sprite.workspaceXml) {
                         const tempWorkspace = new Blockly.Workspace();
                         Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
                         const topBlocks = tempWorkspace.getTopBlocks(true);
                         const flagClickScripts = topBlocks.filter(block => block.type === 'event_when_flag_clicked');
                         
-                        return flagClickScripts.map(startBlock => {
-                            let code = '';
-                            let currentBlock = startBlock.getNextBlock();
-                            while(currentBlock) {
-                                code += Blockly.JavaScript.blockToCode(currentBlock);
-                                code += `if (getExecutionCancelled()) return;\n`;
-                                currentBlock = currentBlock.getNextBlock();
-                            }
-                            return executeScript(code, sprite);
+                        flagClickScripts.forEach(startBlock => {
+                           const generator = createGeneratorForStack(startBlock, sprite);
+                           if (generator) {
+                               scriptRunner.add(generator);
+                               scriptsFound = true;
+                           }
                         });
+                        tempWorkspace.dispose();
                     }
-                    return [];
-                }).flat();
+                });
 
-                if(scriptPromises.length === 0) {
+                if(!scriptsFound) {
                      log('לא נמצאו תסריטים שמתחילים בדגל ירוק.');
-                     isRunning = false;
-                     return;
-                }
-
-                try {
-                    await Promise.all(scriptPromises);
-                    if (!getExecutionCancelled()) {
-                        log('כל התסריטים של הדגל הירוק הסתיימו.');
-                    }
-                } catch (e) {
-                    log('שגיאה כללית בהרצת תסריטים במקביל: ' + e);
-                } finally {
-                    isRunning = false;
+                     scriptRunner.stop();
                 }
             }
             
@@ -2396,12 +2795,14 @@
                 runBroadcastScripts(message);
             });
 
-            async function runBroadcastScripts(message) {
-                // This function starts new scripts but does not set the global isRunning flag.
-                // The flag is managed by the user-initiated events (click, key press).
-                
-                const scriptPromises = Object.values(sprites).map(sprite => {
-                    if (!sprite.workspaceXml) return [];
+            function runBroadcastScripts(message) {
+                saveActiveSpriteWorkspace();
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
+
+                Object.values(sprites).forEach(sprite => {
+                    if (!sprite.workspaceXml) return;
                     
                     const tempWorkspace = new Blockly.Workspace();
                     try {
@@ -2413,87 +2814,44 @@
                             block.getFieldValue('MESSAGE') === message
                         );
                         
-                        const spritePromises = matchingHatBlocks.map(startBlock => {
-                            let code = '';
-                            let currentBlock = startBlock.getNextBlock();
-                            while (currentBlock) {
-                                code += Blockly.JavaScript.blockToCode(currentBlock);
-                                code += `if (getExecutionCancelled()) return;\n`;
-                                currentBlock = currentBlock.getNextBlock();
-                            }
-                            return executeScript(code, sprite); 
+                        matchingHatBlocks.forEach(startBlock => {
+                            const generator = createGeneratorForStack(startBlock, sprite);
+                            if(generator) scriptRunner.add(generator);
                         });
                         
-                        tempWorkspace.dispose();
-                        return spritePromises;
                     } catch (err) {
                         console.error("Error processing workspace for broadcast:", err);
+                    } finally {
                         tempWorkspace.dispose();
-                        return [];
                     }
-                }).flat();
-
-                if (scriptPromises.length > 0) {
-                    log(`מפעיל ${scriptPromises.length} תסריטים עבור מסר "${message}"`);
-                    // We don't await the promises here, allowing them to run in the background.
-                    // This makes 'broadcast' a non-waiting call.
-                    Promise.all(scriptPromises).catch(err => {
-                        console.error("Error running broadcast scripts:", err);
-                    });
-                } else {
-                    log(`לא נמצאו תסריטים עבור מסר "${message}"`);
-                }
+                });
             }
 
 
-            async function handleSpriteClick(spriteId) {
-                if (isRunning) return;
+            function handleSpriteClick(spriteId) {
                 saveActiveSpriteWorkspace();
-                
                 const sprite = sprites[spriteId];
                 if (!sprite || !sprite.workspaceXml) return;
 
-                log(`קליק על ${sprite.name}. מריץ תסריטים.`);
-                isRunning = true;
-                executionCancelled = false;
-
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
+                
                 const tempWorkspace = new Blockly.Workspace();
                 Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
                 const topBlocks = tempWorkspace.getTopBlocks(true);
                 const clickScripts = topBlocks.filter(block => block.type === 'event_when_sprite_clicked');
 
-                const scriptPromises = clickScripts.map(startBlock => {
-                    let code = '';
-                    let currentBlock = startBlock.getNextBlock();
-                    while (currentBlock) {
-                        code += Blockly.JavaScript.blockToCode(currentBlock);
-                        code += `if (getExecutionCancelled()) return;\n`;
-                        currentBlock = currentBlock.getNextBlock();
-                    }
-                    return executeScript(code, sprite);
+                clickScripts.forEach(startBlock => {
+                    const generator = createGeneratorForStack(startBlock, sprite);
+                    if (generator) scriptRunner.add(generator);
                 });
-                
                 tempWorkspace.dispose();
-
-                if (scriptPromises.length > 0) {
-                    try {
-                        await Promise.all(scriptPromises);
-                        if (!getExecutionCancelled()) {
-                            log(`התסריטים של ${sprite.name} הסתיימו.`);
-                        }
-                    } catch (e) {
-                        log('שגיאה בהרצת תסריט קליק: ' + e);
-                    } finally {
-                        isRunning = false;
-                    }
-                } else {
-                    isRunning = false;
-                }
             }
             
              // --- Collision Detection and Handling ---
             function checkCollisions() {
-                if (isLoadingProject) return; // Don't check for collisions while loading a project
+                if (isLoadingProject) return;
 
                 const spriteIds = Object.keys(sprites);
                 if (spriteIds.length < 2) return;
@@ -2516,19 +2874,16 @@
                                               rect1.bottom < rect2.top || 
                                               rect1.top > rect2.bottom);
                         
-                        // Use a sorted key to represent the pair, ensuring (A,B) is the same as (B,A)
                         const collisionKey = [id1, id2].sort().join('-');
 
                         if (isColliding) {
                             if (!collisionState.has(collisionKey)) {
-                                // New collision detected
                                 collisionState.add(collisionKey);
                                 log(`התנגשות בין ${sprites[id1].name} ל-${sprites[id2].name}`);
                                 triggerBumpScripts(id1, id2);
                             }
                         } else {
                             if (collisionState.has(collisionKey)) {
-                                // Sprites have separated
                                 collisionState.delete(collisionKey);
                                 log(`${sprites[id1].name} ו-${sprites[id2].name} נפרדו.`);
                             }
@@ -2537,125 +2892,126 @@
                 }
             }
 
-            async function triggerBumpScripts(id1, id2) {
-                // This function can be triggered anytime, even when other scripts are running.
-                // It should not set the global `isRunning` flag, to allow concurrency.
+            function triggerBumpScripts(id1, id2) {
                 saveActiveSpriteWorkspace();
-                
-                const sprite1 = sprites[id1];
-                const sprite2 = sprites[id2];
-                
-                const wasCancelled = executionCancelled;
-                executionCancelled = false;
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
 
                 const runForSprite = (sprite) => {
-                    if (!sprite.workspaceXml) return null;
+                    if (!sprite.workspaceXml) return;
                     const tempWorkspace = new Blockly.Workspace();
-                    let code = '';
                     try {
                         Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
                         const bumpScript = tempWorkspace.getTopBlocks(true).find(block => block.type === 'event_when_bump');
-                        
                         if (bumpScript) {
-                            let currentBlock = bumpScript.getNextBlock();
-                            while (currentBlock) {
-                                code += Blockly.JavaScript.blockToCode(currentBlock);
-                                code += `if (getExecutionCancelled()) return;\n`;
-                                currentBlock = currentBlock.getNextBlock();
-                            }
+                            const generator = createGeneratorForStack(bumpScript, sprite);
+                            if(generator) scriptRunner.add(generator);
                         }
                     } catch (e) {
                         console.error("Error processing bump script workspace", e);
                     } finally {
                         tempWorkspace.dispose();
                     }
-                    return code ? executeScript(code, sprite) : null;
                 };
 
-                const promise1 = runForSprite(sprite1);
-                const promise2 = runForSprite(sprite2);
-
-                Promise.all([promise1, promise2].filter(p => p !== null)).then(() => {
-                    executionCancelled = wasCancelled;
-                }).catch(err => {
-                    console.error("שגיאה בהרצת תסריט התנגשות:", err);
-                    executionCancelled = wasCancelled;
-                });
+                runForSprite(sprites[id1]);
+                runForSprite(sprites[id2]);
             }
 
 
-            async function handleKeyPress(event) {
-                if (isRunning) return;
-                saveActiveSpriteWorkspace();
-                
+            function handleKeyPress(event) {
                 const keyMap = { 'SPACE': ' ', 'UP': 'ArrowUp', 'DOWN': 'ArrowDown', 'RIGHT': 'ArrowRight', 'LEFT': 'ArrowLeft' };
                 const pressedKey = event.key;
                 
-                isRunning = true;
-                executionCancelled = false;
+                saveActiveSpriteWorkspace();
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
 
-                const scriptPromises = Object.values(sprites).map(sprite => {
+                Object.values(sprites).forEach(sprite => {
                     if (sprite.workspaceXml) {
                         const tempWorkspace = new Blockly.Workspace();
-                        let promises = [];
                         try {
                             Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
                             const topBlocks = tempWorkspace.getTopBlocks(true);
                             
-                            promises = topBlocks.filter(block => block.type === 'event_when_key_pressed' && keyMap[block.getFieldValue('KEY')] === pressedKey)
-                                .map(startBlock => {
-                                    let code = '';
-                                    let currentBlock = startBlock.getNextBlock();
-                                    while(currentBlock) {
-                                        code += Blockly.JavaScript.blockToCode(currentBlock);
-                                        code += `if (getExecutionCancelled()) return;\n`;
-                                        currentBlock = currentBlock.getNextBlock();
-                                    }
-                                    return executeScript(code, sprite);
+                            topBlocks.filter(block => block.type === 'event_when_key_pressed' && keyMap[block.getFieldValue('KEY')] === pressedKey)
+                                .forEach(startBlock => {
+                                    const generator = createGeneratorForStack(startBlock, sprite);
+                                    if (generator) scriptRunner.add(generator);
                                 });
                         } catch(e) {
                             console.error("Error in handleKeyPress workspace processing:", e);
                         } finally {
                             tempWorkspace.dispose();
                         }
-                        return promises;
                     }
-                    return [];
-                }).flat();
-
-                if (scriptPromises.length > 0) {
-                    event.preventDefault(); 
-                    log(`מקש נלחץ: ${pressedKey}. מריץ ${scriptPromises.length} תסריטים.`);
-                    await Promise.all(scriptPromises);
-                }
-                
-                isRunning = false;
+                });
             }
             document.addEventListener('keydown', handleKeyPress);
 
             function stopAllScripts() {
                 log('לחצן עצור נלחץ.');
-                executionCancelled = true;
+                if (scriptRunner) {
+                    scriptRunner.stop();
+                }
                 
-                setTimeout(() => {
-                    // Hide any visible speech bubbles when stopping
-                    Object.values(sprites).forEach(sprite => {
-                        const bubble = document.querySelector(`#${sprite.id} .speech-bubble`);
-                        if (bubble) bubble.classList.remove('visible');
-                    });
-                    log('כל התסריטים נעצרו.');
-                    isRunning = false; // Allow new run
-                }, 50);
+                Object.values(sprites).forEach(sprite => {
+                    const bubble = document.querySelector(`#container-${sprite.id} .speech-bubble`);
+                    if (bubble) bubble.classList.remove('visible');
+                });
+                log('כל התסריטים נעצרו.');
+            }
+
+            function deleteBackdrop(cardElement) {
+                const urlToDelete = cardElement.dataset.url;
+                const currentBackdropUrl = stageArea.style.backgroundImage.replace(/url\((['"])?(.*?)\1\)/, '$2');
+
+                const allBackdrops = document.querySelectorAll('#backdrops-list .backdrop-card');
+                if (allBackdrops.length <= 1) {
+                    alert("לא ניתן למחוק את הרקע האחרון.");
+                    return;
+                }
+
+                cardElement.remove();
+
+                if (urlToDelete === currentBackdropUrl) {
+                    const firstRemainingBackdrop = document.querySelector('#backdrops-list .backdrop-card');
+                    if (firstRemainingBackdrop) {
+                        window.switchBackdrop(firstRemainingBackdrop.dataset.url);
+                    } else {
+                        stageArea.style.backgroundImage = 'none';
+                    }
+                }
+                 Blockly.getMainWorkspace().refreshToolboxSelection();
+            }
+            
+            function createBackdropCard(url) {
+                const card = document.createElement('div');
+                card.classList.add('backdrop-card');
+                card.style.backgroundImage = `url("${url}")`;
+                card.dataset.url = url;
+
+                const deleteBtn = document.createElement('div');
+                deleteBtn.classList.add('delete-button');
+                deleteBtn.textContent = 'X';
+                card.appendChild(deleteBtn);
+
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteBackdrop(card);
+                });
+
+                backdropsList.appendChild(card);
+                return card;
             }
             
             function createDefaultBackdrop() {
-                const defaultBackdrop = document.createElement('div');
-                defaultBackdrop.classList.add('backdrop-card');
-                defaultBackdrop.style.backgroundImage = 'url("https://codejredu.github.io/test/assets/bg/farm.svg")';
-                defaultBackdrop.dataset.url = "https://codejredu.github.io/test/assets/bg/farm.svg";
-                defaultBackdrop.classList.add('selected');
-                backdropsList.appendChild(defaultBackdrop);
-                document.getElementById('stage-area').style.backgroundImage = `url("https://codejredu.github.io/test/assets/bg/farm.svg")`;
+                const url = "https://codejredu.github.io/test/assets/bg/farm.svg";
+                const card = createBackdropCard(url);
+                card.classList.add('selected');
+                stageArea.style.backgroundImage = `url("${url}")`;
             }
 
             function createDefaultSprite() {
@@ -2663,22 +3019,20 @@
             }
 
             function handleBackdropSelection(e) {
-                const url = e.target.dataset.url;
-                if (url) {
-                   window.switchBackdrop(url);
+                const card = e.target.closest('.backdrop-card');
+                if (card && e.target !== card.querySelector('.delete-button')) {
+                    const url = card.dataset.url;
+                    if (url) {
+                       window.switchBackdrop(url);
+                    }
                 }
             }
 
             function handleGallerySelection(e) {
                 const url = e.target.src;
                 if (url) {
-                    const newBackdropCard = document.createElement('div');
-                    newBackdropCard.classList.add('backdrop-card');
-                    newBackdropCard.style.backgroundImage = `url("${url}")`;
-                    newBackdropCard.dataset.url = url;
-                    
-                    backdropsList.appendChild(newBackdropCard);
-
+                    const newCard = createBackdropCard(url);
+                    window.switchBackdrop(url);
                     backgroundGallery.classList.remove('visible');
                 }
             }
@@ -2763,9 +3117,10 @@
             };
 
             const loadSpriteFromData = (spriteData) => {
-                const { id, name, imageUrl, x, y, direction, opacity, size } = spriteData;
+                const { id, name, imageUrl, x, y, direction, opacity, size, rotationStyle } = spriteData;
 
                 spriteData.size = size || 100;
+                spriteData.rotationStyle = rotationStyle || 'all-around'; // Add for compatibility
                 sprites[id] = spriteData;
 
                 const spriteCard = document.createElement('div');
@@ -2777,19 +3132,25 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                const spriteOnStage = document.createElement('div');
-                spriteOnStage.classList.add('sprite-wrapper');
-                spriteOnStage.id = id;
-                spriteOnStage.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
-                stageArea.appendChild(spriteOnStage);
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
+                
+                spriteContainer.appendChild(mainSprite);
+                stageArea.appendChild(mainSprite);
+                
+                const wrapper = spriteContainer.querySelector('.sprite-wrapper');
+                wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
+                wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
                 
                 spriteCard.addEventListener('click', () => setActiveSprite(id));
-                spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
-                spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, id));
-                spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    deleteSprite(id);
-                });
+                spriteCard.querySelector('.delete-button').addEventListener('click', (e) => { e.stopPropagation(); deleteSprite(id); });
+
                 updateSpriteAppearance(id);
             };
 
@@ -2809,7 +3170,7 @@
                         
                         stopAllScripts();
                         Object.keys(sprites).forEach(id => {
-                            document.getElementById(id)?.remove();
+                            document.getElementById(`container-${id}`)?.remove();
                             document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
                         });
 
@@ -2818,13 +3179,7 @@
                         workspace.clear();
                         backdropsList.innerHTML = '';
                         
-                        projectData.backdrops.forEach(url => {
-                            const newBackdropCard = document.createElement('div');
-                            newBackdropCard.classList.add('backdrop-card');
-                            newBackdropCard.style.backgroundImage = `url("${url}")`;
-                            newBackdropCard.dataset.url = url;
-                            backdropsList.appendChild(newBackdropCard);
-                        });
+                        projectData.backdrops.forEach(createBackdropCard);
 
                         window.switchBackdrop(projectData.currentBackdrop);
 
@@ -2946,6 +3301,32 @@
                         updatePropertiesPanel();
                     }
                 });
+                
+                // Rotation Style Listeners
+                propRotationAllAround.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.rotationStyle = 'all-around';
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+                propRotationLeftRight.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.rotationStyle = 'left-right';
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+                propRotationDontRotate.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.rotationStyle = 'dont-rotate';
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
             }
             
             // --- Custom Angle Picker Logic ---
@@ -3033,6 +3414,24 @@
             
             thumbnailsGrid.addEventListener('click', handleGallerySelection);
             
+            backdropUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    const card = createBackdropCard(imageUrl);
+                    window.switchBackdrop(imageUrl);
+                    backgroundGallery.classList.remove('visible');
+                };
+                reader.readAsDataURL(file);
+
+                e.target.value = null; 
+            });
+
             addSpriteButton.addEventListener('click', () => {
                 spriteGallery.classList.add('visible');
             });
@@ -3043,8 +3442,137 @@
             });
 
             spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
+
+            spriteUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    const imageName = file.name.split('.').slice(0, -1).join('.') || 'דמות שהועלתה';
+                    
+                    createNewSprite(imageName, imageUrl);
+                    spriteGallery.classList.remove('visible');
+                };
+                reader.readAsDataURL(file);
+
+                e.target.value = null; 
+            });
+
+            // Expose createNewSprite for the AI module
+            window.createNewSprite = createNewSprite;
+        });
+    </script>
+    <script type="module">
+        import { GoogleGenAI } from 'https://esm.run/@google/genai';
+        
+        const aiModal = document.getElementById('ai-sprite-modal');
+        const openAiModalButton = document.getElementById('open-ai-modal-button');
+        const closeModalButton = document.getElementById('ai-modal-close-button');
+        const generateButton = document.getElementById('ai-generate-button');
+        const promptInput = document.getElementById('ai-prompt-input');
+        const modalContent = document.getElementById('ai-modal-content');
+        const modalLoading = document.getElementById('ai-modal-loading');
+        const modalResult = document.getElementById('ai-modal-result');
+        const resultImage = document.getElementById('ai-result-image');
+        const addButton = document.getElementById('ai-add-button');
+        const retryButton = document.getElementById('ai-retry-button');
+        const aiErrorDiv = document.getElementById('ai-modal-error');
+        const aiErrorMessage = document.getElementById('ai-error-message');
+
+        let generatedImageUrl = null;
+        let userPrompt = '';
+
+        const showInitialState = () => {
+            modalContent.classList.remove('hidden');
+            modalLoading.classList.add('hidden');
+            modalResult.classList.add('hidden');
+            aiErrorDiv.classList.add('hidden'); // Hide error on reset
+            promptInput.value = '';
+            generatedImageUrl = null;
+            userPrompt = '';
+        };
+
+        openAiModalButton.addEventListener('click', () => {
+            showInitialState();
+            aiModal.classList.remove('hidden');
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            aiModal.classList.add('hidden');
+        });
+
+        aiModal.addEventListener('click', (e) => {
+            if (e.target === aiModal) {
+                aiModal.classList.add('hidden');
+            }
+        });
+
+        retryButton.addEventListener('click', showInitialState);
+
+        addButton.addEventListener('click', () => {
+            if (generatedImageUrl && window.createNewSprite) {
+                const spriteName = userPrompt.substring(0, 20) || 'AI Sprite';
+                window.createNewSprite(spriteName, generatedImageUrl);
+                aiModal.classList.add('hidden');
+            }
+        });
+
+        generateButton.addEventListener('click', async () => {
+            userPrompt = promptInput.value.trim();
+            if (!userPrompt) {
+                aiErrorMessage.textContent = 'נא לתאר את הדמות שברצונך ליצור.';
+                aiErrorDiv.classList.remove('hidden');
+                return;
+            }
+
+            modalContent.classList.add('hidden');
+            modalLoading.classList.remove('hidden');
+            aiErrorDiv.classList.add('hidden');
+            
+            try {
+                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+                const fullPrompt = `${userPrompt}, cartoon character for a kids game, simple design, transparent background`;
+                
+                const response = await ai.models.generateImages({
+                    model: 'imagen-4.0-generate-001',
+                    prompt: fullPrompt,
+                    config: {
+                      numberOfImages: 1,
+                      outputMimeType: 'image/png', // PNG for transparency
+                      aspectRatio: '1:1',
+                    },
+                });
+
+                const base64ImageBytes = response.generatedImages[0].image.imageBytes;
+                generatedImageUrl = `data:image/png;base64,${base64ImageBytes}`;
+                
+                resultImage.src = generatedImageUrl;
+                modalLoading.classList.add('hidden');
+                modalResult.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('AI generation failed:', error);
+                
+                let userMessage = 'מצטערים, הייתה שגיאה לא צפויה ביצירת הדמות. אנא נסה שוב.';
+
+                // Check for a 429 quota error specifically
+                if (error.toString().includes('429') || (error.httpError && error.httpError.status === 429)) {
+                    userMessage = 'הגעת למכסת השימוש שלך ב-AI. יש להמתין או לבדוק את הגדרות החיוב בחשבון Google AI שלך.';
+                }
+                
+                // Show the error message in the modal instead of a generic alert
+                aiErrorMessage.textContent = userMessage;
+                aiErrorDiv.classList.remove('hidden');
+                
+                // Go back to the prompt input state so the user can see the error
+                modalLoading.classList.add('hidden');
+                modalContent.classList.remove('hidden');
+            }
         });
     </script>
 </body>
 </html>
-
