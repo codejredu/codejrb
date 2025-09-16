@@ -3193,7 +3193,7 @@
                         log('הפרויקט נטען בהצלחה.');
 
                     } catch (error) {
-                        console.error("שגיאה בטעינת הפרויקט:", error);
+                        console.error("שגיאה בטעינת הפרויקטו:", error);
                     } finally {
                         e.target.value = null;
                         setTimeout(() => { isLoadingProject = false; }, 100); // Unset flag after a short delay
@@ -3558,18 +3558,43 @@
                 console.error('AI generation failed:', error);
                 
                 let userMessage = 'מצטערים, הייתה שגיאה לא צפויה ביצירת הדמות. אנא נסה שוב.';
+                
+                try {
+                    // The error from the API might be a string containing JSON, or an object.
+                    // We'll try to parse it to find the specific error code.
+                    let errorDetails = null;
+                    if (typeof error.message === 'string') {
+                        const jsonMatch = error.message.match(/{.*}/s);
+                        if (jsonMatch && jsonMatch[0]) {
+                            errorDetails = JSON.parse(jsonMatch[0]);
+                        }
+                    }
 
-                // Check for a 429 quota error specifically
-                if (error.toString().includes('429') || (error.httpError && error.httpError.status === 429)) {
-                    userMessage = 'הגעת למכסת השימוש שלך ב-AI. יש להמתין או לבדוק את הגדרות החיוב בחשבון Google AI שלך.';
+                    // Check if we successfully parsed the error details and found the code.
+                    if (errorDetails && errorDetails.error && errorDetails.error.code === 429) {
+                         userMessage = 'הגעת למכסת השימוש שלך ב-AI. יש להמתין או לבדוק את הגדרות החיוב בחשבון Google AI שלך.';
+                    } else {
+                        // If parsing didn't work or the structure was different, fall back to string checking.
+                        const fullErrorString = JSON.stringify(error);
+                        if (fullErrorString.includes('429') || fullErrorString.toUpperCase().includes('RESOURCE_EXHAUSTED')) {
+                            userMessage = 'הגעת למכסת השימוש שלך ב-AI. יש להמתין או לבדוק את הגדרות החיוב בחשבון Google AI שלך.';
+                        }
+                    }
+                } catch (e) {
+                     // Final fallback if parsing or stringifying fails.
+                    const fullErrorString = String(error);
+                    if (fullErrorString.includes('429') || fullErrorString.toUpperCase().includes('RESOURCE_EXHAUSTED')) {
+                        userMessage = 'הגעת למכסת השימוש שלך ב-AI. יש להמתין או לבדוק את הגדרות החיוב בחשבון Google AI שלך.';
+                    }
                 }
                 
-                // Show the error message in the modal instead of a generic alert
+                // Show the error message in the modal
                 aiErrorMessage.textContent = userMessage;
                 aiErrorDiv.classList.remove('hidden');
                 
-                // Go back to the prompt input state so the user can see the error
+                // Go back to the prompt input state so the user can see the error.
                 modalLoading.classList.add('hidden');
+                modalResult.classList.add('hidden');
                 modalContent.classList.remove('hidden');
             }
         });
