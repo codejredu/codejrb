@@ -190,7 +190,12 @@
             font-size: 1.25rem;
             font-weight: bold;
         }
-        .plus-button {
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .header-button {
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -199,10 +204,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
-        
+        .header-button:hover {
+            background-color: #3b82f6;
+        }
+        .header-button svg {
+            width: 20px;
+            height: 20px;
+        }
         .sprite-card {
             display: flex;
             flex-direction: column;
@@ -874,7 +885,21 @@
             <div class="section">
                 <div class="section-header">
                     <h2>דמויות</h2>
-                    <div id="add-sprite-button" class="plus-button">+</div>
+                    <div class="header-actions">
+                         <div id="create-sprite-header-button" class="header-button" title="צור דמות">
+                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                             </svg>
+                         </div>
+                         <div id="upload-sprite-header-button" class="header-button" title="העלה דמות">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                         </div>
+                         <div id="add-sprite-button" class="header-button" title="בחר דמות">
+                            <span class="text-xl font-bold">+</span>
+                         </div>
+                    </div>
                 </div>
                 <div id="sprites-carousel-wrapper" class="relative mt-4">
                      <div id="sprites-list" class="flex items-center gap-4">
@@ -885,23 +910,7 @@
                     <button class="close-gallery-button" id="close-sprite-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית דמויות</h2>
                     <div id="sprite-thumbnails-grid" class="thumbnail-grid">
-                        <div id="create-sprite-button" class="thumbnail flex items-center justify-center bg-purple-500 hover:bg-purple-600 transition-colors flex-col gap-1">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-1-3.72a4 4 0 00-3-3.033M15 21v-1a6 6 0 00-6-6M9 9a4 4 0 100-8 4 4 0 000 8zm-5 8v-1a6 6 0 016-6" />
-                             </svg>
-                             <span class="text-white text-xs font-bold">צור דמות</span>
-                        </div>
-                        <label for="sprite-upload-input" class="thumbnail flex items-center justify-center bg-blue-500 hover:bg-blue-600 transition-colors">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                <path d="M15 8h.01"></path>
-                                <path d="M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5"></path>
-                                <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l3 3"></path>
-                                <path d="M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54"></path>
-                                <path d="M19 22v-6"></path>
-                                <path d="M22 19l-3 -3l-3 3"></path>
-                             </svg>
-                        </label>
+                        <!-- The create/upload buttons are removed from here -->
                         <img src="https://codejredu.github.io/claudejr/Chick.svg" alt="Chick" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Rabbit.svg" alt="Rabbit" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Beetle.svg" alt="Beetle" class="thumbnail">
@@ -951,7 +960,16 @@
             <div class="section" id="backdrops-section">
                 <div class="section-header">
                     <h2>רקעים</h2>
-                    <div id="add-backdrop-button" class="plus-button">+</div>
+                     <div class="header-actions">
+                         <div id="upload-backdrop-header-button" class="header-button" title="העלה רקע">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                         </div>
+                         <div id="add-backdrop-button" class="header-button" title="בחר רקע">
+                           <span class="text-xl font-bold">+</span>
+                         </div>
+                    </div>
                 </div>
                 <div id="backdrops-carousel-wrapper" class="relative mt-4">
                     <div id="backdrops-list" class="flex items-center gap-4">
@@ -962,17 +980,7 @@
                     <button class="close-gallery-button" id="close-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית רקעים</h2>
                     <div id="thumbnails-grid" class="thumbnail-grid">
-                        <label for="backdrop-upload-input" class="thumbnail flex items-center justify-center bg-blue-500 hover:bg-blue-600 transition-colors">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                <path d="M15 8h.01"></path>
-                                <path d="M12.5 21h-6.5a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6.5"></path>
-                                <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l3 3"></path>
-                                <path d="M14 14l1 -1c.67 -.644 1.45 -.824 2.182 -.54"></path>
-                                <path d="M19 22v-6"></path>
-                                <path d="M22 19l-3 -3l-3 3"></path>
-                             </svg>
-                        </label>
+                        <!-- The upload button is removed from here -->
                         <img src="https://codejredu.github.io/test/assets/bg/Amphitheater.svg" alt="Amphitheater" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon.svg" alt="canyon" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon1.svg" alt="canyon1" class="thumbnail">
@@ -1376,7 +1384,7 @@
 
             // --- Character Creator Elements ---
             const creatorModal = document.getElementById('character-creator-modal');
-            const createSpriteButton = document.getElementById('create-sprite-button');
+            const createSpriteHeaderButton = document.getElementById('create-sprite-header-button');
             const creatorCloseButton = document.getElementById('creator-close-button');
             const creatorSaveButton = document.getElementById('creator-save-button');
             const creatorCategoriesContainer = document.getElementById('creator-categories');
@@ -3642,7 +3650,27 @@
                         ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 32 30 L 49 30 L 49 70 L 32 70 Z M 51 30 L 68 30 L 68 70 L 51 70 Z" fill="${['#ec4899', '#f43f5e'][i]}"/></svg>`)}`)
                     ]
                 },
-                shoes: { label: 'נעליים', parts: Array(7).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="35" cy="50" rx="15" ry="6" fill="${['#6b7280', '#78716c', '#7c3aed', '#c026d3', '#db2777', '#e11d48', '#7f1d1d'][i]}"/><ellipse cx="65" cy="50" rx="15" ry="6" fill="${['#6b7280', '#78716c', '#7c3aed', '#c026d3', '#db2777', '#e11d48', '#7f1d1d'][i]}"/></svg>`)}`) },
+                dresses: {
+                    label: 'שמלות',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/drees1.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees2.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees3.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees4.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees5.svg'
+                    ]
+                },
+                shoes: {
+                    label: 'נעליים',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/shoes1.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes2.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes3.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes4.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="35" cy="50" rx="15" ry="6" fill="${['#db2777', '#e11d48'][i]}"/><ellipse cx="65" cy="50" rx="15" ry="6" fill="${['#db2777', '#e11d48'][i]}"/></svg>`)}`)
+                    ]
+                },
                 head: {
                     label: 'ראש',
                     parts: [
@@ -3652,6 +3680,9 @@
                         'https://codejredu.github.io/test/assets/parts/face4.svg',
                         'https://codejredu.github.io/test/assets/parts/face5.svg',
                         'https://codejredu.github.io/test/assets/parts/face6.svg',
+                        'https://codejredu.github.io/test/assets/parts/face7.svg',
+                        'https://codejredu.github.io/test/assets/parts/face8.svg',
+                        'https://codejredu.github.io/test/assets/parts/face9.svg',
                         `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#ffdfba"/></svg>`)}`
                     ]
                 },
@@ -3695,6 +3726,7 @@
                 head:    { scale: { w: 0.28, h: 0.28 }, offset: { x: 0.5, y: 0.22 } },
                 shirt:   { scale: { w: 0.35, h: 0.3 }, offset: { x: 0.5, y: 0.45 } },
                 pants:   { scale: { w: 0.32, h: 0.4 }, offset: { x: 0.5, y: 0.75 } },
+                dresses: { scale: { w: 0.38, h: 0.55 }, offset: { x: 0.5, y: 0.65 } },
                 shoes:   { scale: { w: 0.35, h: 0.1 }, offset: { x: 0.5, y: 0.96 } },
                 eyes:    { scale: { w: 0.15, h: 0.08 }, offset: { x: 0.5, y: 0.20 } },
                 mouth:   { scale: { w: 0.1, h: 0.05 }, offset: { x: 0.5, y: 0.28 } },
@@ -3702,7 +3734,7 @@
             };
             const COLOR_PALETTE = ['#000000', '#FFFFFF', '#FF5733', '#FFC300', '#4CAF50', '#3498DB', '#9B59B6', '#E91E63', '#9E9E9E', '#795548', '#607D8B', '#ffdfba', '#ffadad', '#ffd6a5', '#caffbf', '#a0c4ff'];
 
-            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'head', 'mouth', 'eyes', 'hands'];
+            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'dresses', 'head', 'mouth', 'eyes', 'hands'];
             
             async function getAssetAsText(src) {
                 if (assetCache[src]) return assetCache[src];
@@ -3871,33 +3903,31 @@
                     const selectedHand = getSelectedPartObject();
 
                     if (selectedHand) {
-                        // If a hand is already selected, just change its source
                         selectedHand.src = partSrc;
                     } else if (currentCharacter.hands.length < 2) {
-                        // If no hand is selected and there's room, add a new one
                         const props = PART_PROPORTIONS.hand;
                         const w = characterCanvas.width * props.scale.w;
                         const h = characterCanvas.height * props.scale.h;
                         const xOffset = currentCharacter.hands.length === 0 ? props.offset.x : 1 - props.offset.x;
                         const newHand = { 
-                            src: partSrc, 
+                            category: 'hand', src: partSrc, 
                             x: xOffset * characterCanvas.width,
                             y: props.offset.y * characterCanvas.height,
-                            width: w,
-                            height: h,
-                            rotation: 0,
-                            color: null 
+                            width: w, height: h, rotation: 0, color: null 
                         };
                         currentCharacter.hands.push(newHand);
-                    } else {
-                        // Optionally provide feedback that the user can't add more hands
-                        console.log("Maximum number of hands (2) reached.");
                     }
                 } else {
-                    const existingPart = currentCharacter[category];
+                     const existingPart = currentCharacter[category];
                     if (existingPart) {
                         existingPart.src = partSrc;
-                    } 
+                    }
+                    if (category === 'dresses' && currentCharacter.shirt && currentCharacter.pants) {
+                        currentCharacter.shirt.src = '';
+                        currentCharacter.pants.src = '';
+                    } else if (category === 'shirt' || category === 'pants') {
+                        if (currentCharacter.dresses) currentCharacter.dresses.src = '';
+                    }
                 }
 
                 const siblings = thumbElement.parentElement.querySelectorAll('.part-thumbnail');
@@ -3953,21 +3983,20 @@
                  currentCharacter.hands = []; // Initialize hands as an array
                  
                  DRAW_ORDER.forEach(cat => {
-                    if (cat !== 'hands') { // Don't initialize hands here
-                        const firstPartSrc = ASSET_CATEGORIES[cat]?.parts[0];
-                        if (firstPartSrc) {
+                    if (cat !== 'hands') {
+                        const isDefaultPart = cat !== 'dresses'; // Don't give a default dress
+                        const firstPartSrc = isDefaultPart ? ASSET_CATEGORIES[cat]?.parts[0] : '';
+                        
+                        if (ASSET_CATEGORIES[cat]) {
                             const props = PART_PROPORTIONS[cat];
                             const w = characterCanvas.width * props.scale.w;
                             const h = characterCanvas.height * props.scale.h;
                             
                             currentCharacter[cat] = { 
-                                src: firstPartSrc, 
+                                category: cat, src: firstPartSrc, 
                                 x: props.offset.x * characterCanvas.width,
                                 y: props.offset.y * characterCanvas.height,
-                                width: w,
-                                height: h,
-                                rotation: 0,
-                                color: null 
+                                width: w, height: h, rotation: 0, color: null 
                             };
                         }
                     }
@@ -3991,7 +4020,7 @@
                 });
             }
 
-            createSpriteButton.addEventListener('click', () => {
+            createSpriteHeaderButton.addEventListener('click', () => {
                 initializeCreator();
                 creatorModal.classList.add('visible');
             });
@@ -4053,7 +4082,7 @@
                         }
                     } else {
                         const part = currentCharacter[category];
-                        if (!part) continue;
+                        if (!part || !part.src) continue;
                         const dx = x - part.x;
                         const dy = y - part.y;
                         const cos = Math.cos(-part.rotation);
@@ -4141,7 +4170,8 @@
 
                 if (selectedPartOnCanvas) {
                     creatorControlsPanel.classList.remove('hidden');
-                    const categoryLabel = ASSET_CATEGORIES[selectedPartOnCanvas.category].label;
+                    const categoryKey = selectedPartOnCanvas.category === 'hands' ? 'hand' : selectedPartOnCanvas.category;
+                    const categoryLabel = ASSET_CATEGORIES[categoryKey].label;
                     selectedPartLabel.textContent = categoryLabel;
                 } else {
                     creatorControlsPanel.classList.add('hidden');
@@ -4186,57 +4216,43 @@
                     const angle2 = Math.atan2(mouseY - initial.y, mouseX - initial.x);
                     part.rotation = initial.rotation + (angle2 - angle1);
                 } else if (creatorAction.type === 'resize') {
-                    // --- REWRITTEN, ROBUST RESIZING LOGIC ---
                     const handleName = creatorAction.handle;
-                    const handles = getPartHandles(initial);
-                    const oppositeHandleName = {
-                        topLeft: 'bottomRight', topRight: 'bottomLeft',
-                        bottomLeft: 'topRight', bottomRight: 'topLeft',
-                        top: 'bottom', bottom: 'top', left: 'right', right: 'left'
-                    }[handleName];
-                    const oppositeHandle = handles[oppositeHandleName];
-
-                    // 1. Find the anchor point (the handle opposite the one being dragged) in world coordinates.
+                    const isHorizontal = handleName.includes('left') || handleName.includes('right');
+                    const isVertical = handleName.includes('top') || handleName.includes('bottom');
+                    
                     const cos = Math.cos(initial.rotation);
                     const sin = Math.sin(initial.rotation);
-                    const anchorX = initial.x + oppositeHandle.x * cos - oppositeHandle.y * sin;
-                    const anchorY = initial.y + oppositeHandle.x * sin + oppositeHandle.y * cos;
 
-                    // 2. Find the current mouse position in the rotated coordinate system of the object, relative to the anchor.
-                    const dx = mouseX - anchorX;
-                    const dy = mouseY - anchorY;
-                    const cos_inv = Math.cos(-initial.rotation);
-                    const sin_inv = Math.sin(-initial.rotation);
-                    const local_mx = dx * cos_inv - dy * sin_inv;
-                    const local_my = dx * sin_inv + dy * cos_inv;
+                    const dx = mouseX - creatorAction.startX;
+                    const dy = mouseY - creatorAction.startY;
+                    
+                    const rotatedDx = dx * cos + dy * sin;
+                    const rotatedDy = -dx * sin + dy * cos;
 
-                    // 3. Determine the new width and height based on the handle being dragged.
                     let newWidth = initial.width;
                     let newHeight = initial.height;
-                    
-                    if (handleName.toLowerCase().includes('left') || handleName.toLowerCase().includes('right')) {
-                        newWidth = Math.abs(local_mx);
+                    let moveX = 0;
+                    let moveY = 0;
+
+                    if (isHorizontal) {
+                        const flip = handleName.includes('left') ? -1 : 1;
+                        newWidth = initial.width + rotatedDx * 2 * flip;
+                        moveX = (rotatedDx * flip) * cos;
+                        moveY = (rotatedDx * flip) * sin;
                     }
-                    if (handleName.toLowerCase().includes('top') || handleName.toLowerCase().includes('bottom')) {
-                        newHeight = Math.abs(local_my);
+
+                    if (isVertical) {
+                        const flip = handleName.includes('top') ? -1 : 1;
+                        newHeight = initial.height + rotatedDy * 2 * flip;
+                        moveX -= (rotatedDy * flip) * sin;
+                        moveY += (rotatedDy * flip) * cos;
                     }
                     
-                    // Prevent inversion
                     const min_size = 5;
-                    newWidth = Math.max(newWidth, min_size);
-                    newHeight = Math.max(newHeight, min_size);
-                    
-                    // 4. Calculate the new center of the object.
-                    // The new center is halfway between the anchor and the dragged handle's new position.
-                    const newCenterX = anchorX + (mouseX - anchorX) / 2;
-                    const newCenterY = anchorY + (mouseY - anchorY) / 2;
-                    
-                    // 5. Update the part with the new, correct values.
-                    part.width = newWidth;
-                    part.height = newHeight;
-                    part.x = newCenterX;
-                    part.y = newCenterY;
-                    part.rotation = initial.rotation;
+                    part.width = Math.max(newWidth, min_size);
+                    part.height = Math.max(newHeight, min_size);
+                    part.x = initial.x + moveX;
+                    part.y = initial.y + moveY;
                 }
 
                 drawCharacter();
@@ -4274,6 +4290,9 @@
                 backgroundGallery.classList.add('visible');
             });
             
+            const uploadBackdropHeaderButton = document.getElementById('upload-backdrop-header-button');
+            uploadBackdropHeaderButton.addEventListener('click', () => backdropUploadInput.click());
+
             closeGalleryButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 backgroundGallery.classList.remove('visible');
@@ -4302,6 +4321,9 @@
             addSpriteButton.addEventListener('click', () => {
                 spriteGallery.classList.add('visible');
             });
+
+            const uploadSpriteHeaderButton = document.getElementById('upload-sprite-header-button');
+            uploadSpriteHeaderButton.addEventListener('click', () => spriteUploadInput.click());
 
             closeSpriteGalleryButton.addEventListener('click', (e) => {
                 e.stopPropagation();
