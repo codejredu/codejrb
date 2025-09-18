@@ -109,8 +109,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 80px; /* Base size */
-            height: 80px; /* Base size */
+            width: 160px; /* Base size */
+            height: 160px; /* Base size */
             background-color: transparent;
             border-radius: 0;
             display: flex;
@@ -1586,7 +1586,7 @@
                     const stageX = spriteData.x / stageToSpriteX;
                     const stageY = -spriteData.y / stageToSpriteY;
                     
-                    const baseSize = 80;
+                    const baseSize = 160;
                     const newSize = baseSize * (spriteData.size / 100);
 
                     // --- Rotation Logic ---
@@ -2104,8 +2104,8 @@
                         
                         const halfWidth = ${STAGE_WIDTH / 2};
                         const halfHeight = ${STAGE_HEIGHT / 2};
-                        const spriteLogicalWidth = 80 * (sprite.size / 100);
-                        const spriteLogicalHeight = 80 * (sprite.size / 100);
+                        const spriteLogicalWidth = 160 * (sprite.size / 100);
+                        const spriteLogicalHeight = 160 * (sprite.size / 100);
                         const spriteHalfWidth = spriteLogicalWidth / 2;
                         const spriteHalfHeight = spriteLogicalHeight / 2;
 
@@ -3734,7 +3734,7 @@
             };
             const COLOR_PALETTE = ['#000000', '#FFFFFF', '#FF5733', '#FFC300', '#4CAF50', '#3498DB', '#9B59B6', '#E91E63', '#9E9E9E', '#795548', '#607D8B', '#ffdfba', '#ffadad', '#ffd6a5', '#caffbf', '#a0c4ff'];
 
-            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'dresses', 'head', 'mouth', 'eyes', 'hands'];
+            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'hands', 'dresses', 'head', 'mouth', 'eyes'];
             
             async function getAssetAsText(src) {
                 if (assetCache[src]) return assetCache[src];
