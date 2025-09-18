@@ -717,8 +717,8 @@
             gap: 1.5rem;
         }
         #character-canvas {
-            width: 300px;
-            height: 300px;
+            width: 400px;
+            height: 400px;
             background-color: #fff;
             border-radius: 12px;
             border: 2px dashed #ccc;
@@ -727,7 +727,7 @@
         }
         #creator-controls-panel {
             width: 100%;
-            max-width: 300px;
+            max-width: 400px;
             padding: 1rem;
             background-color: white;
             border-radius: 12px;
@@ -1058,7 +1058,7 @@
                     </div>
                 </div>
                 <div class="creator-preview">
-                    <canvas id="character-canvas" width="300" height="300"></canvas>
+                    <canvas id="character-canvas" width="400" height="400"></canvas>
                     <div id="creator-controls-panel" class="hidden">
                          <div class="text-center font-bold text-lg mb-2">
                            עריכת <span id="selected-part-label"></span>
@@ -1387,16 +1387,16 @@
             const creatorColorPalette = document.getElementById('creator-color-palette');
             const ctx = characterCanvas.getContext('2d');
             
-            let activeCreatorCategory = 'body';
+            let activeCreatorCategory = 'shirt';
             let currentCharacter = {};
             let imageCache = {}; // Caches final Image objects
             let assetCache = {}; // Caches raw SVG text content
-            let selectedPartOnCanvas = null;
+            let selectedPartOnCanvas = null; // Will be an object like { category, index? }
             
             // State for direct manipulation
             let creatorAction = {
                 type: 'none', // 'move', 'resize', 'rotate'
-                part: null,
+                partSelection: null, // The selection object
                 handle: null, // e.g., 'topLeft', 'bottomRight', 'rotate'
                 startX: 0,
                 startY: 0,
@@ -3620,13 +3620,29 @@
             
             // --- Character Creator Logic ---
             const ASSET_CATEGORIES = {
-                body: { 
-                    label: 'גוף', 
+                shirt: {
+                    label: 'חולצות',
                     parts: [
-                        'https://codejredu.github.io/test/assets/parts/body1.svg',
-                        ...Array(6).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="35" y="30" width="30" height="40" rx="5" fill="${['#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff'][i]}"/></svg>`)}`)
-                    ] 
+                        'https://codejredu.github.io/test/assets/parts/shirt1.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt2.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt3.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt4.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 30 30 L 70 30 L 65 70 L 35 70 Z" fill="${['#14b8a6', '#06b6d4'][i]}"/></svg>`)}`)
+                    ]
                 },
+                 pants: {
+                    label: 'מכנסיים',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/pants1.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants2.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants3.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants4.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 32 30 L 49 30 L 49 70 L 32 70 Z M 51 30 L 68 30 L 68 70 L 51 70 Z" fill="${['#ec4899', '#f43f5e'][i]}"/></svg>`)}`)
+                    ]
+                },
+                shoes: { label: 'נעליים', parts: Array(7).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="35" cy="50" rx="15" ry="6" fill="${['#6b7280', '#78716c', '#7c3aed', '#c026d3', '#db2777', '#e11d48', '#7f1d1d'][i]}"/><ellipse cx="65" cy="50" rx="15" ry="6" fill="${['#6b7280', '#78716c', '#7c3aed', '#c026d3', '#db2777', '#e11d48', '#7f1d1d'][i]}"/></svg>`)}`) },
                 head: {
                     label: 'ראש',
                     parts: [
@@ -3650,44 +3666,43 @@
                         ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g><circle cx="35" cy="50" r="${4 + i*0.5}" fill="white" stroke="black" stroke-width="1"/><circle cx="35" cy="50" r="${2 + i*0.2}" fill="black"/><circle cx="65" cy="50" r="${4 + i*0.5}" fill="white" stroke="black" stroke-width="1"/><circle cx="65" cy="50" r="${2 + i*0.2}" fill="black"/></g></svg>`)}`)
                     ] 
                 },
-                mouth: { label: 'פה', parts: Array(7).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 40 60 Q 50 ${60 + i*2 - 6} 60 60" stroke="black" fill="none" stroke-width="2" stroke-linecap="round"/></svg>`)}`) },
-                shirt: {
-                    label: 'חולצות',
+                mouth: {
+                    label: 'פה',
                     parts: [
-                        'https://codejredu.github.io/test/assets/parts/shirt1.svg',
-                        'https://codejredu.github.io/test/assets/parts/shirt2.svg',
-                        'https://codejredu.github.io/test/assets/parts/shirt3.svg',
-                        'https://codejredu.github.io/test/assets/parts/shirt4.svg',
-                        'https://codejredu.github.io/test/assets/parts/shirt5.svg',
-                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 30 30 L 70 30 L 65 70 L 35 70 Z" fill="${['#14b8a6', '#06b6d4'][i]}"/></svg>`)}`)
+                        'https://codejredu.github.io/test/assets/parts/mouth1.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth2.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth3.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth4.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth5.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth6.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth7.svg'
                     ]
                 },
-                pants: {
-                    label: 'מכנסיים',
+                hand: {
+                    label: 'ידים',
                     parts: [
-                        'https://codejredu.github.io/test/assets/parts/pants1.svg',
-                        'https://codejredu.github.io/test/assets/parts/pants2.svg',
-                        'https://codejredu.github.io/test/assets/parts/pants3.svg',
-                        'https://codejredu.github.io/test/assets/parts/pants4.svg',
-                        'https://codejredu.github.io/test/assets/parts/pants5.svg',
-                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 32 30 L 49 30 L 49 70 L 32 70 Z M 51 30 L 68 30 L 68 70 L 51 70 Z" fill="${['#ec4899', '#f43f5e'][i]}"/></svg>`)}`)
+                        'https://codejredu.github.io/test/assets/parts/hand1.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand2.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand3.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand4.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="${['#ffadad', '#ffd6a5'][i]}"/></svg>`)}`)
                     ]
-                },
-                shoes: { label: 'נעליים', parts: Array(7).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="35" cy="50" rx="15" ry="6" fill="${['#6b7280', '#78716c', '#7c3aed', '#c026d3', '#db2777', '#e11d48', '#7f1d1d'][i]}"/><ellipse cx="65" cy="50" rx="15" ry="6" fill="${['#6b7280', '#78716c', '#7c3aed', '#c026d3', '#db2777', '#e11d48', '#7f1d1d'][i]}"/></svg>`)}`) },
+                }
             };
 
             const PART_PROPORTIONS = {
                 head:    { scale: { w: 0.28, h: 0.28 }, offset: { x: 0.5, y: 0.22 } },
-                body:    { scale: { w: 0.3, h: 0.45 }, offset: { x: 0.5, y: 0.6 } },
                 shirt:   { scale: { w: 0.35, h: 0.3 }, offset: { x: 0.5, y: 0.45 } },
                 pants:   { scale: { w: 0.32, h: 0.4 }, offset: { x: 0.5, y: 0.75 } },
                 shoes:   { scale: { w: 0.35, h: 0.1 }, offset: { x: 0.5, y: 0.96 } },
                 eyes:    { scale: { w: 0.15, h: 0.08 }, offset: { x: 0.5, y: 0.20 } },
-                mouth:   { scale: { w: 0.1, h: 0.05 }, offset: { x: 0.5, y: 0.28 } }
+                mouth:   { scale: { w: 0.1, h: 0.05 }, offset: { x: 0.5, y: 0.28 } },
+                hand:    { scale: { w: 0.15, h: 0.18 }, offset: { x: 0.35, y: 0.55 } }
             };
             const COLOR_PALETTE = ['#000000', '#FFFFFF', '#FF5733', '#FFC300', '#4CAF50', '#3498DB', '#9B59B6', '#E91E63', '#9E9E9E', '#795548', '#607D8B', '#ffdfba', '#ffadad', '#ffd6a5', '#caffbf', '#a0c4ff'];
 
-            const DRAW_ORDER = ['body', 'shirt', 'pants', 'shoes', 'head', 'mouth', 'eyes'];
+            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'head', 'mouth', 'eyes', 'hands'];
             
             async function getAssetAsText(src) {
                 if (assetCache[src]) return assetCache[src];
@@ -3745,33 +3760,38 @@
 
             async function drawCharacter() {
                 ctx.clearRect(0, 0, characterCanvas.width, characterCanvas.height);
-
-                const drawingPromises = DRAW_ORDER.map(category => {
-                    const part = currentCharacter[category];
-                    if (!part || !part.src) {
-                        return Promise.resolve(null); // Resolve with null if part doesn't exist
+                
+                const getPartFromSelection = (selection) => {
+                    if (!selection) return null;
+                    if (selection.category === 'hands') {
+                        return currentCharacter.hands[selection.index];
                     }
+                    return currentCharacter[selection.category];
+                };
 
-                    // Create a self-executing async function to handle the loading for each part
+                const partsToDraw = [];
+                DRAW_ORDER.forEach(category => {
+                    if (category === 'hands') {
+                        currentCharacter.hands.forEach(handPart => partsToDraw.push(handPart));
+                    } else {
+                        const part = currentCharacter[category];
+                        if (part && part.src) {
+                            partsToDraw.push(part);
+                        }
+                    }
+                });
+
+                const drawingPromises = partsToDraw.map(part => {
                     return (async () => {
                         try {
-                            // 1. Get the raw SVG text, whether from a data URL or by fetching
                             const svgText = await getAssetAsText(part.src);
-                            
-                            // 2. Colorize if a color is selected
                             const finalSvgText = part.color ? colorizeSvg(svgText, part.color) : svgText;
-
-                            // 3. Create a final data URL from the SVG text
                             const dataUrl = `data:image/svg+xml;base64,${safeBtoa(finalSvgText)}`;
-
-                            // 4. Load the image from the data URL (this is now safe from cross-origin issues)
                             const img = await loadImage(dataUrl);
-
-                            // 5. Return all data needed for drawing
                             return { part, img };
                         } catch (e) {
-                            console.error(`Error processing part ${category}:`, e);
-                            return null; // Return null on error for this specific part
+                            console.error(`Error processing a part:`, e);
+                            return null;
                         }
                     })();
                 });
@@ -3779,7 +3799,6 @@
                 try {
                     const loadedParts = await Promise.all(drawingPromises);
 
-                    // Draw all the successfully loaded parts in order
                     loadedParts.forEach(loaded => {
                         if (loaded) {
                             const { part, img } = loaded;
@@ -3791,9 +3810,9 @@
                         }
                     });
 
-                    // If a part is selected, draw its transformation handles on top
-                    if (selectedPartOnCanvas && currentCharacter[selectedPartOnCanvas]) {
-                        drawTransformHandles(currentCharacter[selectedPartOnCanvas]);
+                    const selectedPartObject = getPartFromSelection(selectedPartOnCanvas);
+                    if (selectedPartObject) {
+                        drawTransformHandles(selectedPartObject);
                     }
                 } catch (error) {
                     console.error("An unexpected error occurred during character drawing:", error);
@@ -3844,25 +3863,41 @@
             }
 
             function selectPart(category, partSrc, thumbElement) {
-                // Keep existing transformation if any, otherwise use default.
-                const existingPart = currentCharacter[category];
-                if (existingPart) {
-                    existingPart.src = partSrc;
-                } else {
-                     // Should be initialized in initializeCreator, but as a fallback:
-                    const props = PART_PROPORTIONS[category];
-                    const scaleIsObject = typeof props.scale === 'object' && props.scale !== null;
-                    const w = characterCanvas.width * (scaleIsObject ? props.scale.w : props.scale);
-                    const h = characterCanvas.height * (scaleIsObject ? props.scale.h : props.scale);
-                    currentCharacter[category] = {
-                        src: partSrc,
-                        x: props.offset.x * characterCanvas.width,
-                        y: props.offset.y * characterCanvas.height,
-                        width: w,
-                        height: h,
-                        rotation: 0,
-                        color: null
+                if (category === 'hand') {
+                    const getSelectedPartObject = () => {
+                        if (!selectedPartOnCanvas) return null;
+                        return selectedPartOnCanvas.category === 'hands' ? currentCharacter.hands[selectedPartOnCanvas.index] : null;
                     };
+                    const selectedHand = getSelectedPartObject();
+
+                    if (selectedHand) {
+                        // If a hand is already selected, just change its source
+                        selectedHand.src = partSrc;
+                    } else if (currentCharacter.hands.length < 2) {
+                        // If no hand is selected and there's room, add a new one
+                        const props = PART_PROPORTIONS.hand;
+                        const w = characterCanvas.width * props.scale.w;
+                        const h = characterCanvas.height * props.scale.h;
+                        const xOffset = currentCharacter.hands.length === 0 ? props.offset.x : 1 - props.offset.x;
+                        const newHand = { 
+                            src: partSrc, 
+                            x: xOffset * characterCanvas.width,
+                            y: props.offset.y * characterCanvas.height,
+                            width: w,
+                            height: h,
+                            rotation: 0,
+                            color: null 
+                        };
+                        currentCharacter.hands.push(newHand);
+                    } else {
+                        // Optionally provide feedback that the user can't add more hands
+                        console.log("Maximum number of hands (2) reached.");
+                    }
+                } else {
+                    const existingPart = currentCharacter[category];
+                    if (existingPart) {
+                        existingPart.src = partSrc;
+                    } 
                 }
 
                 const siblings = thumbElement.parentElement.querySelectorAll('.part-thumbnail');
@@ -3881,7 +3916,8 @@
                     categoryData.parts.forEach(partSrc => {
                         const thumb = document.createElement('div');
                         thumb.className = 'part-thumbnail';
-                        if (currentCharacter[category]?.src === partSrc) {
+                        // For non-multi-part categories, check if it's the current src
+                        if (category !== 'hand' && currentCharacter[category]?.src === partSrc) {
                             thumb.classList.add('selected');
                         }
                         thumb.innerHTML = `<img src="${partSrc}">`;
@@ -3914,23 +3950,26 @@
                  }
                  
                  currentCharacter = {};
+                 currentCharacter.hands = []; // Initialize hands as an array
+                 
                  DRAW_ORDER.forEach(cat => {
-                    const firstPartSrc = ASSET_CATEGORIES[cat]?.parts[0];
-                    if (firstPartSrc) {
-                        const props = PART_PROPORTIONS[cat];
-                        const scaleIsObject = typeof props.scale === 'object' && props.scale !== null;
-                        const w = characterCanvas.width * (scaleIsObject ? props.scale.w : props.scale);
-                        const h = characterCanvas.height * (scaleIsObject ? props.scale.h : props.scale);
-                        
-                        currentCharacter[cat] = { 
-                            src: firstPartSrc, 
-                            x: props.offset.x * characterCanvas.width,
-                            y: props.offset.y * characterCanvas.height,
-                            width: w,
-                            height: h,
-                            rotation: 0,
-                            color: null 
-                        };
+                    if (cat !== 'hands') { // Don't initialize hands here
+                        const firstPartSrc = ASSET_CATEGORIES[cat]?.parts[0];
+                        if (firstPartSrc) {
+                            const props = PART_PROPORTIONS[cat];
+                            const w = characterCanvas.width * props.scale.w;
+                            const h = characterCanvas.height * props.scale.h;
+                            
+                            currentCharacter[cat] = { 
+                                src: firstPartSrc, 
+                                x: props.offset.x * characterCanvas.width,
+                                y: props.offset.y * characterCanvas.height,
+                                width: w,
+                                height: h,
+                                rotation: 0,
+                                color: null 
+                            };
+                        }
                     }
                  });
                  
@@ -3996,21 +4035,35 @@
             }
 
             function getPartAtPoint(x, y) {
-                // Iterate backwards so we hit the top-most part first
-                for (const category of [...DRAW_ORDER].reverse()) {
-                    const part = currentCharacter[category];
-                    if (!part) continue;
+                 for (const category of [...DRAW_ORDER].reverse()) {
+                    if (category === 'hands') {
+                        // Iterate backwards for correct z-index picking
+                        for (let i = currentCharacter.hands.length - 1; i >= 0; i--) {
+                            const part = currentCharacter.hands[i];
+                            const dx = x - part.x;
+                            const dy = y - part.y;
+                            const cos = Math.cos(-part.rotation);
+                            const sin = Math.sin(-part.rotation);
+                            const localX = dx * cos - dy * sin;
+                            const localY = dx * sin + dy * cos;
 
-                    // Transform the point into the part's local coordinate system
-                    const dx = x - part.x;
-                    const dy = y - part.y;
-                    const cos = Math.cos(-part.rotation);
-                    const sin = Math.sin(-part.rotation);
-                    const localX = dx * cos - dy * sin;
-                    const localY = dx * sin + dy * cos;
+                            if (Math.abs(localX) < part.width / 2 && Math.abs(localY) < part.height / 2) {
+                                return { category: 'hands', index: i };
+                            }
+                        }
+                    } else {
+                        const part = currentCharacter[category];
+                        if (!part) continue;
+                        const dx = x - part.x;
+                        const dy = y - part.y;
+                        const cos = Math.cos(-part.rotation);
+                        const sin = Math.sin(-part.rotation);
+                        const localX = dx * cos - dy * sin;
+                        const localY = dx * sin + dy * cos;
 
-                    if (Math.abs(localX) < part.width / 2 && Math.abs(localY) < part.height / 2) {
-                        return category;
+                        if (Math.abs(localX) < part.width / 2 && Math.abs(localY) < part.height / 2) {
+                            return { category: category };
+                        }
                     }
                 }
                 return null;
@@ -4038,6 +4091,14 @@
                  }
                  return null;
             }
+            
+            function getPartFromSelection(selection) {
+                if (!selection) return null;
+                return selection.category === 'hands'
+                    ? currentCharacter.hands[selection.index]
+                    : currentCharacter[selection.category];
+            }
+
 
             function handleCanvasMouseDown(e) {
                 e.preventDefault();
@@ -4045,44 +4106,43 @@
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
 
-                let newSelectedPart = null;
+                let newSelection = null;
                 let actionType = 'none';
                 let handleName = null;
                 
-                // 1. Check if clicking on a handle of the currently selected part
-                if (selectedPartOnCanvas) {
-                    handleName = getHandleAtPoint(currentCharacter[selectedPartOnCanvas], mouseX, mouseY);
+                const currentSelectedPartObject = getPartFromSelection(selectedPartOnCanvas);
+                if (currentSelectedPartObject) {
+                    handleName = getHandleAtPoint(currentSelectedPartObject, mouseX, mouseY);
                     if (handleName) {
-                        newSelectedPart = selectedPartOnCanvas;
-                        actionType = getPartHandles(currentCharacter[selectedPartOnCanvas])[handleName].type;
+                        newSelection = selectedPartOnCanvas;
+                        actionType = getPartHandles(currentSelectedPartObject)[handleName].type;
                     }
                 }
                 
-                // 2. If not a handle, check if clicking on any part
                 if (actionType === 'none') {
                     const partUnderMouse = getPartAtPoint(mouseX, mouseY);
                     if (partUnderMouse) {
-                        newSelectedPart = partUnderMouse;
+                        newSelection = partUnderMouse;
                         actionType = 'move';
                     }
                 }
                 
-                // 3. Update selection state
-                selectedPartOnCanvas = newSelectedPart;
+                selectedPartOnCanvas = newSelection;
                 
-                // 4. If an action is starting, store initial state
                 if (actionType !== 'none') {
+                    const partObject = getPartFromSelection(newSelection);
                     creatorAction.type = actionType;
-                    creatorAction.part = newSelectedPart;
+                    creatorAction.partSelection = newSelection;
                     creatorAction.handle = handleName;
                     creatorAction.startX = mouseX;
                     creatorAction.startY = mouseY;
-                    creatorAction.initialState = { ...currentCharacter[newSelectedPart] };
+                    creatorAction.initialState = JSON.parse(JSON.stringify(partObject)); // Deep copy
                 }
 
                 if (selectedPartOnCanvas) {
                     creatorControlsPanel.classList.remove('hidden');
-                    selectedPartLabel.textContent = ASSET_CATEGORIES[selectedPartOnCanvas].label;
+                    const categoryLabel = ASSET_CATEGORIES[selectedPartOnCanvas.category].label;
+                    selectedPartLabel.textContent = categoryLabel;
                 } else {
                     creatorControlsPanel.classList.add('hidden');
                 }
@@ -4096,12 +4156,12 @@
                 const mouseY = e.clientY - rect.top;
 
                 if (creatorAction.type === 'none') {
-                    // Update cursor style on hover
                     let cursor = 'default';
-                    if (selectedPartOnCanvas) {
-                        const handleName = getHandleAtPoint(currentCharacter[selectedPartOnCanvas], mouseX, mouseY);
+                    const selectedObject = getPartFromSelection(selectedPartOnCanvas);
+                    if (selectedObject) {
+                        const handleName = getHandleAtPoint(selectedObject, mouseX, mouseY);
                         if (handleName) {
-                            cursor = getPartHandles(currentCharacter[selectedPartOnCanvas])[handleName].cursor;
+                            cursor = getPartHandles(selectedObject)[handleName].cursor;
                         } else if (getPartAtPoint(mouseX, mouseY)) {
                             cursor = 'move';
                         }
@@ -4113,7 +4173,7 @@
                 }
 
                 e.preventDefault();
-                const part = currentCharacter[creatorAction.part];
+                const part = getPartFromSelection(creatorAction.partSelection);
                 const initial = creatorAction.initialState;
                 
                 if (creatorAction.type === 'move') {
@@ -4126,69 +4186,57 @@
                     const angle2 = Math.atan2(mouseY - initial.y, mouseX - initial.x);
                     part.rotation = initial.rotation + (angle2 - angle1);
                 } else if (creatorAction.type === 'resize') {
-                    // --- NEW, ROBUST RESIZING LOGIC ---
-                    const handle = creatorAction.handle;
+                    // --- REWRITTEN, ROBUST RESIZING LOGIC ---
+                    const handleName = creatorAction.handle;
+                    const handles = getPartHandles(initial);
+                    const oppositeHandleName = {
+                        topLeft: 'bottomRight', topRight: 'bottomLeft',
+                        bottomLeft: 'topRight', bottomRight: 'topLeft',
+                        top: 'bottom', bottom: 'top', left: 'right', right: 'left'
+                    }[handleName];
+                    const oppositeHandle = handles[oppositeHandleName];
 
-                    // 1. Transform mouse position into the initial object's local coordinate system.
+                    // 1. Find the anchor point (the handle opposite the one being dragged) in world coordinates.
+                    const cos = Math.cos(initial.rotation);
+                    const sin = Math.sin(initial.rotation);
+                    const anchorX = initial.x + oppositeHandle.x * cos - oppositeHandle.y * sin;
+                    const anchorY = initial.y + oppositeHandle.x * sin + oppositeHandle.y * cos;
+
+                    // 2. Find the current mouse position in the rotated coordinate system of the object, relative to the anchor.
+                    const dx = mouseX - anchorX;
+                    const dy = mouseY - anchorY;
                     const cos_inv = Math.cos(-initial.rotation);
                     const sin_inv = Math.sin(-initial.rotation);
+                    const local_mx = dx * cos_inv - dy * sin_inv;
+                    const local_my = dx * sin_inv + dy * cos_inv;
+
+                    // 3. Determine the new width and height based on the handle being dragged.
+                    let newWidth = initial.width;
+                    let newHeight = initial.height;
                     
-                    // Mouse position relative to the initial center
-                    const rel_mx = mouseX - initial.x;
-                    const rel_my = mouseY - initial.y;
-
-                    // Rotated mouse position (now in local coordinates, relative to center)
-                    const local_mx = rel_mx * cos_inv - rel_my * sin_inv;
-                    const local_my = rel_mx * sin_inv + rel_my * cos_inv;
-
-                    let local_top = -initial.height / 2;
-                    let local_bottom = initial.height / 2;
-                    let local_left = -initial.width / 2;
-                    let local_right = initial.width / 2;
-
-                    // 2. Update the local boundaries based on the handle and mouse position.
-                    if (handle.includes('Top')) { local_top = local_my; }
-                    if (handle.includes('Bottom')) { local_bottom = local_my; }
-                    if (handle.includes('Left')) { local_left = local_mx; }
-                    if (handle.includes('Right')) { local_right = local_mx; }
-                    
-                    // For corner handles, update both
-                    if (handle === 'topLeft') { local_top = local_my; local_left = local_mx; }
-                    if (handle === 'topRight') { local_top = local_my; local_right = local_mx; }
-                    if (handle === 'bottomLeft') { local_bottom = local_my; local_left = local_mx; }
-                    if (handle === 'bottomRight') { local_bottom = local_my; local_right = local_mx; }
-
-
-                    // Prevent inversion (object flipping inside out)
-                    const min_size = 10;
-                    if (local_bottom < local_top + min_size) {
-                        if (handle.includes('Top')) local_top = local_bottom - min_size;
-                        else local_bottom = local_top + min_size;
+                    if (handleName.toLowerCase().includes('left') || handleName.toLowerCase().includes('right')) {
+                        newWidth = Math.abs(local_mx);
                     }
-                    if (local_right < local_left + min_size) {
-                         if (handle.includes('Left')) local_left = local_right - min_size;
-                         else local_right = local_left + min_size;
+                    if (handleName.toLowerCase().includes('top') || handleName.toLowerCase().includes('bottom')) {
+                        newHeight = Math.abs(local_my);
                     }
                     
-                    // 3. Calculate new dimensions and new local center from the boundaries.
-                    const newWidth = local_right - local_left;
-                    const newHeight = local_bottom - local_top;
-                    const local_new_cx = (local_left + local_right) / 2;
-                    const local_new_cy = (local_top + local_bottom) / 2;
-
-                    // 4. Transform the new local center's offset back to world coordinates.
-                    const cos_fwd = Math.cos(initial.rotation);
-                    const sin_fwd = Math.sin(initial.rotation);
+                    // Prevent inversion
+                    const min_size = 5;
+                    newWidth = Math.max(newWidth, min_size);
+                    newHeight = Math.max(newHeight, min_size);
                     
-                    const world_offset_x = local_new_cx * cos_fwd - local_new_cy * sin_fwd;
-                    const world_offset_y = local_new_cx * sin_fwd + local_new_cy * cos_fwd;
-
+                    // 4. Calculate the new center of the object.
+                    // The new center is halfway between the anchor and the dragged handle's new position.
+                    const newCenterX = anchorX + (mouseX - anchorX) / 2;
+                    const newCenterY = anchorY + (mouseY - anchorY) / 2;
+                    
                     // 5. Update the part with the new, correct values.
                     part.width = newWidth;
                     part.height = newHeight;
-                    part.x = initial.x + world_offset_x;
-                    part.y = initial.y + world_offset_y;
-                    part.rotation = initial.rotation; // Rotation doesn't change during resize
+                    part.x = newCenterX;
+                    part.y = newCenterY;
+                    part.rotation = initial.rotation;
                 }
 
                 drawCharacter();
@@ -4196,7 +4244,7 @@
 
             function handleCanvasMouseUp(e) {
                 creatorAction.type = 'none';
-                creatorAction.part = null;
+                creatorAction.partSelection = null;
             }
             
             characterCanvas.addEventListener('mousedown', handleCanvasMouseDown);
@@ -4206,8 +4254,11 @@
             // Color Listener
             creatorColorPalette.addEventListener('click', (e) => {
                 if (selectedPartOnCanvas && e.target.matches('.color-swatch')) {
-                    currentCharacter[selectedPartOnCanvas].color = e.target.dataset.color;
-                    drawCharacter();
+                    const part = getPartFromSelection(selectedPartOnCanvas);
+                    if (part) {
+                        part.color = e.target.dataset.color;
+                        drawCharacter();
+                    }
                 }
             });
 
@@ -4216,7 +4267,6 @@
             createDefaultBackdrop();
             createDefaultSprite();
             setupPropertiesPanelListeners();
-            //setupCreatorControlListeners(); <-- This is replaced by canvas listeners
 
             backdropsList.addEventListener('click', handleBackdropSelection);
             
