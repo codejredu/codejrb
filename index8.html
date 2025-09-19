@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -3647,7 +3648,9 @@
                         'https://codejredu.github.io/test/assets/parts/pants3.svg',
                         'https://codejredu.github.io/test/assets/parts/pants4.svg',
                         'https://codejredu.github.io/test/assets/parts/pants5.svg',
-                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 32 30 L 49 30 L 49 70 L 32 70 Z M 51 30 L 68 30 L 68 70 L 51 70 Z" fill="${['#ec4899', '#f43f5e'][i]}"/></svg>`)}`)
+                        'https://codejredu.github.io/test/assets/parts/pants6.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants7.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants8.svg'
                     ]
                 },
                 dresses: {
@@ -3697,6 +3700,18 @@
                         ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g><circle cx="35" cy="50" r="${4 + i*0.5}" fill="white" stroke="black" stroke-width="1"/><circle cx="35" cy="50" r="${2 + i*0.2}" fill="black"/><circle cx="65" cy="50" r="${4 + i*0.5}" fill="white" stroke="black" stroke-width="1"/><circle cx="65" cy="50" r="${2 + i*0.2}" fill="black"/></g></svg>`)}`)
                     ] 
                 },
+                nose: {
+                    label: 'אפים',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/Nose1.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose2.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose3.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose4.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose5.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose6.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose7.svg'
+                    ]
+                },
                 mouth: {
                     label: 'פה',
                     parts: [
@@ -3729,12 +3744,13 @@
                 dresses: { scale: { w: 0.38, h: 0.55 }, offset: { x: 0.5, y: 0.65 } },
                 shoes:   { scale: { w: 0.35, h: 0.1 }, offset: { x: 0.5, y: 0.96 } },
                 eyes:    { scale: { w: 0.15, h: 0.08 }, offset: { x: 0.5, y: 0.20 } },
+                nose:    { scale: { w: 0.08, h: 0.08 }, offset: { x: 0.5, y: 0.24 } },
                 mouth:   { scale: { w: 0.1, h: 0.05 }, offset: { x: 0.5, y: 0.28 } },
                 hand:    { scale: { w: 0.15, h: 0.18 }, offset: { x: 0.35, y: 0.55 } }
             };
             const COLOR_PALETTE = ['#000000', '#FFFFFF', '#FF5733', '#FFC300', '#4CAF50', '#3498DB', '#9B59B6', '#E91E63', '#9E9E9E', '#795548', '#607D8B', '#ffdfba', '#ffadad', '#ffd6a5', '#caffbf', '#a0c4ff'];
 
-            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'hands', 'dresses', 'head', 'mouth', 'eyes'];
+            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'hands', 'dresses', 'head', 'nose', 'mouth', 'eyes'];
             
             async function getAssetAsText(src) {
                 if (assetCache[src]) return assetCache[src];
@@ -4180,7 +4196,7 @@
                 drawCharacter();
             }
             
-            function handleCanvasMouseMove(e) {
+             function handleCanvasMouseMove(e) {
                 const rect = characterCanvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
@@ -4216,43 +4232,61 @@
                     const angle2 = Math.atan2(mouseY - initial.y, mouseX - initial.x);
                     part.rotation = initial.rotation + (angle2 - angle1);
                 } else if (creatorAction.type === 'resize') {
+                     // --- START: New, Robust Resizing Logic ---
                     const handleName = creatorAction.handle;
-                    const isHorizontal = handleName.includes('left') || handleName.includes('right');
-                    const isVertical = handleName.includes('top') || handleName.includes('bottom');
+                    const MIN_SIZE = 10;
                     
+                    // The anchor is the point opposite the handle being dragged
+                    const anchorHandleName = {
+                        topLeft: 'bottomRight', topRight: 'bottomLeft',
+                        bottomLeft: 'topRight', bottomRight: 'topLeft',
+                        top: 'bottom', bottom: 'top', left: 'right', right: 'left'
+                    }[handleName];
+
+                    const initialHandles = getPartHandles(initial);
+                    const anchorPointLocal = initialHandles[anchorHandleName];
+                    
+                    // Convert anchor's local coordinates to global coordinates
                     const cos = Math.cos(initial.rotation);
                     const sin = Math.sin(initial.rotation);
+                    const anchorXGlobal = initial.x + anchorPointLocal.x * cos - anchorPointLocal.y * sin;
+                    const anchorYGlobal = initial.y + anchorPointLocal.x * sin + anchorPointLocal.y * cos;
 
-                    const dx = mouseX - creatorAction.startX;
-                    const dy = mouseY - creatorAction.startY;
-                    
-                    const rotatedDx = dx * cos + dy * sin;
-                    const rotatedDy = -dx * sin + dy * cos;
+                    // Convert the current mouse position into the object's rotated coordinate system
+                    const mdx = mouseX - anchorXGlobal;
+                    const mdy = mouseY - anchorYGlobal;
+                    const rotatedMouseX = mdx * cos + mdy * sin;
+                    const rotatedMouseY = -mdx * sin + mdy * cos;
 
+                    // Calculate new width and height based on the handle being dragged
                     let newWidth = initial.width;
                     let newHeight = initial.height;
-                    let moveX = 0;
-                    let moveY = 0;
-
-                    if (isHorizontal) {
-                        const flip = handleName.includes('left') ? -1 : 1;
-                        newWidth = initial.width + rotatedDx * 2 * flip;
-                        moveX = (rotatedDx * flip) * cos;
-                        moveY = (rotatedDx * flip) * sin;
-                    }
-
-                    if (isVertical) {
-                        const flip = handleName.includes('top') ? -1 : 1;
-                        newHeight = initial.height + rotatedDy * 2 * flip;
-                        moveX -= (rotatedDy * flip) * sin;
-                        moveY += (rotatedDy * flip) * cos;
-                    }
                     
-                    const min_size = 5;
-                    part.width = Math.max(newWidth, min_size);
-                    part.height = Math.max(newHeight, min_size);
-                    part.x = initial.x + moveX;
-                    part.y = initial.y + moveY;
+                    if (handleName.includes('right')) newWidth = rotatedMouseX + initial.width / 2;
+                    if (handleName.includes('left')) newWidth = -rotatedMouseX + initial.width / 2;
+                    if (handleName.includes('bottom')) newHeight = rotatedMouseY + initial.height / 2;
+                    if (handleName.includes('top')) newHeight = -rotatedMouseY + initial.height / 2;
+
+                    // For corner handles, maintain aspect ratio
+                    if (['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].includes(handleName)) {
+                        const ratio = initial.width / initial.height;
+                        if (Math.abs(newWidth / ratio) > Math.abs(newHeight)) {
+                           newHeight = newWidth / ratio;
+                        } else {
+                           newWidth = newHeight * ratio;
+                        }
+                    }
+
+                    part.width = Math.max(MIN_SIZE, newWidth);
+                    part.height = Math.max(MIN_SIZE, newHeight);
+
+                    // Recalculate the center point based on the new dimensions and the fixed anchor
+                    const newCenterLocalX = (part.width - initial.width) * (handleName.includes('left') ? 1 : -1) / 2;
+                    const newCenterLocalY = (part.height - initial.height) * (handleName.includes('top') ? 1 : -1) / 2;
+                    
+                    part.x = anchorXGlobal + newCenterLocalX * cos - newCenterLocalY * sin;
+                    part.y = anchorYGlobal + newCenterLocalX * sin + newCenterLocalY * cos;
+                    // --- END: New, Robust Resizing Logic ---
                 }
 
                 drawCharacter();
