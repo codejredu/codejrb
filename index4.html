@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -6,13 +8,6 @@
     <title>בלוקלי: פריסה בסגנון סקראץ'</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/blockly@9.0.0/blockly.min.js"></script>
-    <script>
-        // Monkey-patch the constant provider to increase loop block height
-        // This is a simpler and more stable way than creating a custom renderer.
-        if (typeof Blockly !== 'undefined' && Blockly.zelos) {
-            Blockly.zelos.ConstantProvider.prototype.STATEMENT_INPUT_MIN_HEIGHT = 48;
-        }
-    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -104,22 +99,31 @@
             background-position: center;
             border-radius: 12px;
         }
-        .sprite-wrapper {
+        .sprite-container {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 80px; /* Base size */
-            height: 80px; /* Base size */
+            width: 1px;
+            height: 1px;
+            visibility: hidden; /* Hide the container itself */
+        }
+        .sprite-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 160px; /* Base size */
+            height: 160px; /* Base size */
             background-color: transparent;
             border-radius: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s ease-out;
+            transform-origin: center center;
             z-index: 10;
             opacity: 1;
             cursor: grab;
+            visibility: visible; /* Make the wrapper visible */
+            transform: translate(-50%, -50%); /* Center the wrapper on the container's point */
         }
         .sprite-wrapper:active {
             cursor: grabbing;
@@ -188,7 +192,12 @@
             font-size: 1.25rem;
             font-weight: bold;
         }
-        .plus-button {
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .header-button {
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -197,10 +206,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
-        
+        .header-button:hover {
+            background-color: #3b82f6;
+        }
+        .header-button svg {
+            width: 20px;
+            height: 20px;
+        }
         .sprite-card {
             display: flex;
             flex-direction: column;
@@ -244,7 +259,8 @@
             opacity: 0;
             transition: opacity 0.2s;
         }
-        .sprite-card:hover .delete-button {
+        .sprite-card:hover .delete-button,
+        .backdrop-card:hover .delete-button {
             visibility: visible;
             opacity: 1;
         }
@@ -258,6 +274,7 @@
             background-position: center;
             transition: border-color 0.2s;
             flex-shrink: 0;
+            position: relative;
         }
         .backdrop-card.selected {
             border-color: #4C97FF;
@@ -284,17 +301,18 @@
         }
         .thumbnail-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            grid-template-columns: repeat(auto-fit, 80px);
             gap: 0.5rem;
-        }
-        @media (min-width: 768px) {
-            .thumbnail-grid {
-                grid-template-columns: repeat(5, minmax(0, 1fr));
-            }
+            justify-content: center;
         }
         .thumbnail {
             width: 100%;
-            height: auto;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            padding: 4px;
+            box-sizing: border-box;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -324,7 +342,7 @@
         }
         /* Colorful Number Pad Styles */
         .number-pad-container {
-            position: absolute;
+            position: fixed; /* Use fixed positioning for viewport-relative logic */
             z-index: 10000;
             background-color: #f0f4f8;
             border: 2px solid #a5b4fc;
@@ -401,11 +419,11 @@
         }
 
         /* Sprite Properties Panel */
-        #prop-show.active, #prop-hide.active {
+        #prop-show.active, #prop-hide.active, #prop-rotation-style button.active {
             background-color: #60a5fa; /* bg-blue-400 */
             color: white;
         }
-        #prop-show, #prop-hide {
+        #prop-show, #prop-hide, #prop-rotation-style button {
             transition: background-color 0.2s, color 0.2s;
         }
         #prop-direction {
@@ -552,6 +570,8 @@
             justify-content: center !important;
             border-bottom: 1px solid #e0e0e0;
             padding: 4px 0 !important;
+            transition: background-color 0.2s, border-right-color 0.2s;
+            border-right: 5px solid transparent; /* Prepare for selected state */
         }
         .blocklyTreeLabel {
             display: flex;
@@ -563,9 +583,6 @@
             font-weight: bold;
             color: #5f6368;
             font-size: 13px;
-        }
-        .blocklyTreeRow.blocklyTreeSelected {
-            background-color: #e4f2ff !important;
         }
         .kidi-category-icon {
             width: 28px;
@@ -587,24 +604,201 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transform: translate(-50%, -110%); /* Center horizontally and place above */
         }
+        .blocklyTreeRow.kidi-category-selected {
+            background-color: var(--category-bg-color);
+            border-right-color: var(--category-color);
+        }
+
+        /* Character Creator Modal Styles */
+        #character-creator-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #character-creator-modal.visible {
+            display: flex;
+        }
+        .creator-content {
+            background-color: #f0f4f8;
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .creator-header {
+            padding: 1rem 1.5rem;
+            background-color: #fff;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .creator-header h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .creator-main {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .creator-controls {
+            width: 65%;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+        .creator-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+            background-color: #f9fafb;
+            overflow-x: auto;
+        }
+        .category-button {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .category-button:hover {
+            background-color: #e5e7eb;
+        }
+        .category-button.active {
+            background-color: #4C97FF;
+            color: white;
+            border-color: #4C97FF;
+        }
+        .creator-parts-grid {
+            flex-grow: 1;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        .part-thumbnail {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #e5e7eb;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+        }
+        .part-thumbnail img {
+             max-width: 100%;
+             max-height: 100%;
+             object-fit: contain;
+        }
+        .part-thumbnail:hover {
+            border-color: #9ca3af;
+        }
+        .part-thumbnail.selected {
+            border-color: #4C97FF;
+            box-shadow: 0 0 10px rgba(76, 151, 255, 0.5);
+        }
+
+        .creator-preview {
+            width: 35%;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        #character-canvas {
+            width: 400px;
+            height: 400px;
+            background-color: #fff;
+            border-radius: 12px;
+            border: 2px dashed #ccc;
+            /* cursor is handled dynamically by JS */
+            flex-shrink: 0;
+        }
+        #creator-controls-panel {
+            width: 100%;
+            max-width: 400px;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .control-group label {
+            font-weight: bold;
+            width: 50px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        #creator-color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-start;
+            flex-grow: 1;
+        }
+        .color-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            transition: transform 0.2s;
+        }
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-    <div id="project-controls" class="w-full bg-white shadow-md p-2 flex justify-start items-center gap-4 fixed top-0 left-0 z-50" dir="rtl">
-        <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM5 4a1 1 0 011-1h8a1 1 0 011 1v1h-2V5H7v1H5V4z"/>
-                <path fill-rule="evenodd" d="M3 13a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1-3a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
-            </svg>
-            <span>שמור פרויקט</span>
-        </button>
-        <button id="load-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-            </svg>
-            <span>טען פרויקט</span>
-        </button>
-        <input type="file" id="load-input" class="hidden" accept=".kidi, .json">
+    <div id="project-controls" class="w-full shadow-md p-2 flex justify-between items-center fixed top-0 left-0 z-50" style="background-color: #855CD6;" dir="rtl">
+        <div class="flex items-center gap-4">
+            <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM5 4a1 1 0 011-1h8a1 1 0 011 1v1h-2V5H7v1H5V4z"/>
+                    <path fill-rule="evenodd" d="M3 13a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1-3a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
+                </svg>
+                <span>שמור פרויקט</span>
+            </button>
+            <button id="load-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                </svg>
+                <span>טען פרויקט</span>
+            </button>
+            <input type="file" id="load-input" class="hidden" accept=".kidi, .json">
+        </div>
+        <h1 class="text-2xl font-bold text-white px-4">קודקידי</h1>
     </div>
 
 
@@ -666,13 +860,48 @@
                             </button>
                         </div>
                     </div>
+                    <div class="flex items-center gap-2">
+                        <label class="font-medium">סיבוב:</label>
+                        <div id="prop-rotation-style" class="flex bg-gray-200 rounded-lg p-0.5">
+                            <button id="rotation-all-around" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="לכל הכיוונים">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M23 4v6h-6" />
+                                </svg>
+                            </button>
+                            <button id="rotation-left-right" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="שמאל-ימין">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18m-7 4l4-4m0 0l-4-4m4 4H3" />
+                                </svg>
+                            </button>
+                            <button id="rotation-dont-rotate" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="ללא סיבוב">
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 3h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="section">
                 <div class="section-header">
-                    <h2></h2>
-                    <div id="add-sprite-button" class="plus-button">+</div>
+                    <h2>דמויות</h2>
+                    <div class="header-actions">
+                         <div id="create-sprite-header-button" class="header-button" title="צור דמות">
+                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                             </svg>
+                         </div>
+                         <div id="upload-sprite-header-button" class="header-button" title="העלה דמות">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                         </div>
+                         <div id="add-sprite-button" class="header-button" title="בחר דמות">
+                            <span class="text-xl font-bold">+</span>
+                         </div>
+                    </div>
                 </div>
                 <div id="sprites-carousel-wrapper" class="relative mt-4">
                      <div id="sprites-list" class="flex items-center gap-4">
@@ -683,6 +912,7 @@
                     <button class="close-gallery-button" id="close-sprite-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית דמויות</h2>
                     <div id="sprite-thumbnails-grid" class="thumbnail-grid">
+                        <!-- The create/upload buttons are removed from here -->
                         <img src="https://codejredu.github.io/claudejr/Chick.svg" alt="Chick" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Rabbit.svg" alt="Rabbit" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Beetle.svg" alt="Beetle" class="thumbnail">
@@ -706,14 +936,42 @@
                         <img src="https://codejredu.github.io/claudejr/Flower.svg" alt="Flower" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Monkey.svg" alt="Monkey" class="thumbnail">
                         <img src="https://codejredu.github.io/claudejr/Crocodile.svg" alt="Crocodile" class="thumbnail">
+                        <img src="https://codejredu.github.io/claudejr/falcon.svg" alt="Falcon" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/waman dance.gif" alt="Waman Dance" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/CAR.gif" alt="Car" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/Hedgehog.gif" alt="Hedgehog" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/KIDWALK.gif" alt="Kid Walk" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bee.gif" alt="Bee" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bird2.gif" alt="Bird 2" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/birdred.gif" alt="Red Bird" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/bycycle.gif" alt="Bicycle" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/car1.gif" alt="Car 1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/dance.gif" alt="Dance" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/dog.gif" alt="Dog" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/fox.gif" alt="Fox" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/gitarwaman.gif" alt="Guitar Woman" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/horse.gif" alt="Horse" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/kidwalk1.gif" alt="Kid Walk 1" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/mouse.gif" alt="Mouse" class="thumbnail">
+                        <img src="https://codejredu.github.io/test/assets/ani/ostrich.gif" alt="Ostrich" class="thumbnail">
                     </div>
+                    <input type="file" id="sprite-upload-input" class="hidden" accept="image/png, image/jpeg, image/gif, image/svg+xml">
                 </div>
             </div>
 
             <div class="section" id="backdrops-section">
                 <div class="section-header">
                     <h2>רקעים</h2>
-                    <div id="add-backdrop-button" class="plus-button">+</div>
+                     <div class="header-actions">
+                         <div id="upload-backdrop-header-button" class="header-button" title="העלה רקע">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                         </div>
+                         <div id="add-backdrop-button" class="header-button" title="בחר רקע">
+                           <span class="text-xl font-bold">+</span>
+                         </div>
+                    </div>
                 </div>
                 <div id="backdrops-carousel-wrapper" class="relative mt-4">
                     <div id="backdrops-list" class="flex items-center gap-4">
@@ -724,6 +982,7 @@
                     <button class="close-gallery-button" id="close-gallery-button">X</button>
                     <h2 class="text-xl font-bold text-center mb-4">גלריית רקעים</h2>
                     <div id="thumbnails-grid" class="thumbnail-grid">
+                        <!-- The upload button is removed from here -->
                         <img src="https://codejredu.github.io/test/assets/bg/Amphitheater.svg" alt="Amphitheater" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon.svg" alt="canyon" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/canyon1.svg" alt="canyon1" class="thumbnail">
@@ -754,6 +1013,7 @@
                         <img src="https://codejredu.github.io/test/assets/bg/winter2.svg" alt="winter2" class="thumbnail">
                         <img src="https://codejredu.github.io/test/assets/bg/under.svg" alt="under" class="thumbnail">
                     </div>
+                    <input type="file" id="backdrop-upload-input" class="hidden" accept="image/png, image/jpeg, image/gif, image/svg+xml">
                 </div>
             </div>
         </div>
@@ -788,10 +1048,48 @@
         </div>
     </div>
     
+    <!-- Character Creator Modal -->
+    <div id="character-creator-modal">
+        <div class="creator-content">
+            <div class="creator-header">
+                <h2>מחולל הדמויות</h2>
+                <div class="flex gap-4">
+                    <button id="creator-save-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">שמור</button>
+                    <button id="creator-close-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">סגור</button>
+                </div>
+            </div>
+            <div class="creator-main">
+                <div class="creator-controls">
+                    <div id="creator-categories" class="creator-categories">
+                        <!-- Categories will be populated by JS -->
+                    </div>
+                    <div id="creator-parts-grid" class="creator-parts-grid">
+                        <!-- Part thumbnails will be populated by JS -->
+                    </div>
+                </div>
+                <div class="creator-preview">
+                    <canvas id="character-canvas" width="400" height="400"></canvas>
+                    <div id="creator-controls-panel" class="hidden">
+                         <div class="text-center font-bold text-lg mb-2">
+                           עריכת <span id="selected-part-label"></span>
+                        </div>
+                        <div class="control-group">
+                            <label>צבע:</label>
+                            <div id="creator-color-palette">
+                                <!-- Color swatches go here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <xml id="toolbox" style="display: none">
         <category 
             name="להפעיל" 
-            colour="#FFD95A" 
+            colour="#FFE75A" 
             icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFC107'><path d='M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z'/></svg>">
             <block type="event_when_flag_clicked"></block>
             <block type="event_when_sprite_clicked"></block>
@@ -871,7 +1169,7 @@
         <category 
             name="מראה" 
             colour="#9966FF"
-            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238a4cff'><path d='M12 2C6.486 2 2 6.486 2 12c0 3.553 1.846 6.63 4.566 8.332.148.066.33.024.437-.113.107-.137.07-.34-.063-.448C4.24 18.01 3 15.22 3 12c0-4.962 4.038-9 9-9s9 4.038 9 9-4.038 9-9 9c-.551 0-1-.449-1-1s.449-1 1-1c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7c0 1.294.358 2.502.984 3.558.125.208.04.473-.145.613-.185.14-.45.064-.59-.12C4.6 14.93 4 13.51 4 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z' /><path d='M11 7h2v6h-2zm0 8h2v2h-2z' /></svg>">
+            icon-uri="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238a4cff'><path d='M12 2C6.486 2 2 6.486 2 12c0 3.553 1.846 6.63 4.566 8.332.148.066.33.024.437-.113.107-.137.07-.34-.063-.448C4.24 18.01 3 15.22 3 12c0-4.962 4.038-9 9-9s9 4.038 9 9-4.038 9-9 9c-.551 0-1-.449-1-1s.449-1 1-1c3.86 0 7-3.14 7-7s-3.14-7-7-7-7 3.14-7 7c0 1.294.358 2.502.984 3.558.125.208.04.473-.145.613-.185.14-.45.064-.59-.12C4.6 14.93 4 13.51 4 12c0-4.411 3.589-8 8-8s8 3.589 8-8 8z' /><path d='M11 7h2v6h-2zm0 8h2v2h-2z' /></svg>">
             <block type="looks_say_for_secs">
                 <value name="MESSAGE">
                     <shadow type="text">
@@ -893,6 +1191,27 @@
             </block>
             <block type="looks_show"></block>
             <block type="looks_hide"></block>
+            <block type="looks_grow">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_shrink">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="looks_set_size">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
             <block type="looks_switch_backdrop"></block>
         </category>
         <category 
@@ -920,6 +1239,47 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
              // START OF CUSTOM TOOLBOX RENDERER
+            
+            /**
+             * Safely encode a string to Base64, handling Unicode characters.
+             * @param {string} str The string to encode.
+             * @returns {string} The Base64 encoded string.
+             */
+            function safeBtoa(str) {
+                // First, URI-encode the string, then convert to a format btoa can handle.
+                return btoa(unescape(encodeURIComponent(str)));
+            }
+            
+            /**
+             * Safely decode a Base64 string, handling Unicode characters.
+             * @param {string} base64 The Base64 string to decode.
+             * @returns {string} The decoded string.
+             */
+            function safeAtob(base64) {
+                 // First, atob the string, then decode the URI-encoded characters.
+                return decodeURIComponent(escape(atob(base64)));
+            }
+
+            /**
+             * Helper function to convert a hex color to an rgba string.
+             * @param {string} hex The hex color string (e.g., "#FF6B1A").
+             * @param {number} alpha The alpha transparency (0.0 to 1.0).
+             * @returns {string} The rgba color string.
+             */
+            function hexToRgba(hex, alpha) {
+                let r = 0, g = 0, b = 0;
+                if (hex.length == 4) { // 3-digit hex
+                    r = parseInt(hex[1] + hex[1], 16);
+                    g = parseInt(hex[2] + hex[2], 16);
+                    b = parseInt(hex[3] + hex[3], 16);
+                } else if (hex.length == 7) { // 6-digit hex
+                    r = parseInt(hex.substring(1, 3), 16);
+                    g = parseInt(hex.substring(3, 5), 16);
+                    b = parseInt(hex.substring(5, 7), 16);
+                }
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+
             class KidiToolboxCategory extends Blockly.ToolboxCategory {
                 createDom_() {
                     super.createDom_(); // Let the parent class create the basic structure
@@ -931,11 +1291,21 @@
                             const icon = document.createElement('img');
                             icon.src = iconUri;
                             icon.className = 'kidi-category-icon';
-                            // Prepend the icon to the label div
                             label.insertBefore(icon, label.firstChild);
                         }
                     }
+                    
+                    // Store colors in CSS variables on the element itself for the new CSS rule to use
+                    this.rowDiv_.style.setProperty('--category-color', this.colour_);
+                    this.rowDiv_.style.setProperty('--category-bg-color', hexToRgba(this.colour_, 0.08));
+                    
                     return this.rowDiv_;
+                }
+                
+                setSelected(isSelected) {
+                    super.setSelected(isSelected);
+                    // Just toggle a class. The CSS will handle the styling.
+                    this.rowDiv_.classList.toggle('kidi-category-selected', isSelected);
                 }
             }
 
@@ -968,9 +1338,11 @@
             const backgroundGallery = document.getElementById('background-gallery');
             const closeGalleryButton = document.getElementById('close-gallery-button');
             const thumbnailsGrid = document.getElementById('thumbnails-grid');
+            const backdropUploadInput = document.getElementById('backdrop-upload-input');
             const spriteGallery = document.getElementById('sprite-gallery');
             const closeSpriteGalleryButton = document.getElementById('close-sprite-gallery-button');
             const spriteThumbnailsGrid = document.getElementById('sprite-thumbnails-grid');
+            const spriteUploadInput = document.getElementById('sprite-upload-input');
             
             const fullscreenButton = document.getElementById('fullscreen-button');
             const enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
@@ -990,6 +1362,9 @@
             const propHide = document.getElementById('prop-hide');
             const propSize = document.getElementById('prop-size');
             const propDirection = document.getElementById('prop-direction');
+            const propRotationAllAround = document.getElementById('rotation-all-around');
+            const propRotationLeftRight = document.getElementById('rotation-left-right');
+            const propRotationDontRotate = document.getElementById('rotation-dont-rotate');
             
             // Angle Picker elements
             const anglePickerWidget = document.getElementById('angle-picker-widget');
@@ -1003,11 +1378,97 @@
             let sprites = {};
             let activeSpriteId = null;
             let executionCancelled = false;
-            let isRunning = false;
             let isLoadingProject = false; // Flag to prevent events during load
             let justDragged = false;
             let dragStartX, dragStartY;
             let collisionState = new Set(); // Stores pairs of collided sprites
+            let scriptRunner = null;
+
+            // --- Character Creator Elements ---
+            const creatorModal = document.getElementById('character-creator-modal');
+            const createSpriteHeaderButton = document.getElementById('create-sprite-header-button');
+            const creatorCloseButton = document.getElementById('creator-close-button');
+            const creatorSaveButton = document.getElementById('creator-save-button');
+            const creatorCategoriesContainer = document.getElementById('creator-categories');
+            const creatorPartsGrid = document.getElementById('creator-parts-grid');
+            const characterCanvas = document.getElementById('character-canvas');
+            const creatorControlsPanel = document.getElementById('creator-controls-panel');
+            const selectedPartLabel = document.getElementById('selected-part-label');
+            const creatorColorPalette = document.getElementById('creator-color-palette');
+            const ctx = characterCanvas.getContext('2d');
+            
+            let activeCreatorCategory = 'shirt';
+            let currentCharacter = {};
+            let imageCache = {}; // Caches final Image objects
+            let assetCache = {}; // Caches raw SVG text content
+            let selectedPartOnCanvas = null; // Will be an object like { category, index? }
+            
+            // State for direct manipulation
+            let creatorAction = {
+                type: 'none', // 'move', 'resize', 'rotate'
+                partSelection: null, // The selection object
+                handle: null, // e.g., 'topLeft', 'bottomRight', 'rotate'
+                startX: 0,
+                startY: 0,
+                initialState: {}
+            };
+
+            
+            // --- Frame-Based Script Execution Engine (like Scratch) ---
+            class ScriptRunner {
+                constructor() {
+                    this.threads = [];
+                    this.isRunning = false;
+                    this.animationFrameId = null;
+                    log('מנוע ריצה חדש נוצר.');
+                }
+
+                add(generator) {
+                    this.threads.push(generator);
+                    if (!this.isRunning) {
+                        this.start();
+                    }
+                }
+
+                start() {
+                    if (this.isRunning) return;
+                    this.isRunning = true;
+                    executionCancelled = false;
+                    log('מנוע ריצה התחיל.');
+                    this.tick();
+                }
+
+                stop() {
+                    if (this.animationFrameId) {
+                        cancelAnimationFrame(this.animationFrameId);
+                    }
+                    this.isRunning = false;
+                    this.threads = [];
+                    this.animationFrameId = null;
+                    executionCancelled = true;
+                    log('מנוע ריצה נעצר.');
+                }
+
+                tick() {
+                    if (!this.isRunning) return;
+
+                    // Run one step of each generator
+                    for (let i = this.threads.length - 1; i >= 0; i--) {
+                        const generator = this.threads[i];
+                        const result = generator.next();
+                        if (result.done) {
+                            this.threads.splice(i, 1);
+                        }
+                    }
+                    
+                    if (this.threads.length > 0) {
+                        this.animationFrameId = requestAnimationFrame(() => this.tick());
+                    } else {
+                        log('כל התסריטים הסתיימו.');
+                        this.stop(); 
+                    }
+                }
+            }
 
             // Custom field for messages
             const messageOptions = [
@@ -1116,20 +1577,49 @@
                 const spriteData = sprites[spriteId];
                 if (!spriteData) return;
 
-                const spriteEl = document.getElementById(spriteData.id);
-                if (spriteEl) {
+                const container = document.getElementById(`container-${spriteData.id}`);
+                const wrapper = container.querySelector('.sprite-wrapper');
+                
+                if (container && wrapper) {
                     const rect = stageArea.getBoundingClientRect();
-                    const stageX = spriteData.x / (STAGE_WIDTH / rect.width);
-                    const stageY = -spriteData.y / (STAGE_HEIGHT / rect.height);
+                    const stageToSpriteX = STAGE_WIDTH / rect.width;
+                    const stageToSpriteY = STAGE_HEIGHT / rect.height;
+
+                    const stageX = spriteData.x / stageToSpriteX;
+                    const stageY = -spriteData.y / stageToSpriteY;
                     
-                    const baseSize = 80;
+                    const baseSize = 160;
                     const newSize = baseSize * (spriteData.size / 100);
 
-                    spriteEl.style.width = `${newSize}px`;
-                    spriteEl.style.height = `${newSize}px`;
-                    spriteEl.style.transform = `translate(calc(-50% + ${stageX}px), calc(-50% + ${stageY}px)) rotate(${spriteData.direction - 90}deg)`;
-                    spriteEl.style.opacity = spriteData.opacity;
+                    // --- Rotation Logic ---
+                    let rotationTransform = '';
+                    switch(spriteData.rotationStyle) {
+                        case 'left-right':
+                            const normalizedDir = ((spriteData.direction % 360) + 360) % 360;
+                            // The sprite should face right for directions 0-179 and left for 180-359.
+                            // This is achieved by flipping it horizontally when the direction is 180 or more.
+                            const isFlipped = normalizedDir >= 180;
+                            rotationTransform = isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
+                            break;
+                        case 'dont-rotate':
+                            rotationTransform = ''; // No rotation at all
+                            break;
+                        case 'all-around':
+                        default:
+                            rotationTransform = `rotate(${spriteData.direction - 90}deg)`;
+                            break;
+                    }
+                    // --- End Rotation Logic ---
 
+                    // Apply styles to the single wrapper
+                    wrapper.style.width = `${newSize}px`;
+                    wrapper.style.height = `${newSize}px`;
+                    wrapper.style.opacity = spriteData.opacity;
+                    wrapper.style.transform = `translate(-50%, -50%) ${rotationTransform}`;
+                    
+                    // Position the main container which holds the wrapper
+                    container.style.transform = `translate(${stageX}px, ${stageY}px)`;
+                    
                     // After any visual update, check for collisions
                     checkCollisions();
                 }
@@ -1151,8 +1641,14 @@
                         propHide.classList.remove('active');
                     } else {
                         propShow.classList.remove('active');
-                        propHide.classList.add('active');
+                        propHide.add('active');
                     }
+                    
+                    // Update rotation style buttons
+                    propRotationAllAround.classList.toggle('active', sprite.rotationStyle === 'all-around');
+                    propRotationLeftRight.classList.toggle('active', sprite.rotationStyle === 'left-right');
+                    propRotationDontRotate.classList.toggle('active', sprite.rotationStyle === 'dont-rotate');
+
                 } else {
                     propertiesPanel.classList.add('hidden');
                 }
@@ -1169,6 +1665,7 @@
                     direction: 90,
                     opacity: 1,
                     size: 100,
+                    rotationStyle: 'all-around', // Default rotation style
                     workspaceXml: null
                 };
                 
@@ -1183,29 +1680,33 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                const spriteOnStage = document.createElement('div');
-                spriteOnStage.classList.add('sprite-wrapper');
-                spriteOnStage.id = id;
-                spriteOnStage.innerHTML = `
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `
                     <img src="${imageUrl}" alt="${name}">
                     <div class="speech-bubble"></div>
                 `;
-                stageArea.appendChild(spriteOnStage);
+                
+                spriteContainer.appendChild(mainSprite);
+                stageArea.appendChild(spriteContainer);
+                
+                const wrapper = spriteContainer.querySelector('.sprite-wrapper');
+                wrapper.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (justDragged) return;
+                    handleSpriteClick(id);
+                });
+                wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
                 
                 spriteCard.addEventListener('click', () => {
                     setActiveSprite(id);
                 });
-
-                spriteOnStage.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent stage click from also firing
-                    if (justDragged) {
-                        return;
-                    }
-                    handleSpriteClick(id); // Corrected function name
-                });
-
-                spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
-                spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, id));
                 spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteSprite(id);
@@ -1217,8 +1718,8 @@
             };
 
             const deleteSprite = (id) => {
-                document.getElementById(id).remove();
-                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`).remove();
+                document.getElementById(`container-${id}`)?.remove();
+                document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
                 
                 delete sprites[id];
 
@@ -1229,7 +1730,6 @@
                     if (firstSpriteId) {
                         setActiveSprite(firstSpriteId);
                     } else {
-                        // No sprites left, hide panel
                         updatePropertiesPanel();
                     }
                 }
@@ -1237,7 +1737,7 @@
             };
             
             const setActiveSprite = (spriteId) => {
-                if (isRunning || activeSpriteId === spriteId) return;
+                if (scriptRunner && scriptRunner.isRunning || activeSpriteId === spriteId) return;
 
                 // 1. Save current workspace
                 if (activeSpriteId && sprites[activeSpriteId]) {
@@ -1296,7 +1796,7 @@
                 e.preventDefault();
                 isDragging = true;
                 dragSpriteId = spriteId;
-                const spriteData = sprites[spriteId];
+                const spriteData = sprites[dragSpriteId];
 
                 setActiveSprite(spriteId);
                 const { x, y } = getPointerPosition(e);
@@ -1363,6 +1863,59 @@
                 Blockly.svgResize(workspace);
             });
             
+            function positionNumberPad(field) {
+                const numberPad = document.getElementById('number-pad-container');
+                if (!field || numberPad.style.display !== 'block') {
+                    return;
+                }
+
+                // Make pad temporarily visible but transparent to measure its dimensions
+                numberPad.style.visibility = 'hidden';
+                const padRect = numberPad.getBoundingClientRect();
+                
+                const blockSvg = field.getSourceBlock().getSvgRoot();
+                const blockBounds = blockSvg.getBoundingClientRect();
+
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const margin = 5; // Margin from screen edges
+
+                // --- Vertical Positioning ---
+                let finalTop;
+                // Try positioning below first
+                if (blockBounds.bottom + padRect.height + margin < viewportHeight) {
+                    finalTop = blockBounds.bottom + margin;
+                } 
+                // If not enough space below, try positioning above
+                else if (blockBounds.top - padRect.height - margin > 0) {
+                    finalTop = blockBounds.top - padRect.height - margin;
+                } 
+                // If no space above either, position it as best as possible (e.g., at the top)
+                else {
+                    finalTop = margin;
+                }
+
+                // --- Horizontal Positioning ---
+                let finalLeft;
+                // Start by aligning with the block's left edge
+                finalLeft = blockBounds.left;
+                
+                // If it overflows right, align to the right edge of the screen
+                if (finalLeft + padRect.width + margin > viewportWidth) {
+                     finalLeft = viewportWidth - padRect.width - margin;
+                }
+                
+                // Ensure it doesn't go off the left edge
+                if (finalLeft < margin) {
+                    finalLeft = margin;
+                }
+
+                numberPad.style.top = `${finalTop}px`;
+                numberPad.style.left = `${finalLeft}px`;
+                
+                numberPad.style.visibility = 'visible';
+            }
+            
             // Custom Field for Number Pad
             class FieldCustomNumber extends Blockly.FieldNumber {
                 constructor(value, min, max, precision, validator) {
@@ -1374,26 +1927,12 @@
                     const numberPadDisplay = document.getElementById('number-pad-display');
                     
                     numberPad.currentField = this;
-                    numberPadDisplay.textContent = this.getValue();
+                    numberPadDisplay.textContent = this.getValue() || '0';
 
-                    const blockSvg = this.getSourceBlock().getSvgRoot();
-                    const blockBounds = blockSvg.getBoundingClientRect();
-                    
+                    // Show pad to start calculations
                     numberPad.style.display = 'block';
                     
-                    let top = blockBounds.bottom + 5;
-                    let left = blockBounds.left;
-
-                    const workspaceBounds = document.getElementById('blockly-area').getBoundingClientRect();
-                    if (left + numberPad.offsetWidth > workspaceBounds.right) {
-                        left = workspaceBounds.right - numberPad.offsetWidth - 5;
-                    }
-                    if (left < workspaceBounds.left) {
-                        left = workspaceBounds.left + 5;
-                    }
-                    
-                    numberPad.style.top = `${top}px`;
-                    numberPad.style.left = `${left}px`;
+                    positionNumberPad(this);
                 }
             }
             Blockly.fieldRegistry.register('field_custom_number', FieldCustomNumber);
@@ -1413,10 +1952,10 @@
             Blockly.Blocks['event_when_flag_clicked'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 48, 48, { alt: "green flag", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//flag.svg", 35, 35, { alt: "green flag", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
                     this.setHelpUrl("");
                 }
@@ -1426,10 +1965,10 @@
             Blockly.Blocks['event_when_sprite_clicked'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 48, 48, "*"))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 35, 35, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר לוחצים על הדמות.");
                     this.setHelpUrl("");
                 }
@@ -1486,10 +2025,10 @@
                         ]
                     ];
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 36, 36, { alt: "keyboard icon", flipRtl: "false" }))
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 35, 35, { alt: "keyboard icon", flipRtl: "false" }))
                         .appendField(new Blockly.FieldDropdown(keyOptions), "KEY");
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("הפעל את התסריט כאשר המקש הנבחר נלחץ.");
                     this.setHelpUrl("");
                 }
@@ -1499,9 +2038,10 @@
             Blockly.Blocks['event_when_bump'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/collision.svg", 48, 48, "*"));
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/collision.svg", 35, 35, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("התחל את התסריט כאשר דמות זו נוגעת בדמות אחרת.");
                 }
             };
@@ -1511,11 +2051,12 @@
             Blockly.Blocks['event_broadcast'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/send.svg", 34, 34, "*"))
-                        .appendField(new FieldMessage(), 'MESSAGE');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/send.svg", 35, 35, "*"))
+                        .appendField(new FieldMessage(), 'MESSAGE')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("שולח מסר לכל הדמויות.");
                 }
             };
@@ -1524,20 +2065,20 @@
                 const message = block.getFieldValue('MESSAGE');
                 return `
                     log('משדר מסר: ${message}');
-                    setTimeout(() => {
-                        const event = new CustomEvent('kidi-broadcast', { detail: { message: '${message}' } });
-                        window.dispatchEvent(event);
-                    }, 0);
+                    const event = new CustomEvent('kidi-broadcast', { detail: { message: '${message}' } });
+                    window.dispatchEvent(event);
+                    yield;
                 `;
             };
 
             Blockly.Blocks['event_when_broadcast_received'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/receive.svg", 34, 34, "*"))
-                        .appendField(new FieldMessage(), 'MESSAGE');
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/receive.svg", 35, 35, "*"))
+                        .appendField(new FieldMessage(), 'MESSAGE')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setNextStatement(true, null);
-                    this.setColour("#FFD95A");
+                    this.setColour("#FFE75A");
                     this.setTooltip("מתחיל תסריט כאשר מתקבל מסר ספציפי.");
                 }
             };
@@ -1546,7 +2087,8 @@
             Blockly.Blocks['motion_move_steps'] = {
                 init: function() {
                     this.appendValueInput("STEPS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 34, 34, "*"));
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon//walk.svg", 34, 34, "*"))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1562,22 +2104,38 @@
                         sprite.x += (${steps}) * Math.sin(radians);
                         sprite.y += (${steps}) * Math.cos(radians);
                         
+                        const halfWidth = ${STAGE_WIDTH / 2};
+                        const halfHeight = ${STAGE_HEIGHT / 2};
+                        const spriteLogicalWidth = 160 * (sprite.size / 100);
+                        const spriteLogicalHeight = 160 * (sprite.size / 100);
+                        const spriteHalfWidth = spriteLogicalWidth / 2;
+                        const spriteHalfHeight = spriteLogicalHeight / 2;
+
+                        if (sprite.x - spriteHalfWidth > halfWidth) {
+                            sprite.x = -halfWidth - spriteHalfWidth;
+                        }
+                        if (sprite.x + spriteHalfWidth < -halfWidth) {
+                            sprite.x = halfWidth + spriteHalfWidth;
+                        }
+                        if (sprite.y - spriteHalfHeight > halfHeight) {
+                            sprite.y = -halfHeight - spriteHalfHeight;
+                        }
+                        if (sprite.y + spriteHalfHeight < -halfHeight) {
+                            sprite.y = halfHeight + spriteHalfHeight;
+                        }
+
                         updateSpriteAppearance(sprite.id);
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' זזה ' + (${steps}) + ' צעדים.');
-                        await new Promise(resolve => {
-                            let timeoutId = setTimeout(() => { clearInterval(checkCancelId); resolve(); }, 50);
-                            const checkCancelId = setInterval(() => {
-                                if (getExecutionCancelled()) { clearTimeout(timeoutId); clearInterval(checkCancelId); resolve(); }
-                            }, 50);
-                        });
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['motion_turn_right_degrees'] = {
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/right.png", 34, 34, { alt: "turn right icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1594,12 +2152,14 @@
                          window.updateActiveSpritePanel();
                         log(sprite.name + ' הסתובבה ימינה ב-' + (${degrees}) + ' מעלות.');
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['motion_turn_left_degrees'] = {
                 init: function() {
                     this.appendValueInput("DEGREES").setCheck("Number")
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }));
+                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/left.png", 34, 34, { alt: "turn left icon", flipRtl: "false" }))
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1616,6 +2176,7 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' הסתובבה שמאלה ב-' + (${degrees}) + ' מעלות.');
                     }
+                    yield;
                 `;
             };
             
@@ -1633,7 +2194,7 @@
 
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 34, 34, { alt: "compass icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0')
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
@@ -1651,6 +2212,7 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' קבעה כיוון ל-' + ${degrees} + ' מעלות.');
                     }
+                    yield;
                 `;
             };
             
@@ -1672,26 +2234,22 @@
                 return `
                     if (sprite) {
                         const spriteEl = document.getElementById(sprite.id);
-                        const bubble = spriteEl.querySelector('.speech-bubble');
-                        bubble.textContent = ${message};
-                        bubble.classList.add('visible');
-                        log(sprite.name + ' אומרת: ' + ${message});
+                        if (spriteEl) {
+                            const bubble = spriteEl.querySelector('.speech-bubble');
+                            bubble.textContent = ${message};
+                            bubble.classList.add('visible');
+                            log(sprite.name + ' אומרת: ' + ${message});
+                            
+                            const endTime = Date.now() + (${secs}) * 1000;
+                            while (Date.now() < endTime) {
+                                if (getExecutionCancelled()) break;
+                                yield;
+                            }
 
-                        await new Promise(resolve => {
-                            const timeoutId = setTimeout(() => {
-                                bubble.classList.remove('visible');
-                                clearInterval(checkCancelId);
-                                resolve();
-                            }, (${secs}) * 1000);
-                            const checkCancelId = setInterval(() => {
-                                if (getExecutionCancelled()) {
-                                    clearTimeout(timeoutId);
-                                    clearInterval(checkCancelId);
-                                    bubble.classList.remove('visible');
-                                    resolve();
-                                }
-                            }, 50);
-                        });
+                            if (!getExecutionCancelled()) {
+                                 bubble.classList.remove('visible');
+                            }
+                        }
                     }
                 `;
             };
@@ -1711,16 +2269,18 @@
                 return `
                     if (sprite) {
                         const spriteEl = document.getElementById(sprite.id);
-                        const bubble = spriteEl.querySelector('.speech-bubble');
-                        bubble.textContent = ${message};
-                        bubble.classList.add('visible');
-                        log(sprite.name + ' אומרת: ' + ${message});
+                        if (spriteEl) {
+                           const bubble = spriteEl.querySelector('.speech-bubble');
+                           bubble.textContent = ${message};
+                           bubble.classList.add('visible');
+                           log(sprite.name + ' אומרת: ' + ${message});
+                        }
                     }
                 `;
             };
             Blockly.Blocks['looks_show'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 34, 34, { alt: "show icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/show.png", 34, 34, { alt: "show icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1735,11 +2295,12 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' הוצגה.');
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['looks_hide'] = {
                 init: function() {
-                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 34, 34, { alt: "hide icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/hide.png", 34, 34, { alt: "hide icon", flipRtl: "false" })).appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#9966FF");
@@ -1754,9 +2315,88 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' הוסתרה.');
                     }
+                    yield;
+                `;
+            };
+
+            Blockly.Blocks['looks_grow'] = {
+                init: function() {
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/increase.svg", 34, 34, "*"));
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("הגדל את הדמות.");
+                }
+            };
+            Blockly.JavaScript['looks_grow'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+                return `
+                    if (sprite) {
+                        sprite.size += Number(${size});
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' גדלה לגודל ' + sprite.size);
+                    }
+                    yield;
                 `;
             };
             
+            Blockly.Blocks['looks_shrink'] = {
+                init: function() {
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/decrease.svg", 34, 34, "*"));
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("הקטן את הדמות.");
+                }
+            };
+            Blockly.JavaScript['looks_shrink'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+                return `
+                    if (sprite) {
+                        sprite.size = Math.max(5, sprite.size - Number(${size})); // Don't let size go below 5
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' קטנה לגודל ' + sprite.size);
+                    }
+                    yield;
+                `;
+            };
+
+            Blockly.Blocks['looks_set_size'] = {
+                init: function() {
+                    this.appendValueInput("SIZE")
+                        .setCheck("Number")
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/equal.svg", 34, 34, "*"));
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.setInputsInline(true);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour("#9966FF");
+                    this.setTooltip("קובע את גודל הדמות באחוזים.");
+                }
+            };
+            Blockly.JavaScript['looks_set_size'] = function(block) {
+                const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+                return `
+                    if (sprite) {
+                        sprite.size = Math.max(5, Number(${size})); // Don't let size go below 5
+                        updateSpriteAppearance(sprite.id);
+                        window.updateActiveSpritePanel();
+                        log(sprite.name + ' קבע גודל ל-' + sprite.size);
+                    }
+                    yield;
+                `;
+            };
+
             // Custom field for backdrop selection
             class FieldBackdrop extends Blockly.FieldDropdown {
                 constructor() {
@@ -1837,7 +2477,7 @@
                     const safeUrl = backdropUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
                     return `
                         window.switchBackdrop('${safeUrl}');
-                        await new Promise(r => setTimeout(r, 20)); // Short delay for rendering
+                        yield;
                     `;
                 }
                 return ''; // Do nothing if no backdrop is selected
@@ -1847,7 +2487,7 @@
             
             Blockly.Blocks['control_wait_secs'] = {
                 init: function() {
-                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/wait.png", 34, 34, "*"));
+                    this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/wait.svg", 34, 34, "*"));
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -1859,19 +2499,11 @@
                 const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
                 return `
                     log('המתנה של ' + (${secs}) + ' שניות...');
-                    await new Promise(resolve => {
-                        const timeoutId = setTimeout(() => {
-                            clearInterval(checkCancelId);
-                            resolve();
-                        }, (${secs}) * 1000);
-                        const checkCancelId = setInterval(() => {
-                            if (getExecutionCancelled()) {
-                                clearTimeout(timeoutId);
-                                clearInterval(checkCancelId);
-                                resolve();
-                            }
-                        }, 50);
-                    });
+                    const endTime = Date.now() + (${secs}) * 1000;
+                    while (Date.now() < endTime) {
+                        if (getExecutionCancelled()) break;
+                        yield;
+                    }
                 `;
             };
 
@@ -1881,7 +2513,7 @@
                         .setCheck("Number")
                         .appendField('\u00A0\u00A0\u00A0\u00A0')
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/repeat.svg", 24, 24, "*"));
-                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                    this.appendDummyInput().appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
@@ -1899,6 +2531,7 @@
                         log('חזרה מספר: ' + (i + 1));
                         ${branch}
                         if (getExecutionCancelled()) break;
+                        yield;
                     }
                 `;
             };
@@ -1907,7 +2540,7 @@
                 init: function() {
                     this.appendDummyInput()
                         .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
-                        .appendField(new Blockly.FieldImage("https://github.com/codejredu/test/raw/main/assets/blocklyicon/forever.png", 24, 24, "*"));
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/forever.svg", 36, 36, "*"));
                     this.appendStatementInput("DO").setCheck(null);
                     this.setPreviousStatement(true, null);
                     this.setColour("#FF6B1A");
@@ -1919,7 +2552,7 @@
                 return `
                     while(!getExecutionCancelled()) {
                         ${branch}
-                        await new Promise(r => setTimeout(r, 10)); // Yield to event loop
+                        yield;
                     }
                 `;
             };
@@ -1945,6 +2578,7 @@
                         window.updateActiveSpritePanel();
                         log(sprite.name + ' עברה למיקום: ' + sprite.x.toFixed(0) + ', ' + sprite.y.toFixed(0));
                     }
+                    yield;
                 `;
             };
             Blockly.Blocks['motion_glide_to_xy'] = {
@@ -1966,34 +2600,28 @@
                 const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
                 return `
                     if (sprite) {
-                        await new Promise(resolve => {
-                            const startX = sprite.x;
-                            const startY = sprite.y;
-                            const endX = (${x});
-                            const endY = (${y});
-                            const duration = (${secs}) * 1000;
-                            const startTime = Date.now();
-                            
-                            const animate = () => {
-                                if (getExecutionCancelled()) { resolve(); return; }
-                                const elapsed = Date.now() - startTime;
-                                const progress = Math.min(elapsed / duration, 1);
-                                
-                                sprite.x = startX + (endX - startX) * progress;
-                                sprite.y = startY + (endY - startY) * progress;
-                                
-                                updateSpriteAppearance(sprite.id);
-                                window.updateActiveSpritePanel();
-                                
-                                if (progress < 1) {
-                                    requestAnimationFrame(animate);
-                                } else {
-                                    log(sprite.name + ' סיימה לגלוש.');
-                                    resolve();
-                                }
-                            };
-                            animate();
-                        });
+                        const startX = sprite.x;
+                        const startY = sprite.y;
+                        const endX = (${x});
+                        const endY = (${y});
+                        const durationTicks = Math.max(1, Math.round((${secs}) * 30)); // 30 FPS target
+
+                        for (let i = 0; i <= durationTicks; i++) {
+                             if (getExecutionCancelled()) break;
+                             const progress = i / durationTicks;
+                             sprite.x = startX + (endX - startX) * progress;
+                             sprite.y = startY + (endY - startY) * progress;
+                             updateSpriteAppearance(sprite.id);
+                             window.updateActiveSpritePanel();
+                             yield;
+                        }
+                        if (!getExecutionCancelled()) {
+                            sprite.x = endX;
+                            sprite.y = endY;
+                            updateSpriteAppearance(sprite.id);
+                            window.updateActiveSpritePanel();
+                            log(sprite.name + ' סיימה לגלוש.');
+                        }
                     }
                 `;
             };
@@ -2003,7 +2631,7 @@
                     this.appendValueInput("HEIGHT")
                         .setCheck("Number")
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test//assets/blocklyicon/jump.svg", 34, 34, { alt: "jump icon", flipRtl: "false" }))
-                        .appendField('\u00A0\u00A0\u00A0\u00A0');
+                        .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
                     this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
@@ -2016,33 +2644,30 @@
                 const height = Blockly.JavaScript.valueToCode(block, 'HEIGHT', Blockly.JavaScript.ORDER_ATOMIC) || '100';
                 return `
                     if (sprite) {
-                        await new Promise(resolve => {
-                            const JUMP_HEIGHT = (${height});
-                            const DURATION = 500;
-                            const startY = sprite.y;
-                            const startTime = Date.now();
+                        const JUMP_HEIGHT = (${height});
+                        const DURATION_TICKS = 15; // Approx 500ms at 30fps
+                        const startY = sprite.y;
+                        log(sprite.name + ' מתחילה לקפוץ...');
 
-                            const animateJump = () => {
-                                if (getExecutionCancelled()) { resolve(); return; }
-                                const elapsed = Date.now() - startTime;
-                                const progress = Math.min(elapsed / DURATION, 1);
-                                
-                                const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
-                                sprite.y = startY + parabolicProgress;
-
-                                updateSpriteAppearance(sprite.id);
-                                window.updateActiveSpritePanel();
-                                
-                                if (progress < 1) {
-                                    requestAnimationFrame(animateJump);
-                                } else {
-                                    log(sprite.name + ' סיימה לקפוץ.');
-                                    resolve();
-                                }
-                            };
-                            log(sprite.name + ' מתחילה לקפוץ...');
-                            animateJump();
-                        });
+                        for (let i = 0; i <= DURATION_TICKS; i++) {
+                            if (getExecutionCancelled()) {
+                                sprite.y = startY;
+                                break;
+                            }
+                            const progress = i / DURATION_TICKS;
+                            const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
+                            sprite.y = startY + parabolicProgress;
+                            
+                            updateSpriteAppearance(sprite.id);
+                            window.updateActiveSpritePanel();
+                            yield;
+                        }
+                        if (!getExecutionCancelled()) {
+                            sprite.y = startY;
+                            updateSpriteAppearance(sprite.id);
+                            window.updateActiveSpritePanel();
+                            log(sprite.name + ' סיימה לקפוץ.');
+                        }
                     }
                 `;
             };
@@ -2121,10 +2746,10 @@
 
             Blockly.Blocks['operator_random_number'] = {
                 init: function() {
-                    this.appendDummyInput().appendField("מספר אקראי בין");
-                    this.appendDummyInput().appendField(new FieldCustomNumber(1), "FROM");
-                    this.appendDummyInput().appendField("ל-");
-                    this.appendDummyInput().appendField(new FieldCustomNumber(10), "TO");
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/random.svg", 34, 34, "*"))
+                        .appendField(new FieldCustomNumber(1), "FROM")
+                        .appendField(new FieldCustomNumber(10), "TO");
                     this.setInputsInline(true);
                     this.setOutput(true, "Number");
                     this.setColour("#40BF4A");
@@ -2158,8 +2783,14 @@
 
             Blockly.JavaScript['sound_play_until_done'] = function(block) {
                 const sound = block.getFieldValue('SOUND');
-                // Placeholder for actual sound playing logic
-                return `log('מנגן צליל: ${sound}'); await new Promise(r => setTimeout(r, 1000));`;
+                return `
+                    log('מנגן צליל: ${sound}'); 
+                    const waitTime = Date.now() + 1000;
+                    while (Date.now() < waitTime) {
+                        if (getExecutionCancelled()) break;
+                        yield;
+                    }
+                `;
             };
 
             
@@ -2178,6 +2809,29 @@
                     maxScale: 3,
                     minScale: 0.3,
                     scaleSpeed: 1.2
+                },
+                renderer: 'zelos',
+                theme: Blockly.Themes.Scratch
+            });
+            
+            const toolbox = workspace.getToolbox();
+            if (toolbox) {
+                // Prevent the toolbox from clearing the category selection when the workspace is clicked.
+                // This keeps the currently selected category visually highlighted.
+                toolbox.clearSelection = () => {
+                    // Do nothing, overriding the default behavior.
+                };
+            }
+
+            workspace.addChangeListener((event) => {
+                if (event.type === Blockly.Events.BLOCK_MOVE) {
+                    const numberPad = document.getElementById('number-pad-container');
+                    if (numberPad.style.display === 'block' && numberPad.currentField) {
+                        const fieldBlockId = numberPad.currentField.getSourceBlock().id;
+                        if (event.blockId === fieldBlockId) {
+                            positionNumberPad(numberPad.currentField);
+                        }
+                    }
                 }
             });
 
@@ -2225,61 +2879,61 @@
                 }, 1200); // Display for 1.2 seconds
             }
 
-            async function runScriptStack(startBlock) {
-                if (isRunning || !startBlock) return;
-                saveActiveSpriteWorkspace();
+            function createGeneratorForStack(startBlock, sprite) {
+                let code = '';
+                let currentBlock = startBlock.getNextBlock();
+                while (currentBlock) {
+                    code += Blockly.JavaScript.blockToCode(currentBlock);
+                    if (getExecutionCancelled()) break;
+                    currentBlock = currentBlock.getNextBlock();
+                }
 
+                if (!code) return null;
+
+                const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
+                const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
+                
+                return func(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
+            }
+
+            function runScriptStack(startBlock) {
+                saveActiveSpriteWorkspace();
                 const sprite = getActiveSprite();
                 if (!sprite) {
                     log("No active sprite to run script.");
                     return;
                 }
-
-                isRunning = true;
-                executionCancelled = false;
-                log(`מריץ תסריט בודד מסוג ${startBlock.type} עבור ${sprite.name}.`);
-
-                let code = '';
-                let currentBlock = startBlock.getNextBlock();
-                while (currentBlock) {
-                    if (getExecutionCancelled()) break;
-                    code += Blockly.JavaScript.blockToCode(currentBlock);
-                    code += `if (getExecutionCancelled()) return;\n`;
-                    currentBlock = currentBlock.getNextBlock();
-                }
                 
-                if (code) {
-                    try {
-                        await executeScript(code, sprite);
-                    } catch (e) {
-                        log('שגיאה בהרצת תסריט: ' + e);
-                    } finally {
-                        isRunning = false;
-                        log('התסריט סיים.');
+                const generator = createGeneratorForStack(startBlock, sprite);
+                if (generator) {
+                    if (!scriptRunner || !scriptRunner.isRunning) {
+                         scriptRunner = new ScriptRunner();
                     }
-                } else {
-                     log('לא נמצאו בלוקים להרצה מתחת לבלוק האירוע.');
-                     isRunning = false;
+                    scriptRunner.add(generator);
                 }
             }
 
-
-            async function executeBlock(blockId) {
+            function executeBlock(blockId) {
                 const block = workspace.getBlockById(blockId);
                 if (!block || block.type.startsWith('event_')) return;
                 
                 log(`מפעיל בלוק בודד: ${block.type}`);
                 
                 const code = Blockly.JavaScript.blockToCode(block);
-                isRunning = true;
-                executionCancelled = false;
-                await executeScript(code, getActiveSprite());
-                isRunning = false;
+                const sprite = getActiveSprite();
+                const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
+                const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
+                const generator = func(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
+                
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
+                scriptRunner.add(generator);
             }
             
             const blocklyDiv = document.getElementById('blockly-area');
             blocklyDiv.addEventListener('click', (event) => {
-                if (isRunning) return;
+                if (scriptRunner && scriptRunner.isRunning) return;
                 const blocklyBlockSvg = event.target.closest('.blocklyDraggable');
                 if (blocklyBlockSvg) {
                     const blockId = blocklyBlockSvg.getAttribute('data-id');
@@ -2287,24 +2941,21 @@
                         const block = workspace.getBlockById(blockId);
                         if (!block) return;
 
-                        // If it's a top-level hat block
                         if (block.previousConnection === null && block.getParent() === null) {
                             if (block.type === 'event_when_flag_clicked') {
                                 log('לחיצה על בלוק הדגל הירוק, מפעיל את כל התסריטים.');
                                 runCode();
-                                return; // Handled
+                                return;
                             }
-                            if (block.type === 'event_when_sprite_clicked' || block.type === 'event_when_bump') {
+                            if (['event_when_sprite_clicked', 'event_when_bump', 'event_when_key_pressed'].includes(block.type)) {
                                 runScriptStack(block);
-                                return; // Handled
+                                return; 
                             }
                         }
                         
-                        // If it's a statement block (that can be run alone)
                         if (!block.outputConnection && block.getParent() === null) {
                              executeBlock(blockId);
                         } 
-                        // If it's a value/reporter block
                         else if (block.outputConnection) {
                             showBlockValue(block);
                         }
@@ -2327,17 +2978,6 @@
                 }, 300);
             });
 
-            async function executeScript(code, sprite) {
-                if (code && !getExecutionCancelled()) {
-                    try {
-                        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-                        const f = new AsyncFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
-                        await f(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
-                    } catch (e) {
-                        log(`שגיאת ריצה בתסריט: ${e}`);
-                    }
-                }
-            }
 
             function saveActiveSpriteWorkspace() {
                  if (activeSpriteId && sprites[activeSpriteId]) {
@@ -2346,54 +2986,38 @@
                 }
             }
             
-            async function runCode() {
-                if (isRunning) {
+            function runCode() {
+                if (scriptRunner && scriptRunner.isRunning) {
                     log('תסריט כבר רץ. לחץ על עצור לפני הפעלה מחדש.');
                     return;
                 }
                 saveActiveSpriteWorkspace();
-
-                isRunning = true;
-                executionCancelled = false;
+                scriptRunner = new ScriptRunner();
                 
                 log('התסריט הופעל.');
 
-                const scriptPromises = Object.values(sprites).map(sprite => {
+                let scriptsFound = false;
+                Object.values(sprites).forEach(sprite => {
                     if (sprite.workspaceXml) {
                         const tempWorkspace = new Blockly.Workspace();
                         Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
                         const topBlocks = tempWorkspace.getTopBlocks(true);
                         const flagClickScripts = topBlocks.filter(block => block.type === 'event_when_flag_clicked');
                         
-                        return flagClickScripts.map(startBlock => {
-                            let code = '';
-                            let currentBlock = startBlock.getNextBlock();
-                            while(currentBlock) {
-                                code += Blockly.JavaScript.blockToCode(currentBlock);
-                                code += `if (getExecutionCancelled()) return;\n`;
-                                currentBlock = currentBlock.getNextBlock();
-                            }
-                            return executeScript(code, sprite);
+                        flagClickScripts.forEach(startBlock => {
+                           const generator = createGeneratorForStack(startBlock, sprite);
+                           if (generator) {
+                               scriptRunner.add(generator);
+                               scriptsFound = true;
+                           }
                         });
+                        tempWorkspace.dispose();
                     }
-                    return [];
-                }).flat();
+                });
 
-                if(scriptPromises.length === 0) {
+                if(!scriptsFound) {
                      log('לא נמצאו תסריטים שמתחילים בדגל ירוק.');
-                     isRunning = false;
-                     return;
-                }
-
-                try {
-                    await Promise.all(scriptPromises);
-                    if (!getExecutionCancelled()) {
-                        log('כל התסריטים של הדגל הירוק הסתיימו.');
-                    }
-                } catch (e) {
-                    log('שגיאה כללית בהרצת תסריטים במקביל: ' + e);
-                } finally {
-                    isRunning = false;
+                     scriptRunner.stop();
                 }
             }
             
@@ -2403,12 +3027,14 @@
                 runBroadcastScripts(message);
             });
 
-            async function runBroadcastScripts(message) {
-                // This function starts new scripts but does not set the global isRunning flag.
-                // The flag is managed by the user-initiated events (click, key press).
-                
-                const scriptPromises = Object.values(sprites).map(sprite => {
-                    if (!sprite.workspaceXml) return [];
+            function runBroadcastScripts(message) {
+                saveActiveSpriteWorkspace();
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
+
+                Object.values(sprites).forEach(sprite => {
+                    if (!sprite.workspaceXml) return;
                     
                     const tempWorkspace = new Blockly.Workspace();
                     try {
@@ -2420,87 +3046,44 @@
                             block.getFieldValue('MESSAGE') === message
                         );
                         
-                        const spritePromises = matchingHatBlocks.map(startBlock => {
-                            let code = '';
-                            let currentBlock = startBlock.getNextBlock();
-                            while (currentBlock) {
-                                code += Blockly.JavaScript.blockToCode(currentBlock);
-                                code += `if (getExecutionCancelled()) return;\n`;
-                                currentBlock = currentBlock.getNextBlock();
-                            }
-                            return executeScript(code, sprite); 
+                        matchingHatBlocks.forEach(startBlock => {
+                            const generator = createGeneratorForStack(startBlock, sprite);
+                            if(generator) scriptRunner.add(generator);
                         });
                         
-                        tempWorkspace.dispose();
-                        return spritePromises;
                     } catch (err) {
                         console.error("Error processing workspace for broadcast:", err);
+                    } finally {
                         tempWorkspace.dispose();
-                        return [];
                     }
-                }).flat();
-
-                if (scriptPromises.length > 0) {
-                    log(`מפעיל ${scriptPromises.length} תסריטים עבור מסר "${message}"`);
-                    // We don't await the promises here, allowing them to run in the background.
-                    // This makes 'broadcast' a non-waiting call.
-                    Promise.all(scriptPromises).catch(err => {
-                        console.error("Error running broadcast scripts:", err);
-                    });
-                } else {
-                    log(`לא נמצאו תסריטים עבור מסר "${message}"`);
-                }
+                });
             }
 
 
-            async function handleSpriteClick(spriteId) {
-                if (isRunning) return;
+            function handleSpriteClick(spriteId) {
                 saveActiveSpriteWorkspace();
-                
                 const sprite = sprites[spriteId];
                 if (!sprite || !sprite.workspaceXml) return;
 
-                log(`קליק על ${sprite.name}. מריץ תסריטים.`);
-                isRunning = true;
-                executionCancelled = false;
-
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
+                
                 const tempWorkspace = new Blockly.Workspace();
                 Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
                 const topBlocks = tempWorkspace.getTopBlocks(true);
                 const clickScripts = topBlocks.filter(block => block.type === 'event_when_sprite_clicked');
 
-                const scriptPromises = clickScripts.map(startBlock => {
-                    let code = '';
-                    let currentBlock = startBlock.getNextBlock();
-                    while (currentBlock) {
-                        code += Blockly.JavaScript.blockToCode(currentBlock);
-                        code += `if (getExecutionCancelled()) return;\n`;
-                        currentBlock = currentBlock.getNextBlock();
-                    }
-                    return executeScript(code, sprite);
+                clickScripts.forEach(startBlock => {
+                    const generator = createGeneratorForStack(startBlock, sprite);
+                    if (generator) scriptRunner.add(generator);
                 });
-                
                 tempWorkspace.dispose();
-
-                if (scriptPromises.length > 0) {
-                    try {
-                        await Promise.all(scriptPromises);
-                        if (!getExecutionCancelled()) {
-                            log(`התסריטים של ${sprite.name} הסתיימו.`);
-                        }
-                    } catch (e) {
-                        log('שגיאה בהרצת תסריט קליק: ' + e);
-                    } finally {
-                        isRunning = false;
-                    }
-                } else {
-                    isRunning = false;
-                }
             }
             
              // --- Collision Detection and Handling ---
             function checkCollisions() {
-                if (isLoadingProject) return; // Don't check for collisions while loading a project
+                if (isLoadingProject) return;
 
                 const spriteIds = Object.keys(sprites);
                 if (spriteIds.length < 2) return;
@@ -2523,19 +3106,16 @@
                                               rect1.bottom < rect2.top || 
                                               rect1.top > rect2.bottom);
                         
-                        // Use a sorted key to represent the pair, ensuring (A,B) is the same as (B,A)
                         const collisionKey = [id1, id2].sort().join('-');
 
                         if (isColliding) {
                             if (!collisionState.has(collisionKey)) {
-                                // New collision detected
                                 collisionState.add(collisionKey);
                                 log(`התנגשות בין ${sprites[id1].name} ל-${sprites[id2].name}`);
                                 triggerBumpScripts(id1, id2);
                             }
                         } else {
                             if (collisionState.has(collisionKey)) {
-                                // Sprites have separated
                                 collisionState.delete(collisionKey);
                                 log(`${sprites[id1].name} ו-${sprites[id2].name} נפרדו.`);
                             }
@@ -2544,116 +3124,126 @@
                 }
             }
 
-            async function triggerBumpScripts(id1, id2) {
-                if (isRunning) return;
+            function triggerBumpScripts(id1, id2) {
                 saveActiveSpriteWorkspace();
-                
-                const sprite1 = sprites[id1];
-                const sprite2 = sprites[id2];
-
-                isRunning = true;
-                executionCancelled = false;
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
 
                 const runForSprite = (sprite) => {
-                    if (!sprite.workspaceXml) return null;
+                    if (!sprite.workspaceXml) return;
                     const tempWorkspace = new Blockly.Workspace();
-                    Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
-                    const bumpScript = tempWorkspace.getTopBlocks(true).find(block => block.type === 'event_when_bump');
-                    
-                    if (bumpScript) {
-                        let code = '';
-                        let currentBlock = bumpScript.getNextBlock();
-                        while (currentBlock) {
-                            code += Blockly.JavaScript.blockToCode(currentBlock);
-                            code += `if (getExecutionCancelled()) return;\n`;
-                            currentBlock = currentBlock.getNextBlock();
+                    try {
+                        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
+                        const bumpScript = tempWorkspace.getTopBlocks(true).find(block => block.type === 'event_when_bump');
+                        if (bumpScript) {
+                            const generator = createGeneratorForStack(bumpScript, sprite);
+                            if(generator) scriptRunner.add(generator);
                         }
-                        return executeScript(code, sprite);
+                    } catch (e) {
+                        console.error("Error processing bump script workspace", e);
+                    } finally {
+                        tempWorkspace.dispose();
                     }
-                    return null;
                 };
 
-                const promise1 = runForSprite(sprite1);
-                const promise2 = runForSprite(sprite2);
-
-                await Promise.all([promise1, promise2].filter(p => p !== null));
-                
-                isRunning = false;
+                runForSprite(sprites[id1]);
+                runForSprite(sprites[id2]);
             }
 
 
-            async function handleKeyPress(event) {
-                if (isRunning) return;
-                saveActiveSpriteWorkspace();
-                
+            function handleKeyPress(event) {
                 const keyMap = { 'SPACE': ' ', 'UP': 'ArrowUp', 'DOWN': 'ArrowDown', 'RIGHT': 'ArrowRight', 'LEFT': 'ArrowLeft' };
                 const pressedKey = event.key;
                 
-                isRunning = true;
-                executionCancelled = false;
+                saveActiveSpriteWorkspace();
+                if (!scriptRunner || !scriptRunner.isRunning) {
+                    scriptRunner = new ScriptRunner();
+                }
 
-                const scriptPromises = Object.values(sprites).map(sprite => {
+                Object.values(sprites).forEach(sprite => {
                     if (sprite.workspaceXml) {
                         const tempWorkspace = new Blockly.Workspace();
-                        let promises = [];
                         try {
                             Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
                             const topBlocks = tempWorkspace.getTopBlocks(true);
                             
-                            promises = topBlocks.filter(block => block.type === 'event_when_key_pressed' && keyMap[block.getFieldValue('KEY')] === pressedKey)
-                                .map(startBlock => {
-                                    let code = '';
-                                    let currentBlock = startBlock.getNextBlock();
-                                    while(currentBlock) {
-                                        code += Blockly.JavaScript.blockToCode(currentBlock);
-                                        code += `if (getExecutionCancelled()) return;\n`;
-                                        currentBlock = currentBlock.getNextBlock();
-                                    }
-                                    return executeScript(code, sprite);
+                            topBlocks.filter(block => block.type === 'event_when_key_pressed' && keyMap[block.getFieldValue('KEY')] === pressedKey)
+                                .forEach(startBlock => {
+                                    const generator = createGeneratorForStack(startBlock, sprite);
+                                    if (generator) scriptRunner.add(generator);
                                 });
                         } catch(e) {
                             console.error("Error in handleKeyPress workspace processing:", e);
                         } finally {
                             tempWorkspace.dispose();
                         }
-                        return promises;
                     }
-                    return [];
-                }).flat();
-
-                if (scriptPromises.length > 0) {
-                    event.preventDefault(); 
-                    log(`מקש נלחץ: ${pressedKey}. מריץ ${scriptPromises.length} תסריטים.`);
-                    await Promise.all(scriptPromises);
-                }
-                
-                isRunning = false;
+                });
             }
             document.addEventListener('keydown', handleKeyPress);
 
             function stopAllScripts() {
                 log('לחצן עצור נלחץ.');
-                executionCancelled = true;
+                if (scriptRunner) {
+                    scriptRunner.stop();
+                }
                 
-                setTimeout(() => {
-                    // Hide any visible speech bubbles when stopping
-                    Object.values(sprites).forEach(sprite => {
-                        const bubble = document.querySelector(`#${sprite.id} .speech-bubble`);
-                        if (bubble) bubble.classList.remove('visible');
-                    });
-                    log('כל התסריטים נעצרו.');
-                    isRunning = false; // Allow new run
-                }, 50);
+                Object.values(sprites).forEach(sprite => {
+                    const bubble = document.querySelector(`#container-${sprite.id} .speech-bubble`);
+                    if (bubble) bubble.classList.remove('visible');
+                });
+                log('כל התסריטים נעצרו.');
+            }
+
+            function deleteBackdrop(cardElement) {
+                const urlToDelete = cardElement.dataset.url;
+                const currentBackdropUrl = stageArea.style.backgroundImage.replace(/url\((['"])?(.*?)\1\)/, '$2');
+
+                const allBackdrops = document.querySelectorAll('#backdrops-list .backdrop-card');
+                if (allBackdrops.length <= 1) {
+                    alert("לא ניתן למחוק את הרקע האחרון.");
+                    return;
+                }
+
+                cardElement.remove();
+
+                if (urlToDelete === currentBackdropUrl) {
+                    const firstRemainingBackdrop = document.querySelector('#backdrops-list .backdrop-card');
+                    if (firstRemainingBackdrop) {
+                        window.switchBackdrop(firstRemainingBackdrop.dataset.url);
+                    } else {
+                        stageArea.style.backgroundImage = 'none';
+                    }
+                }
+                 Blockly.getMainWorkspace().refreshToolboxSelection();
+            }
+            
+            function createBackdropCard(url) {
+                const card = document.createElement('div');
+                card.classList.add('backdrop-card');
+                card.style.backgroundImage = `url("${url}")`;
+                card.dataset.url = url;
+
+                const deleteBtn = document.createElement('div');
+                deleteBtn.classList.add('delete-button');
+                deleteBtn.textContent = 'X';
+                card.appendChild(deleteBtn);
+
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteBackdrop(card);
+                });
+
+                backdropsList.appendChild(card);
+                return card;
             }
             
             function createDefaultBackdrop() {
-                const defaultBackdrop = document.createElement('div');
-                defaultBackdrop.classList.add('backdrop-card');
-                defaultBackdrop.style.backgroundImage = 'url("https://codejredu.github.io/test/assets/bg/farm.svg")';
-                defaultBackdrop.dataset.url = "https://codejredu.github.io/test/assets/bg/farm.svg";
-                defaultBackdrop.classList.add('selected');
-                backdropsList.appendChild(defaultBackdrop);
-                document.getElementById('stage-area').style.backgroundImage = `url("https://codejredu.github.io/test/assets/bg/farm.svg")`;
+                const url = "https://codejredu.github.io/test/assets/bg/farm.svg";
+                const card = createBackdropCard(url);
+                card.classList.add('selected');
+                stageArea.style.backgroundImage = `url("${url}")`;
             }
 
             function createDefaultSprite() {
@@ -2661,22 +3251,20 @@
             }
 
             function handleBackdropSelection(e) {
-                const url = e.target.dataset.url;
-                if (url) {
-                   window.switchBackdrop(url);
+                const card = e.target.closest('.backdrop-card');
+                if (card && e.target !== card.querySelector('.delete-button')) {
+                    const url = card.dataset.url;
+                    if (url) {
+                       window.switchBackdrop(url);
+                    }
                 }
             }
 
             function handleGallerySelection(e) {
                 const url = e.target.src;
                 if (url) {
-                    const newBackdropCard = document.createElement('div');
-                    newBackdropCard.classList.add('backdrop-card');
-                    newBackdropCard.style.backgroundImage = `url("${url}")`;
-                    newBackdropCard.dataset.url = url;
-                    
-                    backdropsList.appendChild(newBackdropCard);
-
+                    const newCard = createBackdropCard(url);
+                    window.switchBackdrop(url);
                     backgroundGallery.classList.remove('visible');
                 }
             }
@@ -2761,9 +3349,10 @@
             };
 
             const loadSpriteFromData = (spriteData) => {
-                const { id, name, imageUrl, x, y, direction, opacity, size } = spriteData;
+                const { id, name, imageUrl, x, y, direction, opacity, size, rotationStyle } = spriteData;
 
                 spriteData.size = size || 100;
+                spriteData.rotationStyle = rotationStyle || 'all-around'; // Add for compatibility
                 sprites[id] = spriteData;
 
                 const spriteCard = document.createElement('div');
@@ -2775,19 +3364,25 @@
                 `;
                 spritesList.appendChild(spriteCard);
 
-                const spriteOnStage = document.createElement('div');
-                spriteOnStage.classList.add('sprite-wrapper');
-                spriteOnStage.id = id;
-                spriteOnStage.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
-                stageArea.appendChild(spriteOnStage);
+                const spriteContainer = document.createElement('div');
+                spriteContainer.id = `container-${id}`;
+                spriteContainer.classList.add('sprite-container');
+                const mainSprite = document.createElement('div');
+                mainSprite.classList.add('sprite-wrapper');
+                mainSprite.id = id;
+                mainSprite.innerHTML = `<img src="${imageUrl}" alt="${name}"><div class="speech-bubble"></div>`;
+                
+                spriteContainer.appendChild(mainSprite);
+                stageArea.appendChild(mainSprite);
+                
+                const wrapper = spriteContainer.querySelector('.sprite-wrapper');
+                wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
+                wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
+                wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
                 
                 spriteCard.addEventListener('click', () => setActiveSprite(id));
-                spriteOnStage.addEventListener('mousedown', (e) => startDrag(e, id));
-                spriteOnStage.addEventListener('touchstart', (e) => startDrag(e, id));
-                spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    deleteSprite(id);
-                });
+                spriteCard.querySelector('.delete-button').addEventListener('click', (e) => { e.stopPropagation(); deleteSprite(id); });
+
                 updateSpriteAppearance(id);
             };
 
@@ -2807,7 +3402,7 @@
                         
                         stopAllScripts();
                         Object.keys(sprites).forEach(id => {
-                            document.getElementById(id)?.remove();
+                            document.getElementById(`container-${id}`)?.remove();
                             document.querySelector(`.sprite-card[data-sprite-id="${id}"]`)?.remove();
                         });
 
@@ -2816,13 +3411,7 @@
                         workspace.clear();
                         backdropsList.innerHTML = '';
                         
-                        projectData.backdrops.forEach(url => {
-                            const newBackdropCard = document.createElement('div');
-                            newBackdropCard.classList.add('backdrop-card');
-                            newBackdropCard.style.backgroundImage = `url("${url}")`;
-                            newBackdropCard.dataset.url = url;
-                            backdropsList.appendChild(newBackdropCard);
-                        });
+                        projectData.backdrops.forEach(createBackdropCard);
 
                         window.switchBackdrop(projectData.currentBackdrop);
 
@@ -2836,10 +3425,10 @@
                         log('הפרויקט נטען בהצלחה.');
 
                     } catch (error) {
-                        console.error("שגיאה בטעינת הפרויקט:", error);
+                        console.error("שגיאה בטעינת הפרויקטים:", error);
                     } finally {
                         e.target.value = null;
-                        isLoadingProject = false; // Unset flag after loading
+                        setTimeout(() => { isLoadingProject = false; }, 100); // Unset flag after a short delay
                     }
                 };
                  reader.onerror = () => {
@@ -2944,6 +3533,32 @@
                         updatePropertiesPanel();
                     }
                 });
+                
+                // Rotation Style Listeners
+                propRotationAllAround.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.rotationStyle = 'all-around';
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+                propRotationLeftRight.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.rotationStyle = 'left-right';
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
+                propRotationDontRotate.addEventListener('click', () => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.rotationStyle = 'dont-rotate';
+                        updateSpriteAppearance(sprite.id);
+                        updatePropertiesPanel();
+                    }
+                });
             }
             
             // --- Custom Angle Picker Logic ---
@@ -3012,6 +3627,703 @@
                     anglePickerWidget.style.display = 'none';
                 }
             });
+            
+            // --- Character Creator Logic ---
+            const ASSET_CATEGORIES = {
+                shirt: {
+                    label: 'חולצות',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/shirt1.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt2.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt3.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt4.svg',
+                        'https://codejredu.github.io/test/assets/parts/shirt5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M 30 30 L 70 30 L 65 70 L 35 70 Z" fill="${['#14b8a6', '#06b6d4'][i]}"/></svg>`)}`)
+                    ]
+                },
+                 pants: {
+                    label: 'מכנסיים',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/pants1.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants2.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants3.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants4.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants5.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants6.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants7.svg',
+                        'https://codejredu.github.io/test/assets/parts/pants8.svg'
+                    ]
+                },
+                dresses: {
+                    label: 'שמלות',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/drees1.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees2.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees3.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees4.svg',
+                        'https://codejredu.github.io/test/assets/parts/drees5.svg'
+                    ]
+                },
+                shoes: {
+                    label: 'נעליים',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/shoes1.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes2.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes3.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes4.svg',
+                        'https://codejredu.github.io/test/assets/parts/shoes5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><ellipse cx="35" cy="50" rx="15" ry="6" fill="${['#db2777', '#e11d48'][i]}"/><ellipse cx="65" cy="50" rx="15" ry="6" fill="${['#db2777', '#e11d48'][i]}"/></svg>`)}`)
+                    ]
+                },
+                head: {
+                    label: 'ראש',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/face1.svg',
+                        'https://codejredu.github.io/test/assets/parts/face2.svg',
+                        'https://codejredu.github.io/test/assets/parts/face3.svg',
+                        'https://codejredu.github.io/test/assets/parts/face4.svg',
+                        'https://codejredu.github.io/test/assets/parts/face5.svg',
+                        'https://codejredu.github.io/test/assets/parts/face6.svg',
+                        'https://codejredu.github.io/test/assets/parts/face7.svg',
+                        'https://codejredu.github.io/test/assets/parts/face8.svg',
+                        'https://codejredu.github.io/test/assets/parts/face9.svg',
+                        'https://codejredu.github.io/test/assets/parts/face10.svg',
+                        'https://codejredu.github.io/test/assets/parts/face11.svg',
+                        'https://codejredu.github.io/test/assets/parts/face12.svg',
+                        'https://codejredu.github.io/test/assets/parts/face13.svg',
+                        'https://codejredu.github.io/test/assets/parts/face14.svg',
+                        'https://codejredu.github.io/test/assets/parts/face15.svg',
+                        'https://codejredu.github.io/test/assets/parts/face16.svg',
+                        'https://codejredu.github.io/test/assets/parts/face17.svg',
+                        'https://codejredu.github.io/test/assets/parts/face18.svg',
+                        'https://codejredu.github.io/test/assets/parts/face19.svg',
+                        'https://codejredu.github.io/test/assets/parts/face20.svg',
+                        `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#ffdfba"/></svg>`)}`
+                    ]
+                },
+                eyes: { 
+                    label: 'עיניים', 
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/eye1.svg',
+                        'https://codejredu.github.io/test/assets/parts/eye2.svg',
+                        'https://codejredu.github.io/test/assets/parts/eye3.svg',
+                        'https://codejredu.github.io/test/assets/parts/eye4.svg',
+                        'https://codejredu.github.io/test/assets/parts/eye5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g><circle cx="35" cy="50" r="${4 + i*0.5}" fill="white" stroke="black" stroke-width="1"/><circle cx="35" cy="50" r="${2 + i*0.2}" fill="black"/><circle cx="65" cy="50" r="${4 + i*0.5}" fill="white" stroke="black" stroke-width="1"/><circle cx="65" cy="50" r="${2 + i*0.2}" fill="black"/></g></svg>`)}`)
+                    ] 
+                },
+                nose: {
+                    label: 'אפים',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/Nose1.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose2.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose3.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose4.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose5.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose6.svg',
+                        'https://codejredu.github.io/test/assets/parts/Nose7.svg'
+                    ]
+                },
+                mouth: {
+                    label: 'פה',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/mouth1.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth2.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth3.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth4.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth5.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth6.svg',
+                        'https://codejredu.github.io/test/assets/parts/mouth7.svg'
+                    ]
+                },
+                hand: {
+                    label: 'ידים',
+                    parts: [
+                        'https://codejredu.github.io/test/assets/parts/hand1.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand2.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand3.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand4.svg',
+                        'https://codejredu.github.io/test/assets/parts/hand5.svg',
+                        ...Array(2).fill(0).map((_, i) => `data:image/svg+xml;base64,${safeBtoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="${['#ffadad', '#ffd6a5'][i]}"/></svg>`)}`)
+                    ]
+                }
+            };
+
+            const PART_PROPORTIONS = {
+                head:    { scale: { w: 0.28, h: 0.28 }, offset: { x: 0.5, y: 0.22 } },
+                shirt:   { scale: { w: 0.35, h: 0.3 }, offset: { x: 0.5, y: 0.45 } },
+                pants:   { scale: { w: 0.32, h: 0.4 }, offset: { x: 0.5, y: 0.75 } },
+                dresses: { scale: { w: 0.38, h: 0.55 }, offset: { x: 0.5, y: 0.65 } },
+                shoes:   { scale: { w: 0.35, h: 0.1 }, offset: { x: 0.5, y: 0.96 } },
+                eyes:    { scale: { w: 0.15, h: 0.08 }, offset: { x: 0.5, y: 0.20 } },
+                nose:    { scale: { w: 0.08, h: 0.08 }, offset: { x: 0.5, y: 0.24 } },
+                mouth:   { scale: { w: 0.1, h: 0.05 }, offset: { x: 0.5, y: 0.28 } },
+                hand:    { scale: { w: 0.15, h: 0.18 }, offset: { x: 0.35, y: 0.55 } }
+            };
+            const COLOR_PALETTE = ['#000000', '#FFFFFF', '#FF5733', '#FFC300', '#4CAF50', '#3498DB', '#9B59B6', '#E91E63', '#9E9E9E', '#795548', '#607D8B', '#ffdfba', '#ffadad', '#ffd6a5', '#caffbf', '#a0c4ff'];
+
+            const DRAW_ORDER = ['pants', 'shoes', 'shirt', 'hands', 'dresses', 'head', 'nose', 'mouth', 'eyes'];
+            
+            async function getAssetAsText(src) {
+                if (assetCache[src]) return assetCache[src];
+                try {
+                    if (src.startsWith('data:image/svg+xml;base64,')) {
+                        const svgText = safeAtob(src.split(',')[1]);
+                        assetCache[src] = svgText;
+                        return svgText;
+                    }
+                    const response = await fetch(src);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const svgText = await response.text();
+                    assetCache[src] = svgText;
+                    return svgText;
+                } catch (error) {
+                    console.error(`Failed to fetch asset: ${src}`, error);
+                    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" text-anchor="middle">Error</text></svg>`;
+                }
+            }
+            
+            function colorizeSvg(svgText, color) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(svgText, "image/svg+xml");
+                const allElements = doc.querySelectorAll('*');
+                allElements.forEach(el => {
+                    if (el.getAttribute('fill') && el.getAttribute('fill') !== 'none') {
+                        el.setAttribute('fill', color);
+                    }
+                     if (el.getAttribute('stroke') && el.getAttribute('stroke') !== 'none') {
+                        el.setAttribute('stroke', color);
+                    }
+                });
+                return new XMLSerializer().serializeToString(doc.documentElement);
+            }
+
+            function loadImage(src) {
+                // Now that we only load data URLs, caching based on src is very effective.
+                if (imageCache[src]) {
+                    return Promise.resolve(imageCache[src]);
+                }
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    // crossOrigin is no longer needed as we only load data URLs
+                    img.onload = () => {
+                        imageCache[src] = img;
+                        resolve(img);
+                    };
+                    img.onerror = (err) => {
+                         console.error(`Failed to load image from src: ${src.substring(0, 100)}...`, err);
+                         reject(err);
+                    };
+                    img.src = src;
+                });
+            }
+
+            async function drawCharacter() {
+                ctx.clearRect(0, 0, characterCanvas.width, characterCanvas.height);
+                
+                const getPartFromSelection = (selection) => {
+                    if (!selection) return null;
+                    if (selection.category === 'hands') {
+                        return currentCharacter.hands[selection.index];
+                    }
+                    return currentCharacter[selection.category];
+                };
+
+                const partsToDraw = [];
+                DRAW_ORDER.forEach(category => {
+                    if (category === 'hands') {
+                        currentCharacter.hands.forEach(handPart => partsToDraw.push(handPart));
+                    } else {
+                        const part = currentCharacter[category];
+                        if (part && part.src) {
+                            partsToDraw.push(part);
+                        }
+                    }
+                });
+
+                const drawingPromises = partsToDraw.map(part => {
+                    return (async () => {
+                        try {
+                            const svgText = await getAssetAsText(part.src);
+                            const finalSvgText = part.color ? colorizeSvg(svgText, part.color) : svgText;
+                            const dataUrl = `data:image/svg+xml;base64,${safeBtoa(finalSvgText)}`;
+                            const img = await loadImage(dataUrl);
+                            return { part, img };
+                        } catch (e) {
+                            console.error(`Error processing a part:`, e);
+                            return null;
+                        }
+                    })();
+                });
+
+                try {
+                    const loadedParts = await Promise.all(drawingPromises);
+
+                    loadedParts.forEach(loaded => {
+                        if (loaded) {
+                            const { part, img } = loaded;
+                            ctx.save();
+                            ctx.translate(part.x, part.y);
+                            ctx.rotate(part.rotation);
+                            ctx.drawImage(img, -part.width / 2, -part.height / 2, part.width, part.height);
+                            ctx.restore();
+                        }
+                    });
+
+                    const selectedPartObject = getPartFromSelection(selectedPartOnCanvas);
+                    if (selectedPartObject) {
+                        drawTransformHandles(selectedPartObject);
+                    }
+                } catch (error) {
+                    console.error("An unexpected error occurred during character drawing:", error);
+                }
+            }
+
+
+            function drawTransformHandles(part) {
+                const HANDLE_SIZE = 8;
+                const ROTATE_HANDLE_OFFSET = 20;
+
+                ctx.save();
+                ctx.translate(part.x, part.y);
+                ctx.rotate(part.rotation);
+
+                // Bounding box
+                ctx.strokeStyle = '#4C97FF';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 2]);
+                ctx.strokeRect(-part.width / 2, -part.height / 2, part.width, part.height);
+                ctx.setLineDash([]);
+
+                // Resize handles
+                const handles = getPartHandles(part);
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = '#4C97FF';
+                ctx.lineWidth = 2;
+                Object.values(handles).forEach(handle => {
+                    if (handle.type === 'resize') {
+                       ctx.strokeRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+                       ctx.fillRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+                    }
+                });
+
+                // Rotation handle
+                const rotateHandle = handles.rotate;
+                ctx.beginPath();
+                ctx.moveTo(0, -part.height / 2);
+                ctx.lineTo(0, -part.height / 2 - ROTATE_HANDLE_OFFSET);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(rotateHandle.x, rotateHandle.y, HANDLE_SIZE / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+
+            function selectPart(category, partSrc, thumbElement) {
+                if (category === 'hand') {
+                    const getSelectedPartObject = () => {
+                        if (!selectedPartOnCanvas) return null;
+                        return selectedPartOnCanvas.category === 'hands' ? currentCharacter.hands[selectedPartOnCanvas.index] : null;
+                    };
+                    const selectedHand = getSelectedPartObject();
+
+                    if (selectedHand) {
+                        selectedHand.src = partSrc;
+                    } else if (currentCharacter.hands.length < 2) {
+                        const props = PART_PROPORTIONS.hand;
+                        const w = characterCanvas.width * props.scale.w;
+                        const h = characterCanvas.height * props.scale.h;
+                        const xOffset = currentCharacter.hands.length === 0 ? props.offset.x : 1 - props.offset.x;
+                        const newHand = { 
+                            category: 'hand', src: partSrc, 
+                            x: xOffset * characterCanvas.width,
+                            y: props.offset.y * characterCanvas.height,
+                            width: w, height: h, rotation: 0, color: null 
+                        };
+                        currentCharacter.hands.push(newHand);
+                    }
+                } else {
+                     const existingPart = currentCharacter[category];
+                    if (existingPart) {
+                        existingPart.src = partSrc;
+                    }
+                    if (category === 'dresses' && currentCharacter.shirt && currentCharacter.pants) {
+                        currentCharacter.shirt.src = '';
+                        currentCharacter.pants.src = '';
+                    } else if (category === 'shirt' || category === 'pants') {
+                        if (currentCharacter.dresses) currentCharacter.dresses.src = '';
+                    }
+                }
+
+                const siblings = thumbElement.parentElement.querySelectorAll('.part-thumbnail');
+                siblings.forEach(t => t.classList.remove('selected'));
+                thumbElement.classList.add('selected');
+                
+                drawCharacter();
+            }
+
+            function populateParts(category) {
+                activeCreatorCategory = category;
+                creatorPartsGrid.innerHTML = '';
+                const categoryData = ASSET_CATEGORIES[category];
+
+                if (categoryData) {
+                    categoryData.parts.forEach(partSrc => {
+                        const thumb = document.createElement('div');
+                        thumb.className = 'part-thumbnail';
+                        // For non-multi-part categories, check if it's the current src
+                        if (category !== 'hand' && currentCharacter[category]?.src === partSrc) {
+                            thumb.classList.add('selected');
+                        }
+                        thumb.innerHTML = `<img src="${partSrc}">`;
+                        thumb.addEventListener('click', () => selectPart(category, partSrc, thumb));
+                        creatorPartsGrid.appendChild(thumb);
+                    });
+                }
+            }
+
+            function selectCategory(category, buttonElement) {
+                const buttons = creatorCategoriesContainer.querySelectorAll('.category-button');
+                buttons.forEach(b => b.classList.remove('active'));
+                buttonElement.classList.add('active');
+                populateParts(category);
+            }
+
+            function initializeCreator() {
+                 creatorCategoriesContainer.innerHTML = '';
+                 for (const key in ASSET_CATEGORIES) {
+                    const category = ASSET_CATEGORIES[key];
+                    const button = document.createElement('button');
+                    button.className = 'category-button';
+                    button.textContent = category.label;
+                    button.dataset.category = key;
+                    if (key === activeCreatorCategory) {
+                        button.classList.add('active');
+                    }
+                    button.addEventListener('click', () => selectCategory(key, button));
+                    creatorCategoriesContainer.appendChild(button);
+                 }
+                 
+                 currentCharacter = {};
+                 currentCharacter.hands = []; // Initialize hands as an array
+                 
+                 DRAW_ORDER.forEach(cat => {
+                    if (cat !== 'hands') {
+                        const isDefaultPart = cat !== 'dresses'; // Don't give a default dress
+                        const firstPartSrc = isDefaultPart ? ASSET_CATEGORIES[cat]?.parts[0] : '';
+                        
+                        if (ASSET_CATEGORIES[cat]) {
+                            const props = PART_PROPORTIONS[cat];
+                            const w = characterCanvas.width * props.scale.w;
+                            const h = characterCanvas.height * props.scale.h;
+                            
+                            currentCharacter[cat] = { 
+                                category: cat, src: firstPartSrc, 
+                                x: props.offset.x * characterCanvas.width,
+                                y: props.offset.y * characterCanvas.height,
+                                width: w, height: h, rotation: 0, color: null 
+                            };
+                        }
+                    }
+                 });
+                 
+                selectedPartOnCanvas = null;
+                creatorControlsPanel.classList.add('hidden');
+                populateParts(activeCreatorCategory);
+                populateColorPalette();
+                drawCharacter();
+            }
+            
+            function populateColorPalette() {
+                creatorColorPalette.innerHTML = '';
+                COLOR_PALETTE.forEach(color => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'color-swatch';
+                    swatch.style.backgroundColor = color;
+                    swatch.dataset.color = color;
+                    creatorColorPalette.appendChild(swatch);
+                });
+            }
+
+            createSpriteHeaderButton.addEventListener('click', () => {
+                initializeCreator();
+                creatorModal.classList.add('visible');
+            });
+            creatorCloseButton.addEventListener('click', () => {
+                creatorModal.classList.remove('visible');
+            });
+            creatorSaveButton.addEventListener('click', () => {
+                const previouslySelected = selectedPartOnCanvas;
+                selectedPartOnCanvas = null; // Hide handles for saving
+                drawCharacter().then(() => {
+                    try {
+                        const dataUrl = characterCanvas.toDataURL('image/png');
+                        createNewSprite('דמות חדשה', dataUrl);
+                        creatorModal.classList.remove('visible');
+                        spriteGallery.classList.remove('visible');
+                    } catch (e) {
+                         console.error("שגיאה בשמירת הדמות:", e);
+                         alert("לא ניתן לשמור את הדמות. ייתכן שישנה בעיה בטעינת אחת התמונות.");
+                    } finally {
+                        selectedPartOnCanvas = previouslySelected; // Restore selection state
+                    }
+                });
+            });
+
+            // --- Vector Manipulation Logic ---
+
+            function getPartHandles(part) {
+                const halfW = part.width / 2;
+                const halfH = part.height / 2;
+                return {
+                    topLeft:     { x: -halfW, y: -halfH, type: 'resize', cursor: 'nwse-resize' },
+                    top:         { x: 0,      y: -halfH, type: 'resize', cursor: 'ns-resize' },
+                    topRight:    { x: halfW,  y: -halfH, type: 'resize', cursor: 'nesw-resize' },
+                    right:       { x: halfW,  y: 0,      type: 'resize', cursor: 'ew-resize' },
+                    bottomRight: { x: halfW,  y: halfH,  type: 'resize', cursor: 'nwse-resize' },
+                    bottom:      { x: 0,      y: halfH,  type: 'resize', cursor: 'ns-resize' },
+                    bottomLeft:  { x: -halfW, y: halfH,  type: 'resize', cursor: 'nesw-resize' },
+                    left:        { x: -halfW, y: 0,      type: 'resize', cursor: 'ew-resize' },
+                    rotate:      { x: 0, y: -halfH - 20, type: 'rotate', cursor: 'grab' }
+                };
+            }
+
+            function getPartAtPoint(x, y) {
+                 for (const category of [...DRAW_ORDER].reverse()) {
+                    if (category === 'hands') {
+                        // Iterate backwards for correct z-index picking
+                        for (let i = currentCharacter.hands.length - 1; i >= 0; i--) {
+                            const part = currentCharacter.hands[i];
+                            const dx = x - part.x;
+                            const dy = y - part.y;
+                            const cos = Math.cos(-part.rotation);
+                            const sin = Math.sin(-part.rotation);
+                            const localX = dx * cos - dy * sin;
+                            const localY = dx * sin + dy * cos;
+
+                            if (Math.abs(localX) < part.width / 2 && Math.abs(localY) < part.height / 2) {
+                                return { category: 'hands', index: i };
+                            }
+                        }
+                    } else {
+                        const part = currentCharacter[category];
+                        if (!part || !part.src) continue;
+                        const dx = x - part.x;
+                        const dy = y - part.y;
+                        const cos = Math.cos(-part.rotation);
+                        const sin = Math.sin(-part.rotation);
+                        const localX = dx * cos - dy * sin;
+                        const localY = dx * sin + dy * cos;
+
+                        if (Math.abs(localX) < part.width / 2 && Math.abs(localY) < part.height / 2) {
+                            return { category: category };
+                        }
+                    }
+                }
+                return null;
+            }
+
+            function getHandleAtPoint(part, x, y) {
+                 const handles = getPartHandles(part);
+                 for (const [name, handle] of Object.entries(handles)) {
+                    // Transform point to part's local coordinates
+                    const dx = x - part.x;
+                    const dy = y - part.y;
+                    const cos = Math.cos(-part.rotation);
+                    const sin = Math.sin(-part.rotation);
+                    const localX = dx * cos - dy * sin;
+                    const localY = dx * sin + dy * cos;
+                    
+                    const handleRect = {
+                        left: handle.x - 8, right: handle.x + 8,
+                        top: handle.y - 8, bottom: handle.y + 8,
+                    };
+
+                    if (localX >= handleRect.left && localX <= handleRect.right && localY >= handleRect.top && localY <= handleRect.bottom) {
+                        return name;
+                    }
+                 }
+                 return null;
+            }
+            
+            function getPartFromSelection(selection) {
+                if (!selection) return null;
+                return selection.category === 'hands'
+                    ? currentCharacter.hands[selection.index]
+                    : currentCharacter[selection.category];
+            }
+
+
+            function handleCanvasMouseDown(e) {
+                e.preventDefault();
+                const rect = characterCanvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                let newSelection = null;
+                let actionType = 'none';
+                let handleName = null;
+                
+                const currentSelectedPartObject = getPartFromSelection(selectedPartOnCanvas);
+                if (currentSelectedPartObject) {
+                    handleName = getHandleAtPoint(currentSelectedPartObject, mouseX, mouseY);
+                    if (handleName) {
+                        newSelection = selectedPartOnCanvas;
+                        actionType = getPartHandles(currentSelectedPartObject)[handleName].type;
+                    }
+                }
+                
+                if (actionType === 'none') {
+                    const partUnderMouse = getPartAtPoint(mouseX, mouseY);
+                    if (partUnderMouse) {
+                        newSelection = partUnderMouse;
+                        actionType = 'move';
+                    }
+                }
+                
+                selectedPartOnCanvas = newSelection;
+                
+                if (actionType !== 'none') {
+                    const partObject = getPartFromSelection(newSelection);
+                    creatorAction.type = actionType;
+                    creatorAction.partSelection = newSelection;
+                    creatorAction.handle = handleName;
+                    creatorAction.startX = mouseX;
+                    creatorAction.startY = mouseY;
+                    creatorAction.initialState = JSON.parse(JSON.stringify(partObject)); // Deep copy
+                }
+
+                if (selectedPartOnCanvas) {
+                    creatorControlsPanel.classList.remove('hidden');
+                    const categoryKey = selectedPartOnCanvas.category === 'hands' ? 'hand' : selectedPartOnCanvas.category;
+                    const categoryLabel = ASSET_CATEGORIES[categoryKey].label;
+                    selectedPartLabel.textContent = categoryLabel;
+                } else {
+                    creatorControlsPanel.classList.add('hidden');
+                }
+                
+                drawCharacter();
+            }
+            
+             function handleCanvasMouseMove(e) {
+                const rect = characterCanvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                if (creatorAction.type === 'none') {
+                    let cursor = 'default';
+                    const selectedObject = getPartFromSelection(selectedPartOnCanvas);
+                    if (selectedObject) {
+                        const handleName = getHandleAtPoint(selectedObject, mouseX, mouseY);
+                        if (handleName) {
+                            cursor = getPartHandles(selectedObject)[handleName].cursor;
+                        } else if (getPartAtPoint(mouseX, mouseY)) {
+                            cursor = 'move';
+                        }
+                    } else if (getPartAtPoint(mouseX, mouseY)) {
+                        cursor = 'pointer';
+                    }
+                    characterCanvas.style.cursor = cursor;
+                    return;
+                }
+
+                e.preventDefault();
+                const part = getPartFromSelection(creatorAction.partSelection);
+                const initial = creatorAction.initialState;
+                
+                if (creatorAction.type === 'move') {
+                    const deltaX = mouseX - creatorAction.startX;
+                    const deltaY = mouseY - creatorAction.startY;
+                    part.x = initial.x + deltaX;
+                    part.y = initial.y + deltaY;
+                } else if (creatorAction.type === 'rotate') {
+                    const angle1 = Math.atan2(creatorAction.startY - initial.y, creatorAction.startX - initial.x);
+                    const angle2 = Math.atan2(mouseY - initial.y, mouseX - initial.x);
+                    part.rotation = initial.rotation + (angle2 - angle1);
+                } else if (creatorAction.type === 'resize') {
+                     // --- START: New, Robust Resizing Logic ---
+                    const handleName = creatorAction.handle;
+                    const MIN_SIZE = 10;
+                    
+                    // The anchor is the point opposite the handle being dragged
+                    const anchorHandleName = {
+                        topLeft: 'bottomRight', topRight: 'bottomLeft',
+                        bottomLeft: 'topRight', bottomRight: 'topLeft',
+                        top: 'bottom', bottom: 'top', left: 'right', right: 'left'
+                    }[handleName];
+
+                    const initialHandles = getPartHandles(initial);
+                    const anchorPointLocal = initialHandles[anchorHandleName];
+                    
+                    // Convert anchor's local coordinates to global coordinates
+                    const cos = Math.cos(initial.rotation);
+                    const sin = Math.sin(initial.rotation);
+                    const anchorXGlobal = initial.x + anchorPointLocal.x * cos - anchorPointLocal.y * sin;
+                    const anchorYGlobal = initial.y + anchorPointLocal.x * sin + anchorPointLocal.y * cos;
+
+                    // Convert the current mouse position into the object's rotated coordinate system
+                    const mdx = mouseX - anchorXGlobal;
+                    const mdy = mouseY - anchorYGlobal;
+                    const rotatedMouseX = mdx * cos + mdy * sin;
+                    const rotatedMouseY = -mdx * sin + mdy * cos;
+
+                    // Calculate new width and height based on the handle being dragged
+                    let newWidth = initial.width;
+                    let newHeight = initial.height;
+                    
+                    if (handleName.includes('right')) newWidth = rotatedMouseX + initial.width / 2;
+                    if (handleName.includes('left')) newWidth = -rotatedMouseX + initial.width / 2;
+                    if (handleName.includes('bottom')) newHeight = rotatedMouseY + initial.height / 2;
+                    if (handleName.includes('top')) newHeight = -rotatedMouseY + initial.height / 2;
+
+                    // For corner handles, maintain aspect ratio
+                    if (['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].includes(handleName)) {
+                        const ratio = initial.width / initial.height;
+                        if (Math.abs(newWidth / ratio) > Math.abs(newHeight)) {
+                           newHeight = newWidth / ratio;
+                        } else {
+                           newWidth = newHeight * ratio;
+                        }
+                    }
+
+                    part.width = Math.max(MIN_SIZE, newWidth);
+                    part.height = Math.max(MIN_SIZE, newHeight);
+
+                    // Recalculate the center point based on the new dimensions and the fixed anchor
+                    const newCenterLocalX = (part.width - initial.width) * (handleName.includes('left') ? 1 : -1) / 2;
+                    const newCenterLocalY = (part.height - initial.height) * (handleName.includes('top') ? 1 : -1) / 2;
+                    
+                    part.x = anchorXGlobal + newCenterLocalX * cos - newCenterLocalY * sin;
+                    part.y = anchorYGlobal + newCenterLocalX * sin + newCenterLocalY * cos;
+                    // --- END: New, Robust Resizing Logic ---
+                }
+
+                drawCharacter();
+            }
+
+            function handleCanvasMouseUp(e) {
+                creatorAction.type = 'none';
+                creatorAction.partSelection = null;
+            }
+            
+            characterCanvas.addEventListener('mousedown', handleCanvasMouseDown);
+            characterCanvas.addEventListener('mousemove', handleCanvasMouseMove);
+            document.addEventListener('mouseup', handleCanvasMouseUp);
+            
+            // Color Listener
+            creatorColorPalette.addEventListener('click', (e) => {
+                if (selectedPartOnCanvas && e.target.matches('.color-swatch')) {
+                    const part = getPartFromSelection(selectedPartOnCanvas);
+                    if (part) {
+                        part.color = e.target.dataset.color;
+                        drawCharacter();
+                    }
+                }
+            });
+
 
             // --- Initial Setup ---
             createDefaultBackdrop();
@@ -3024,6 +4336,9 @@
                 backgroundGallery.classList.add('visible');
             });
             
+            const uploadBackdropHeaderButton = document.getElementById('upload-backdrop-header-button');
+            uploadBackdropHeaderButton.addEventListener('click', () => backdropUploadInput.click());
+
             closeGalleryButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 backgroundGallery.classList.remove('visible');
@@ -3031,9 +4346,30 @@
             
             thumbnailsGrid.addEventListener('click', handleGallerySelection);
             
+            backdropUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    const card = createBackdropCard(imageUrl);
+                    window.switchBackdrop(imageUrl);
+                    backgroundGallery.classList.remove('visible');
+                };
+                reader.readAsDataURL(file);
+
+                e.target.value = null; 
+            });
+
             addSpriteButton.addEventListener('click', () => {
                 spriteGallery.classList.add('visible');
             });
+
+            const uploadSpriteHeaderButton = document.getElementById('upload-sprite-header-button');
+            uploadSpriteHeaderButton.addEventListener('click', () => spriteUploadInput.click());
 
             closeSpriteGalleryButton.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -3041,8 +4377,26 @@
             });
 
             spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
+
+            spriteUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    const imageName = file.name.split('.').slice(0, -1).join('.') || 'דמות שהועלתה';
+                    
+                    createNewSprite(imageName, imageUrl);
+                    spriteGallery.classList.remove('visible');
+                };
+                reader.readAsDataURL(file);
+
+                e.target.value = null; 
+            });
         });
     </script>
 </body>
 </html>
-
