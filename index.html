@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -7,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/blockly@9.0.0/blockly.min.js"></script>
     <link rel="stylesheet" href="index.css">
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-gray-100 text-gray-800">
     <svg width="0" height="0" style="position:absolute;">
@@ -20,18 +20,15 @@
     </svg>
     <div id="project-controls" class="w-full shadow-md p-2 flex justify-between items-center fixed top-0 left-0 z-50" style="background-color: #855CD6;" dir="rtl">
         <div class="flex items-center gap-4">
-            <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586L7.707 10.293zM5 4a1 1 0 011-1h8a1 1 0 011 1v1h-2V5H7v1H5V4z"/>
-                    <path fill-rule="evenodd" d="M3 13a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1-3a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
+            <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors" title="שמור פרויקט">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
-                <span>שמור פרויקט</span>
             </button>
-            <button id="load-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+            <button id="load-button" class="bg-green-500 hover:bg-green-600 text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors" title="טען פרויקט">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.75h16.5m-16.5 0V21m16.5 0V9.75m0 0l-7.5-4.5-7.5 4.5m16.5 0v11.25c0 .621-.504 1.125-1.125 1.125H4.875c-.621 0-1.125-.504-1.125-1.125V9.75" />
                 </svg>
-                <span>טען פרויקט</span>
             </button>
             <input type="file" id="load-input" class="hidden" accept=".kidi, .json">
         </div>
@@ -1395,13 +1392,13 @@
                 return { x: e.clientX, y: e.clientY };
             };
             
-            const startDrag = (e, spriteId) => {
+            const startDrag = (e, id) => {
                 e.preventDefault();
                 isDragging = true;
-                dragSpriteId = spriteId;
+                dragSpriteId = id;
                 const spriteData = sprites[dragSpriteId];
 
-                setActiveSprite(spriteId);
+                setActiveSprite(id);
                 const { x, y } = getPointerPosition(e);
                 dragStartX = x;
                 dragStartY = y;
@@ -1409,7 +1406,7 @@
                 initialMouseY = y;
                 initialSpriteX = spriteData.x;
                 initialSpriteY = spriteData.y;
-                document.getElementById(id).style.transition = 'none';
+                document.getElementById(dragSpriteId).style.transition = 'none';
                 log('הדמות נתפסה לגרירה.');
             };
 
@@ -2385,7 +2382,7 @@
             Blockly.Blocks['sound_play_until_done'] = {
                 init: function() {
                     this.appendDummyInput()
-                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/play_sound.svg", 34, 34, "*"))
+                        .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/audio.svg", 34, 34, "*"))
                         .appendField('\u00A0\u00A0')
                         .appendField(new FieldSound(), "SOUND");
                     this.setPreviousStatement(true, null);
@@ -3090,7 +3087,10 @@
                     try {
                         const projectData = JSON.parse(event.target.result);
 
-                        if (!projectData.sprites || !projectData.backdrops) {
+                        // Robust check for valid project structure
+                        if (typeof projectData !== 'object' || projectData === null || 
+                            typeof projectData.sprites !== 'object' || projectData.sprites === null || 
+                            !Array.isArray(projectData.backdrops)) {
                             throw new Error("קובץ פרויקט לא תקין.");
                         }
                         
@@ -4093,15 +4093,13 @@
                 const recorderMessageEl = document.getElementById('recorder-message');
                 const recorderUiContent = document.getElementById('recorder-ui-content');
                 
-                // Always open the modal, but content depends on permission
                 recorderModal.classList.remove('hidden');
 
                 try {
                     mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-                    // --- Permission Granted ---
-                    recorderMessageEl.classList.add('hidden'); // Hide any previous error message
-                    recorderUiContent.classList.remove('hidden'); // Show recorder UI
+                    recorderMessageEl.classList.add('hidden');
+                    recorderUiContent.classList.remove('hidden');
 
                     recorderRecordBtn.classList.remove('hidden');
                     recorderStopBtn.classList.add('hidden');
@@ -4112,13 +4110,11 @@
                     recorderTimer.textContent = '0.0 / 15.0';
 
                 } catch (err) {
-                    // --- Permission Denied or other error ---
-                    console.error("שגיאה בגישה למיקרופון:", err);
+                    console.error("שגיאה בגישה למיקרופון:", err.name);
                     
-                    recorderUiContent.classList.add('hidden'); // Hide recorder UI
-                    recorderMessageEl.classList.remove('hidden'); // Show error message area
+                    recorderUiContent.classList.add('hidden');
+                    recorderMessageEl.classList.remove('hidden');
                     
-                    // Customize message based on error type
                     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
                          recorderMessageEl.innerHTML = 'הגישה למיקרופון נדחתה. <br> כדי להקליט, יש לאפשר גישה למיקרופון בהגדרות הדפדפן.';
                     } else if (err.name === 'NotFoundError') {
@@ -4138,8 +4134,6 @@
                     mediaRecorder.stop();
                 }
                 clearInterval(recorderTimerInterval);
-
-                // Reset UI before hiding
                 document.getElementById('sound-recorder-modal').classList.add('hidden');
                 document.getElementById('recorder-ui-content').classList.remove('hidden');
                 document.getElementById('recorder-message').classList.add('hidden');
@@ -4182,25 +4176,25 @@
                     }
                 }, 100);
             };
-
+            
             const stopRecording = () => {
                 if (mediaRecorder && mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
-                    clearInterval(recorderTimerInterval);
-                    recorderVisualizer.classList.remove('is-recording');
                 }
+                clearInterval(recorderTimerInterval);
+                recorderVisualizer.classList.remove('is-recording');
             };
-            
+
             const saveRecording = () => {
                 const sprite = getActiveSprite();
                 if (!sprite || !recordedBlob) return;
-                
+
                 const reader = new FileReader();
-                reader.onloadend = function() {
-                    const base64data = reader.result;
+                reader.onloadend = () => {
+                    const base64String = reader.result;
                     const newSound = {
                         name: recorderSoundName.value || 'הקלטה',
-                        url: base64data
+                        url: base64String
                     };
                     sprite.sounds.push(newSound);
                     renderSpriteSounds(sprite);
@@ -4215,171 +4209,140 @@
             recorderRecordBtn.addEventListener('click', startRecording);
             recorderStopBtn.addEventListener('click', stopRecording);
             recorderRerecordBtn.addEventListener('click', () => {
+                recorderRecordBtn.classList.remove('hidden');
+                recorderPreviewContainer.classList.add('hidden');
                 recorderRerecordBtn.classList.add('hidden');
                 recorderSaveBtn.classList.add('hidden');
-                recorderPreviewContainer.classList.add('hidden');
-                recorderRecordBtn.classList.remove('hidden');
                 recorderTimer.textContent = '0.0 / 15.0';
             });
             recorderSaveBtn.addEventListener('click', saveRecording);
             
-            // --- End Sound Recorder Logic ---
 
-
-            // Game loop for animations
+            // --- Main Game Loop ---
             let lastTime = 0;
             function gameLoop(timestamp) {
+                if (!lastTime) lastTime = timestamp;
                 const deltaTime = timestamp - lastTime;
                 lastTime = timestamp;
 
                 if (scriptRunner) {
                     scriptRunner.tick();
                 }
-                
-                updateGifAnimations(deltaTime);
 
+                updateGifAnimations(deltaTime);
+                
                 requestAnimationFrame(gameLoop);
             }
             
-            const initialSounds = [
-                { name: "Boat Start", url: "https://codejredu.github.io/test/assets/sound/BoatStart.mp3" },
-                { name: "Car Door", url: "https://codejredu.github.io/test/assets/sound/CARDOOR.mp3" },
-                { name: "Elevator Ding", url: "https://codejredu.github.io/test/assets/sound/ElevatorDing.mp3" },
-                { name: "Water Emptying", url: "https://codejredu.github.io/test/assets/sound/WaterEmptying.mp3" },
-                { name: "Water Vole Diving", url: "https://codejredu.github.io/test/assets/sound/WaterVole.mp3" },
-                { name: "Air Land", url: "https://codejredu.github.io/test/assets/sound/airland.mp3" },
-                { name: "Airplane Cessna", url: "https://codejredu.github.io/test/assets/sound/airplanecessna.mp3" },
-                { name: "Airplane F15", url: "https://codejredu.github.io/test/assets/sound/airplanef15.mp3" },
-                { name: "Animal Howl", url: "https://codejredu.github.io/test/assets/sound/animals.mp3" },
-                { name: "Crowd", url: "https://codejredu.github.io/test/assets/sound/crowds.mp3" },
-                { name: "Bird Call", url: "https://codejredu.github.io/test/assets/sound/double.mp3" },
-                { name: "Partridge", url: "https://codejredu.github.io/test/assets/sound/grey.mp3" },
-                { name: "Pygmy Shrew", url: "https://codejredu.github.io/test/assets/sound/pygmy.mp3" },
-                { name: "School", url: "https://codejredu.github.io/test/assets/sound/schools.mp3" },
-                { name: "Flycatcher", url: "https://codejredu.github.io/test/assets/sound/vermilion.mp3" },
-                { name: "Ding", url: "https://codejredu.github.io/test/assets/sound/dingsoundeffect2.mp3" },
-                { name: "Dog", url: "https://codejredu.github.io/test/assets/sound/dog.mp3" },
-                { name: "Leopard", url: "https://codejredu.github.io/test/assets/sound/leopard7.mp3" },
-                { name: "Link", url: "https://codejredu.github.io/test/assets/sound/link.mp3" },
-                { name: "Lion Cub", url: "https://codejredu.github.io/test/assets/sound/lioncub.mp3" },
-                { name: "Whale", url: "https://codejredu.github.io/test/assets/sound/whale3.mp3" },
-            ];
-
-            function populateSoundGallery() {
-                soundGalleryGrid.innerHTML = '';
-                initialSounds.forEach(sound => {
-                    const item = document.createElement('div');
-                    item.className = 'sound-gallery-item';
-                    item.dataset.url = sound.url;
-                    item.dataset.name = sound.name;
-                    item.innerHTML = `
-                        <button class="sound-gallery-play-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                            </svg>
-                        </button>
-                        <span class="sound-gallery-name">${sound.name}</span>
-                    `;
-                    soundGalleryGrid.appendChild(item);
-                });
-            }
-
-            // --- Initialization ---
             function init() {
-                // Populate galleries
-                populateSoundGallery();
-
-                // Setup Listeners
-                setupPropertiesPanelListeners();
-                
-                // Backdrops
+                // Initialize UI components
                 addBackdropButton.addEventListener('click', () => backgroundGallery.classList.add('visible'));
                 closeGalleryButton.addEventListener('click', () => backgroundGallery.classList.remove('visible'));
-                backdropsList.addEventListener('click', handleBackdropSelection);
                 thumbnailsGrid.addEventListener('click', handleGallerySelection);
-                document.getElementById('upload-backdrop-header-button').addEventListener('click', () => document.getElementById('backdrop-upload-input').click());
-                document.getElementById('backdrop-upload-input').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            const newCard = createBackdropCard(event.target.result);
-                            window.switchBackdrop(event.target.result);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    e.target.value = null;
-                });
+                backdropsList.addEventListener('click', handleBackdropSelection);
 
-                // Sprites
                 addSpriteButton.addEventListener('click', () => spriteGallery.classList.add('visible'));
                 closeSpriteGalleryButton.addEventListener('click', () => spriteGallery.classList.remove('visible'));
                 spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
-                document.getElementById('upload-sprite-header-button').addEventListener('click', () => document.getElementById('sprite-upload-input').click());
-                document.getElementById('sprite-upload-input').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            createNewSprite(file.name.replace(/\..+$/, ''), event.target.result);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    e.target.value = null;
-                });
+                
+                const soundLibrary = [
+                    { name: "Boat Start", url: "https://codejredu.github.io/test/assets/sound/BoatStart.mp3" },
+                    { name: "Car Door", url: "https://codejredu.github.io/test/assets/sound/CARDOOR.mp3" },
+                    { name: "Elevator Ding", url: "https://codejredu.github.io/test/assets/sound/ElevatorDing.mp3" },
+                    { name: "Water Emptying", url: "https://codejredu.github.io/test/assets/sound/WaterEmptying.mp3" },
+                    { name: "Water Vole Diving", url: "https://codejredu.github.io/test/assets/sound/WaterVole.mp3" },
+                    { name: "Air Land", url: "https://codejredu.github.io/test/assets/sound/airland.mp3" },
+                    { name: "Airplane Cessna", url: "https://codejredu.github.io/test/assets/sound/airplanecessna.mp3" },
+                    { name: "Airplane F15", url: "https://codejredu.github.io/test/assets/sound/airplanef15.mp3" },
+                    { name: "Animal Howl", url: "https://codejredu.github.io/test/assets/sound/animals.mp3" },
+                    { name: "Crowd", url: "https://codejredu.github.io/test/assets/sound/crowds.mp3" },
+                    { name: "Bird Call", url: "https://codejredu.github.io/test/assets/sound/double.mp3" },
+                    { name: "Partridge", url: "https://codejredu.github.io/test/assets/sound/grey.mp3" },
+                    { name: "Pygmy Shrew", url: "https://codejredu.github.io/test/assets/sound/pygmy.mp3" },
+                    { name: "School", url: "https://codejredu.github.io/test/assets/sound/schools.mp3" },
+                    { name: "Flycatcher", url: "https://codejredu.github.io/test/assets/sound/vermilion.mp3" },
+                    { name: "Ding", url: "https://codejredu.github.io/test/assets/sound/dingsoundeffect2.mp3" },
+                    { name: "Dog", url: "https://codejredu.github.io/test/assets/sound/dog.mp3" },
+                    { name: "Leopard", url: "https://codejredu.github.io/test/assets/sound/leopard7.mp3" },
+                    { name: "Link", url: "https://codejredu.github.io/test/assets/sound/link.mp3" },
+                    { name: "Lion Cub", url: "https://codejredu.github.io/test/assets/sound/lioncub.mp3" },
+                    { name: "Whale", url: "https://codejredu.github.io/test/assets/sound/whale3.mp3" },
+                ];
 
-                // Sounds
-                addSoundButton.addEventListener('click', () => soundGallery.classList.add('visible'));
-                closeSoundGalleryButton.addEventListener('click', () => {
-                     soundGallery.classList.remove('visible');
-                     if(currentPreviewAudio) { currentPreviewAudio.pause(); currentPreviewAudio = null; }
-                });
-                document.getElementById('upload-sound-header-button').addEventListener('click', () => document.getElementById('sound-upload-input').click());
-                document.getElementById('sound-upload-input').addEventListener('change', (e) => {
-                     const file = e.target.files[0];
-                     const sprite = getActiveSprite();
-                    if (file && sprite) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            sprite.sounds.push({ name: file.name.replace(/\..+$/, ''), url: event.target.result });
-                            renderSpriteSounds(sprite);
-                            Blockly.getMainWorkspace().refreshToolboxSelection();
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    e.target.value = null;
-                });
+                soundGalleryGrid.innerHTML = soundLibrary.map(sound => `
+                    <div class="sound-gallery-item" data-name="${sound.name}" data-url="${sound.url}">
+                        <button class="sound-gallery-play-btn">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <span class="sound-gallery-name">${sound.name}</span>
+                    </div>`).join('');
+                
                 soundGalleryGrid.addEventListener('click', (e) => {
                     const item = e.target.closest('.sound-gallery-item');
+                    if (!item) return;
+
                     const playBtn = e.target.closest('.sound-gallery-play-btn');
+                    const sprite = getActiveSprite();
                     
                     if (playBtn) {
                         e.stopPropagation();
                         if (currentPreviewAudio) currentPreviewAudio.pause();
                         currentPreviewAudio = new Audio(item.dataset.url);
                         currentPreviewAudio.play();
-                    } else if (item) {
-                        const sprite = getActiveSprite();
-                        if (sprite) {
-                             sprite.sounds.push({ name: item.dataset.name, url: item.dataset.url });
-                             renderSpriteSounds(sprite);
-                             Blockly.getMainWorkspace().refreshToolboxSelection();
-                             soundGallery.classList.remove('visible');
-                        }
+                    } else if (sprite) {
+                        const newSound = { name: item.dataset.name, url: item.dataset.url };
+                        sprite.sounds.push(newSound);
+                        renderSpriteSounds(sprite);
+                        workspace.refreshToolboxSelection();
+                        soundGallery.classList.remove('visible');
                     }
                 });
 
-                // Create initial state
+                addSoundButton.addEventListener('click', () => soundGallery.classList.add('visible'));
+                closeSoundGalleryButton.addEventListener('click', () => soundGallery.classList.remove('visible'));
+
+                const setupFileUpload = (headerButtonId, fileInputId, handler) => {
+                    const headerButton = document.getElementById(headerButtonId);
+                    const fileInput = document.getElementById(fileInputId);
+                    headerButton.addEventListener('click', () => fileInput.click());
+                    fileInput.addEventListener('change', handler);
+                };
+
+                const handleFileUpload = (file, callback) => {
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => callback(e.target.result, file.name);
+                        reader.readAsDataURL(file);
+                    }
+                };
+
+                setupFileUpload('upload-sprite-header-button', 'sprite-upload-input', (e) => handleFileUpload(e.target.files[0], (url, name) => {
+                    createNewSprite(name.replace(/\.[^/.]+$/, ""), url);
+                }));
+                setupFileUpload('upload-backdrop-header-button', 'backdrop-upload-input', (e) => handleFileUpload(e.target.files[0], (url) => {
+                    const newCard = createBackdropCard(url);
+                    window.switchBackdrop(url);
+                }));
+                setupFileUpload('upload-sound-header-button', 'sound-upload-input', (e) => handleFileUpload(e.target.files[0], (url, name) => {
+                    const sprite = getActiveSprite();
+                    if (sprite) {
+                        sprite.sounds.push({ name: name.replace(/\.[^/.]+$/, ""), url });
+                        renderSpriteSounds(sprite);
+                        workspace.refreshToolboxSelection();
+                    }
+                }));
+
+                setupPropertiesPanelListeners();
                 createDefaultBackdrop();
                 createDefaultSprite();
-
-                // Start game loop
                 requestAnimationFrame(gameLoop);
             }
-
+            
             init();
+
         });
     </script>
-<script type="module" src="/index.tsx"></script>
 </body>
 </html>
