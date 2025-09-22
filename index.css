@@ -1,7 +1,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
+            background-color: #FCF8F0; /* Warm, creamy off-white background */
             margin: 0;
             padding: 0;
             display: flex;
@@ -42,11 +42,11 @@
             background: transparent;
         }
         .left-panel::-webkit-scrollbar-thumb {
-            background: #ccc;
+            background: #A99985; /* Darker, warm gray/brown scrollbar */
             border-radius: 10px;
         }
         .left-panel::-webkit-scrollbar-thumb:hover {
-            background: #aaa;
+            background: #9a8a77; /* Even darker on hover */
         }
         .right-panel {
             display: flex;
@@ -74,7 +74,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             background-color: #fff;
-            border: 2px solid #ccc;
+            border: 2px solid #EAE2D3; /* Softer border color */
             transition: all 0.3s ease-in-out;
             flex-shrink: 0; /* Prevent stage from shrinking */
         }
@@ -126,10 +126,10 @@
         }
         .speech-bubble {
             position: absolute;
-            background: #fdfd96;
+            background: #FFFBEA; /* Lighter, creamier yellow */
             border-radius: 12px;
             padding: 8px 12px;
-            border: 1px solid #ccc;
+            border: 1px solid #F5E8C7; /* Soft border for bubble */
             white-space: nowrap;
             font-size: 0.9rem;
             bottom: 100%;
@@ -148,7 +148,7 @@
             width: 0;
             height: 0;
             border: 8px solid transparent;
-            border-top-color: #fdfd96;
+            border-top-color: #FFFBEA;
             border-bottom: 0;
             margin-left: -8px;
             margin-top: -1px;
@@ -158,7 +158,7 @@
         }
         #blockly-area {
             flex-grow: 1;
-            background-color: #fff;
+            background-color: #FDFBF5; /* Match blueprint pattern background */
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             height: calc(100vh - 56px - 4rem); /* Account for top bar + body padding */
@@ -169,7 +169,7 @@
             border-radius: 12px;
             padding: 1rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border: 1px solid #ccc;
+            border: 1px solid #EAE2D3; /* Softer border */
             position: relative;
         }
         .section-header {
@@ -191,7 +191,7 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background-color: #4C97FF;
+            background-color: #3b82f6; /* Blue accent */
             color: white;
             display: flex;
             justify-content: center;
@@ -200,7 +200,7 @@
             transition: background-color 0.2s;
         }
         .header-button:hover {
-            background-color: #3b82f6;
+            background-color: #2563eb; /* Darker blue on hover */
         }
         .header-button svg {
             width: 20px;
@@ -211,7 +211,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            border: 2px solid #e5e7eb; /* Added gray border for separation */
+            border: 2px solid #EAE2D3; /* Softer border */
             background-color: white;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border-radius: 12px;
@@ -222,7 +222,7 @@
             flex-shrink: 0;
         }
         .sprite-card.selected {
-            border-color: #4C97FF;
+            border-color: #3b82f6; /* Blue accent for selection */
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .sprite-card img {
@@ -272,7 +272,8 @@
         }
         .sprite-card:hover .delete-button,
         .sprite-card:hover .edit-button,
-        .backdrop-card:hover .delete-button {
+        .backdrop-card:hover .delete-button,
+        .sound-card:hover .delete-button {
             visibility: visible;
             opacity: 1;
         }
@@ -289,17 +290,17 @@
             position: relative;
         }
         .backdrop-card.selected {
-            border-color: #4C97FF;
+            border-color: #3b82f6; /* Blue accent for selection */
         }
         .gallery-container {
             width: 100%;
             padding: 1rem;
-            background-color: #f0f4f8;
+            background-color: #FCF8F0; /* Warm background */
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             display: none;
             transition: all 0.5s ease-in-out;
-            border: 2px solid #ccc;
+            border: 2px solid #EAE2D3; /* Softer border */
             position: absolute;
             top: 0;
             left: 0;
@@ -322,7 +323,7 @@
             aspect-ratio: 1 / 1;
             object-fit: contain;
             background-color: white;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #EAE2D3; /* Softer border */
             padding: 4px;
             box-sizing: border-box;
             border-radius: 8px;
@@ -334,14 +335,14 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         .thumbnail.selected {
-            border: 3px solid #4C97FF;
+            border: 3px solid #3b82f6; /* Blue accent for selection */
         }
         .close-gallery-button {
             position: absolute;
             top: 1rem;
             right: 1rem;
-            background-color: #ccc;
-            color: #333;
+            background-color: #e0daca; /* Soft beige */
+            color: #5d5d5d;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -356,8 +357,8 @@
         .number-pad-container {
             position: fixed; /* Use fixed positioning for viewport-relative logic */
             z-index: 10000;
-            background-color: #f0f4f8;
-            border: 2px solid #a5b4fc;
+            background-color: #FCF8F0; /* Warm background */
+            border: 2px solid #F5B041; /* Warm orange accent border */
             border-radius: 12px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             display: none;
@@ -366,15 +367,15 @@
             user-select: none;
         }
         .number-pad-display {
-            background-color: #e0e7ff;
-            border: 1px solid #c7d2fe;
+            background-color: #FFF6E0; /* Light cream */
+            border: 1px solid #FFECCF;
             border-radius: 6px;
             padding: 6px; /* Further reduced padding */
             text-align: right;
             font-size: 1.25rem; /* Further reduced font size */
             margin-bottom: 8px; /* Further reduced margin */
             min-height: 36px; /* Further reduced height */
-            color: #3730a3;
+            color: #78350f; /* Dark brown/orange text */
             font-weight: bold;
         }
         .number-pad-grid {
@@ -432,7 +433,7 @@
 
         /* Sprite Properties Panel */
         #prop-show.active, #prop-hide.active, #prop-rotation-style button.active {
-            background-color: #60a5fa; /* bg-blue-400 */
+            background-color: #60a5fa; /* Lighter blue for active state */
             color: white;
         }
         #prop-show, #prop-hide, #prop-rotation-style button {
@@ -448,7 +449,7 @@
             width: 120px;
             height: 120px;
             background-color: #fff;
-            border: 2px solid #a5b4fc;
+            border: 2px solid #F5B041; /* Warm orange accent */
             border-radius: 50%;
             box-shadow: 0 5px 15px rgba(0,0,0,0.15);
             z-index: 10001;
@@ -473,7 +474,7 @@
             left: 50%;
             width: 50%;
             height: 2px;
-            background: #4C97FF;
+            background: #3b82f6; /* Blue accent */
             transform-origin: 0% 50%;
         }
         
@@ -488,16 +489,16 @@
           height: 12px;
         }
         #sprites-list::-webkit-scrollbar-track {
-          background: #e0e7ff; 
+          background: #fde8d7; /* Light warm orange */
           border-radius: 10px;
         }
         #sprites-list::-webkit-scrollbar-thumb {
-          background-color: #818cf8; 
+          background-color: #F5B041; /* Warm orange */
           border-radius: 10px;
-          border: 3px solid #e0e7ff; 
+          border: 3px solid #fde8d7;
         }
         #sprites-list::-webkit-scrollbar-thumb:hover {
-          background-color: #6366f1;
+          background-color: #f3a02c; /* Darker warm orange */
         }
         
         /* Backdrops Carousel with Slider */
@@ -511,18 +512,144 @@
           height: 12px;
         }
         #backdrops-list::-webkit-scrollbar-track {
-          background: #d1fae5; /* light-green-100 */
+          background: #dbeafe; /* Light blue */
           border-radius: 10px;
         }
         #backdrops-list::-webkit-scrollbar-thumb {
-          background-color: #34d399; /* green-400 */
+          background-color: #3b82f6; /* Blue accent */
           border-radius: 10px;
-          border: 3px solid #d1fae5; /* light-green-100 */
+          border: 3px solid #dbeafe;
         }
         #backdrops-list::-webkit-scrollbar-thumb:hover {
-          background-color: #10b981; /* green-500 */
+          background-color: #2563eb; /* Darker blue */
         }
 
+        /* Sounds Carousel Styles */
+        #sounds-list {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 1rem;
+        }
+        #sounds-list::-webkit-scrollbar {
+          height: 12px;
+        }
+        #sounds-list::-webkit-scrollbar-track {
+          background: #e9d5ff; /* Light purple */
+          border-radius: 10px;
+        }
+        #sounds-list::-webkit-scrollbar-thumb {
+          background-color: #9333ea; /* Purple */
+          border-radius: 10px;
+          border: 3px solid #e9d5ff;
+        }
+        #sounds-list::-webkit-scrollbar-thumb:hover {
+          background-color: #7e22ce; /* Darker purple */
+        }
+        .sound-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: 2px solid #EAE2D3;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+            flex-shrink: 0;
+            width: 80px;
+            height: 60px;
+        }
+        .sound-card-icon {
+            width: 32px;
+            height: 32px;
+            color: #9333ea;
+        }
+        .sound-card-name {
+            font-size: 0.7rem;
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 100%;
+        }
+
+        /* Sound Gallery Styles */
+        .sound-gallery-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #EAE2D3;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .sound-gallery-item:hover {
+            background-color: #f0eaff;
+        }
+        .sound-gallery-play-btn {
+            background-color: #9333ea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .sound-gallery-play-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        .sound-gallery-name {
+            font-weight: 500;
+        }
+
+        /* Sound Recorder Modal Styles */
+        #sound-recorder-modal {
+            z-index: 110; /* Above other modals */
+        }
+        .recorder-content {
+            position: relative;
+        }
+        #recorder-visualizer {
+            transition: all 0.2s ease-in-out;
+        }
+        #recorder-visualizer.is-recording {
+            animation: pulse 1.2s infinite ease-out;
+        }
+        @keyframes pulse {
+          0% { 
+            transform: scale(1); 
+            box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); 
+          }
+          70% { 
+            transform: scale(1.05); 
+            box-shadow: 0 0 0 25px rgba(147, 51, 234, 0); 
+          }
+          100% { 
+            transform: scale(1); 
+            box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); 
+          }
+        }
+        #recorder-record-btn, #recorder-stop-btn {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        #recorder-record-btn:hover, #recorder-stop-btn:hover {
+            transform: scale(1.05);
+        }
+        #recorder-record-btn:active, #recorder-stop-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
 
         /* Stage Expanded Styles */
         .container-wrapper.stage-expanded {
@@ -638,7 +765,7 @@
             display: flex;
         }
         .creator-content {
-            background-color: #f0f4f8;
+            background-color: #FCF8F0; /* Warm background */
             width: 90%;
             max-width: 1200px;
             height: 90vh;
@@ -694,9 +821,9 @@
             background-color: #e5e7eb;
         }
         .category-button.active {
-            background-color: #4C97FF;
+            background-color: #3b82f6; /* Blue accent */
             color: white;
-            border-color: #4C97FF;
+            border-color: #3b82f6; /* Blue accent */
         }
         .creator-parts-grid {
             flex-grow: 1;
@@ -728,8 +855,8 @@
             border-color: #9ca3af;
         }
         .part-thumbnail.selected {
-            border-color: #4C97FF;
-            box-shadow: 0 0 10px rgba(76, 151, 255, 0.5);
+            border-color: #3b82f6; /* Blue accent */
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
         }
 
         .creator-preview {
@@ -746,7 +873,7 @@
             height: 400px;
             background-color: #fff;
             border-radius: 12px;
-            border: 2px dashed #ccc;
+            border: 2px dashed #d4c4b0; /* Soft beige dashed border */
             /* cursor is handled dynamically by JS */
             flex-shrink: 0;
         }
@@ -800,7 +927,7 @@
 
         input[type=range]::-webkit-slider-thumb {
           -webkit-appearance: none;
-          border: 1px solid #4C97FF;
+          border: 1px solid #3b82f6; /* Blue accent */
           height: 16px;
           width: 16px;
           border-radius: 50%;
@@ -814,24 +941,24 @@
           width: 100%;
           height: 4px;
           cursor: pointer;
-          background: #a5b4fc;
+          background: #fbdba7; /* Light warm orange */
           border-radius: 5px;
         }
 
         input[type=range]:focus::-webkit-slider-runnable-track {
-          background: #818cf8;
+          background: #F5B041; /* Warm orange */
         }
 
         input[type=range]::-moz-range-track {
           width: 100%;
           height: 4px;
           cursor: pointer;
-          background: #a5b4fc;
+          background: #fbdba7; /* Light warm orange */
           border-radius: 5px;
         }
 
         input[type=range]::-moz-range-thumb {
-          border: 1px solid #4C97FF;
+          border: 1px solid #3b82f6; /* Blue accent */
           height: 16px;
           width: 16px;
           border-radius: 50%;
@@ -842,11 +969,11 @@
 
         /* Specific styles for GIF speed slider */
         #gif-speed-slider::-webkit-slider-runnable-track {
-            background: #60a5fa; /* A brighter blue */
+            background: #93c5fd; /* Lighter blue */
             height: 6px;
         }
         #gif-speed-slider::-moz-range-track {
-            background: #60a5fa;
+            background: #93c5fd; /* Lighter blue */
             height: 6px;
         }
          #gif-speed-slider::-webkit-slider-thumb {

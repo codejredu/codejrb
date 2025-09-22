@@ -7,8 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/blockly@9.0.0/blockly.min.js"></script>
     <link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-gray-100 text-gray-800">
+    <svg width="0" height="0" style="position:absolute;">
+      <defs>
+        <pattern id="blockly-bg-pattern" patternUnits="userSpaceOnUse" width="40" height="40">
+          <rect width="40" height="40" fill="#FDFBF5"/>
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#DCE4F2" stroke-width="1"/>
+        </pattern>
+      </defs>
+    </svg>
     <div id="project-controls" class="w-full shadow-md p-2 flex justify-between items-center fixed top-0 left-0 z-50" style="background-color: #855CD6;" dir="rtl">
         <div class="flex items-center gap-4">
             <button id="save-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
@@ -33,7 +42,6 @@
     <div id="container-wrapper" class="container-wrapper">
         <div class="left-panel">
             <div id="stage-header">
-                <h2 class="panel-title text-xl font-bold">במה</h2>
                 <div id="stage-controls">
                     <button id="run-button" class="w-10 h-10 bg-green-500 text-white font-bold rounded-full flex justify-center items-center shadow-md hover:bg-green-600 transition-colors" title="הפעל">
                         <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 3v18h2v-8h10l-4-5 4-5H8V3H6z"/></svg>
@@ -132,7 +140,6 @@
 
             <div class="section">
                 <div class="section-header">
-                    <h2>דמויות</h2>
                     <div class="header-actions">
                          <div id="create-sprite-header-button" class="header-button" title="צור דמות">
                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -207,7 +214,6 @@
 
             <div class="section" id="backdrops-section">
                 <div class="section-header">
-                    <h2>רקעים</h2>
                      <div class="header-actions">
                          <div id="upload-backdrop-header-button" class="header-button" title="העלה רקע">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -260,6 +266,39 @@
                         <img src="https://codejredu.github.io/test/assets/bg/under.svg" alt="under" class="thumbnail">
                     </div>
                     <input type="file" id="backdrop-upload-input" class="hidden" accept="image/png, image/jpeg, image/gif, image/svg+xml">
+                </div>
+            </div>
+
+            <div class="section" id="sounds-section">
+                <div class="section-header">
+                     <div class="header-actions">
+                         <div id="record-sound-header-button" class="header-button" title="הקלט צליל">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                         </div>
+                         <div id="upload-sound-header-button" class="header-button" title="העלה צליל">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                         </div>
+                         <div id="add-sound-button" class="header-button" title="בחר צליל">
+                           <span class="text-xl font-bold">+</span>
+                         </div>
+                    </div>
+                </div>
+                <div id="sounds-carousel-wrapper" class="relative mt-4">
+                    <div id="sounds-list" class="flex items-center gap-4">
+                        <!-- Sounds will be dynamically added here -->
+                    </div>
+                </div>
+                <div id="sound-gallery" class="gallery-container">
+                    <button class="close-gallery-button" id="close-sound-gallery-button">X</button>
+                    <h2 class="text-xl font-bold text-center mb-4">גלריית צלילים</h2>
+                    <div id="sound-gallery-grid" class="flex flex-col gap-2">
+                        <!-- Sounds will be dynamically added here by JS -->
+                    </div>
+                    <input type="file" id="sound-upload-input" class="hidden" accept="audio/mpeg, audio/wav, audio/ogg">
                 </div>
             </div>
         </div>
@@ -339,6 +378,35 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Sound Recorder Modal -->
+    <div id="sound-recorder-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div class="recorder-content bg-white p-6 rounded-lg shadow-xl w-full max-w-md flex flex-col items-center gap-4">
+            <h2 class="text-2xl font-bold">הקלטת צליל חדש</h2>
+            <div id="recorder-message" class="hidden w-full text-center p-3 rounded-lg bg-red-100 text-red-700 border border-red-200"></div>
+            <div id="recorder-ui-content" class="flex flex-col items-center gap-4 w-full">
+                <div id="recorder-visualizer" class="w-32 h-32 bg-purple-200 rounded-full flex justify-center items-center">
+                    <div id="recorder-mic-icon">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </div>
+                </div>
+                <div id="recorder-timer" class="text-2xl font-mono">0.0 / 15.0</div>
+                <div id="recorder-preview-container" class="hidden w-full flex flex-col items-center gap-2">
+                     <audio id="recorder-audio-preview" controls class="w-full"></audio>
+                     <input type="text" id="recorder-sound-name" placeholder="שם הצליל" class="p-2 border rounded-lg w-full mt-2">
+                </div>
+                <div id="recorder-controls" class="flex items-center justify-center gap-4 h-16">
+                     <button id="recorder-record-btn" class="bg-red-500 text-white rounded-full w-16 h-16 flex justify-center items-center text-sm font-bold shadow-lg">הקלט</button>
+                     <button id="recorder-stop-btn" class="hidden bg-gray-700 text-white rounded-full w-16 h-16 flex justify-center items-center text-sm font-bold shadow-lg">עצור</button>
+                     <button id="recorder-rerecord-btn" class="hidden bg-yellow-500 text-white py-2 px-4 rounded-lg font-bold">הקלט שוב</button>
+                     <button id="recorder-save-btn" class="hidden bg-green-500 text-white py-2 px-4 rounded-lg font-bold">שמור</button>
+                </div>
+            </div>
+            <button id="recorder-close-btn" class="absolute top-3 right-3 text-2xl text-gray-500 hover:text-gray-800">&times;</button>
         </div>
     </div>
 
@@ -774,6 +842,12 @@
             const closeSpriteGalleryButton = document.getElementById('close-sprite-gallery-button');
             const spriteThumbnailsGrid = document.getElementById('sprite-thumbnails-grid');
             
+            const addSoundButton = document.getElementById('add-sound-button');
+            const soundsList = document.getElementById('sounds-list');
+            const soundGallery = document.getElementById('sound-gallery');
+            const closeSoundGalleryButton = document.getElementById('close-sound-gallery-button');
+            const soundGalleryGrid = document.getElementById('sound-gallery-grid');
+            
             const fullscreenButton = document.getElementById('fullscreen-button');
             const enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
             const exitFullscreenIcon = document.getElementById('exit-fullscreen-icon');
@@ -809,6 +883,20 @@
             const gifSpeedSlider = document.getElementById('gif-speed-slider');
             const gifSpeedValue = document.getElementById('gif-speed-value');
 
+            // Sound Recorder elements
+            const recordSoundHeaderButton = document.getElementById('record-sound-header-button');
+            const soundRecorderModal = document.getElementById('sound-recorder-modal');
+            const recorderCloseBtn = document.getElementById('recorder-close-btn');
+            const recorderVisualizer = document.getElementById('recorder-visualizer');
+            const recorderTimer = document.getElementById('recorder-timer');
+            const recorderPreviewContainer = document.getElementById('recorder-preview-container');
+            const recorderAudioPreview = document.getElementById('recorder-audio-preview');
+            const recorderSoundName = document.getElementById('recorder-sound-name');
+            const recorderRecordBtn = document.getElementById('recorder-record-btn');
+            const recorderStopBtn = document.getElementById('recorder-stop-btn');
+            const recorderRerecordBtn = document.getElementById('recorder-rerecord-btn');
+            const recorderSaveBtn = document.getElementById('recorder-save-btn');
+
             const STAGE_WIDTH = 480;
             const STAGE_HEIGHT = 360;
 
@@ -821,6 +909,14 @@
             let dragStartX, dragStartY;
             let collisionState = new Set(); // Stores pairs of collided sprites
             let scriptRunner = null;
+            let currentPreviewAudio = null;
+
+            // Sound Recorder state
+            let mediaRecorder;
+            let audioChunks = [];
+            let mediaStream;
+            let recorderTimerInterval;
+            let recordedBlob;
 
             // --- Character Creator Elements ---
             const creatorModal = document.getElementById('character-creator-modal');
@@ -1114,7 +1210,8 @@
                     characterData: characterData,
                     isGif: isGif,
                     animation: null,
-                    gifSpeed: gifSpeed
+                    gifSpeed: gifSpeed,
+                    sounds: [],
                 };
                 
                 sprites[id] = spriteData;
@@ -1198,9 +1295,44 @@
                         setActiveSprite(firstSpriteId);
                     } else {
                         updatePropertiesPanel();
+                        renderSpriteSounds(null);
                     }
                 }
                 log(`הדמות ${id} נמחקה.`);
+            };
+            
+            const renderSpriteSounds = (sprite) => {
+                soundsList.innerHTML = '';
+                if (!sprite || !sprite.sounds) return;
+
+                sprite.sounds.forEach(sound => {
+                    const soundCard = document.createElement('div');
+                    soundCard.className = 'sound-card';
+                    soundCard.dataset.url = sound.url;
+                    soundCard.innerHTML = `
+                        <svg class="sound-card-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                        </svg>
+                        <span class="sound-card-name">${sound.name}</span>
+                        <div class="delete-button">X</div>
+                    `;
+                    soundsList.appendChild(soundCard);
+
+                    soundCard.querySelector('.delete-button').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const indexToDelete = sprite.sounds.findIndex(s => s.url === sound.url);
+                        if (indexToDelete > -1) {
+                            sprite.sounds.splice(indexToDelete, 1);
+                            renderSpriteSounds(sprite);
+                            Blockly.getMainWorkspace().refreshToolboxSelection();
+                        }
+                    });
+
+                    soundCard.addEventListener('click', () => {
+                        const audio = new Audio(sound.url);
+                        audio.play();
+                    });
+                });
             };
             
             const setActiveSprite = (spriteId) => {
@@ -1242,8 +1374,12 @@
                     newCard.classList.add('selected');
                 }
                 
-                // 6. Update properties panel
+                // 6. Update properties panel and sounds list
                 updatePropertiesPanel();
+                renderSpriteSounds(newSprite);
+                
+                // 7. Refresh toolbox to update dynamic fields (like sounds)
+                workspace.refreshToolboxSelection();
 
                 log(`הדמות הפעילה היא: ${newSprite.name}`);
             };
@@ -1273,7 +1409,7 @@
                 initialMouseY = y;
                 initialSpriteX = spriteData.x;
                 initialSpriteY = spriteData.y;
-                document.getElementById(spriteId).style.transition = 'none';
+                document.getElementById(id).style.transition = 'none';
                 log('הדמות נתפסה לגרירה.');
             };
 
@@ -2229,34 +2365,60 @@
                 const code = `Math.floor(Math.random() * (${to} - ${from} + 1)) + ${from}`;
                 return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
             };
+
+            // Custom field for sound selection
+            class FieldSound extends Blockly.FieldDropdown {
+                constructor() {
+                    super(FieldSound.generateOptions);
+                }
+
+                static generateOptions() {
+                    const sprite = getActiveSprite();
+                    if (!sprite || !sprite.sounds || sprite.sounds.length === 0) {
+                        return [['(אין צלילים)', 'NONE']];
+                    }
+                    return sprite.sounds.map(sound => [sound.name, sound.url]);
+                }
+            }
+            Blockly.fieldRegistry.register('field_sound', FieldSound);
             
             Blockly.Blocks['sound_play_until_done'] = {
                 init: function() {
                     this.appendDummyInput()
                         .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/play_sound.svg", 34, 34, "*"))
                         .appendField('\u00A0\u00A0')
-                        .appendField(new Blockly.FieldDropdown([
-                            ["מחיאות כפיים", "APPLAUSE"],
-                            ["קפיצה", "BOING"],
-                            ["ציוץ", "TWEET"]
-                        ]), "SOUND");
+                        .appendField(new FieldSound(), "SOUND");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour("#CF63CF");
                     this.setTooltip("מנגן צליל ומחכה לסיומו.");
-                    this.setHelpUrl("");
                 }
             };
 
             Blockly.JavaScript['sound_play_until_done'] = function(block) {
-                const sound = block.getFieldValue('SOUND');
+                const soundUrl = block.getFieldValue('SOUND');
+                if (!soundUrl || soundUrl === 'NONE') return '';
+                
+                const safeUrl = soundUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 return `
-                    log('מנגן צליל: ${sound}'); 
-                    const waitTime = Date.now() + 1000;
-                    while (Date.now() < waitTime) {
-                        if (getExecutionCancelled()) break;
+                    log('מנגן צליל: ${safeUrl}');
+                    const audio = new Audio('${safeUrl}');
+                    let soundEnded = false;
+                    const endListener = () => { soundEnded = true; };
+                    audio.addEventListener('ended', endListener);
+                    audio.addEventListener('error', endListener);
+                    audio.play().catch(e => { console.error('Audio play failed:', e); soundEnded = true; });
+                    
+                    while (!soundEnded) {
+                        if (getExecutionCancelled()) {
+                            audio.pause();
+                            audio.removeEventListener('ended', endListener);
+                            audio.removeEventListener('error', endListener);
+                            break;
+                        }
                         yield;
                     }
+                    log('הצליל הסתיים.');
                 `;
             };
 
@@ -2280,6 +2442,15 @@
                 renderer: 'zelos',
                 theme: Blockly.Themes.Scratch
             });
+            
+            try {
+                const mainBackground = document.querySelector('#blockly-area .blocklyMainBackground');
+                if (mainBackground) {
+                    mainBackground.setAttribute('fill', 'url(#blockly-bg-pattern)');
+                }
+            } catch (e) {
+                console.error("Could not apply Blockly background pattern:", e);
+            }
             
             const toolbox = workspace.getToolbox();
             if (toolbox) {
@@ -2677,6 +2848,11 @@
                     }
                 });
 
+                if (currentPreviewAudio) {
+                    currentPreviewAudio.pause();
+                    currentPreviewAudio = null;
+                }
+
                 updatePropertiesPanel(); // To update play/pause button state
                 log('כל התסריטים נעצרו.');
             }
@@ -2841,13 +3017,14 @@
             };
 
             const loadSpriteFromData = (spriteData) => {
-                const { id, name, imageUrl, x, y, direction, opacity, size, rotationStyle, isCustom, characterData, isGif, gifSpeed } = spriteData;
+                const { id, name, imageUrl, x, y, direction, opacity, size, rotationStyle, isCustom, characterData, isGif, gifSpeed, sounds } = spriteData;
 
                 spriteData.size = size || 100;
                 spriteData.rotationStyle = rotationStyle || 'all-around'; // Add for compatibility
                 spriteData.isGif = isGif || false;
                 spriteData.gifSpeed = gifSpeed || 1.0;
                 spriteData.animation = null; // Will be loaded async
+                spriteData.sounds = sounds || [];
                 sprites[id] = spriteData;
 
                 const spriteCard = document.createElement('div');
@@ -3700,6 +3877,203 @@
                 });
             }
 
+            creatorColorPalette.addEventListener('click', (e) => {
+                const swatch = e.target.closest('.color-swatch');
+                if (!swatch || !selectedPartOnCanvas) return;
+                
+                const newColor = swatch.dataset.color;
+                if (selectedPartOnCanvas.category === 'hands') {
+                    currentCharacter.hands[selectedPartOnCanvas.index].color = newColor;
+                } else if (currentCharacter[selectedPartOnCanvas.category]) {
+                    currentCharacter[selectedPartOnCanvas.category].color = newColor;
+                }
+                drawCharacter();
+            });
+
+            creatorFlipHButton.addEventListener('click', () => {
+                if (!selectedPartOnCanvas) return;
+                if (selectedPartOnCanvas.category === 'hands') {
+                    currentCharacter.hands[selectedPartOnCanvas.index].isFlippedH = !currentCharacter.hands[selectedPartOnCanvas.index].isFlippedH;
+                } // Flipping other parts might not make sense, add if needed
+                drawCharacter();
+            });
+
+
+            function getPartAtPosition(x, y) {
+                // Iterate backwards (top layers first)
+                const reversedDrawOrder = [...DRAW_ORDER].reverse();
+                for (const category of reversedDrawOrder) {
+                    const partsToCheck = [];
+                     if (category === 'hands' && currentCharacter.hands) {
+                        currentCharacter.hands.forEach((hand, index) => partsToCheck.push({part: hand, selection: {category: 'hands', index}}));
+                    } else if (currentCharacter[category] && currentCharacter[category].src) {
+                        partsToCheck.push({part: currentCharacter[category], selection: {category}});
+                    }
+
+                    for (const { part, selection } of partsToCheck) {
+                        const dx = x - part.x;
+                        const dy = y - part.y;
+                        const rotatedX = dx * Math.cos(-part.rotation) - dy * Math.sin(-part.rotation);
+                        const rotatedY = dx * Math.sin(-part.rotation) + dy * Math.cos(-part.rotation);
+
+                        if (Math.abs(rotatedX) <= part.width / 2 && Math.abs(rotatedY) <= part.height / 2) {
+                             const handles = getPartHandles(part);
+                             for (const handleName in handles) {
+                                const handle = handles[handleName];
+                                const dist = Math.sqrt(Math.pow(rotatedX - handle.x, 2) + Math.pow(rotatedY - handle.y, 2));
+                                if (dist < 10) { // 10px handle click radius
+                                    return { type: 'handle', handle: handleName, selection };
+                                }
+                             }
+                            return { type: 'part', selection };
+                        }
+                    }
+                }
+                return null;
+            }
+            
+            function updateCursor(e) {
+                const rect = characterCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                if (creatorAction.type !== 'none') {
+                    // Cursor is already set by the action
+                    return;
+                }
+
+                const hit = getPartAtPosition(x, y);
+                if (hit && hit.type === 'part') {
+                    characterCanvas.style.cursor = 'grab';
+                } else if (hit && hit.type === 'handle') {
+                    const part = hit.selection.category === 'hands' ? currentCharacter.hands[hit.selection.index] : currentCharacter[hit.selection.category];
+                    const handleInfo = getPartHandles(part)[hit.handle];
+                    characterCanvas.style.cursor = handleInfo.cursor;
+                } else {
+                    characterCanvas.style.cursor = 'default';
+                }
+            }
+
+            characterCanvas.addEventListener('mousemove', (e) => {
+                if (creatorAction.type === 'none') {
+                    updateCursor(e);
+                    return;
+                }
+
+                const rect = characterCanvas.getBoundingClientRect();
+                const currentX = e.clientX - rect.left;
+                const currentY = e.clientY - rect.top;
+                const dx = currentX - creatorAction.startX;
+                const dy = currentY - creatorAction.startY;
+                
+                const part = creatorAction.partSelection.category === 'hands' ? currentCharacter.hands[creatorAction.partSelection.index] : currentCharacter[creatorAction.partSelection.category];
+
+                if (creatorAction.type === 'move') {
+                    part.x = creatorAction.initialState.x + dx;
+                    part.y = creatorAction.initialState.y + dy;
+                } else if (creatorAction.type === 'rotate') {
+                    const centerX = creatorAction.initialState.x;
+                    const centerY = creatorAction.initialState.y;
+                    const startAngle = Math.atan2(creatorAction.startY - centerY, creatorAction.startX - centerX);
+                    const currentAngle = Math.atan2(currentY - centerY, currentX - centerX);
+                    part.rotation = creatorAction.initialState.rotation + (currentAngle - startAngle);
+                }
+                drawCharacter();
+            });
+
+            characterCanvas.addEventListener('mousedown', (e) => {
+                const rect = characterCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const hit = getPartAtPosition(x, y);
+                
+                if (hit) {
+                    selectedPartOnCanvas = hit.selection;
+                    const part = hit.selection.category === 'hands' ? currentCharacter.hands[hit.selection.index] : currentCharacter[hit.selection.category];
+                    
+                    creatorAction.startX = x;
+                    creatorAction.startY = y;
+                    creatorAction.partSelection = hit.selection;
+                    creatorAction.initialState = { ...part };
+
+                    if (hit.type === 'handle') {
+                        creatorAction.type = getPartHandles(part)[hit.handle].type;
+                        creatorAction.handle = hit.handle;
+                    } else {
+                        creatorAction.type = 'move';
+                        characterCanvas.style.cursor = 'grabbing';
+                    }
+
+                    // Update controls panel
+                    creatorControlsPanel.classList.remove('hidden');
+                    const categoryLabel = ASSET_CATEGORIES[part.category]?.label || part.category;
+                    selectedPartLabel.textContent = categoryLabel;
+                    populateColorPalette();
+                    if (part.category === 'hands') {
+                        creatorFlipHButton.classList.remove('hidden');
+                    } else {
+                        creatorFlipHButton.classList.add('hidden');
+                    }
+                } else {
+                    selectedPartOnCanvas = null;
+                    creatorControlsPanel.classList.add('hidden');
+                }
+                drawCharacter();
+            });
+            
+            characterCanvas.addEventListener('mouseup', () => {
+                creatorAction.type = 'none';
+                updateCursor({clientX: creatorAction.startX, clientY: creatorAction.startY});
+            });
+            
+            characterCanvas.addEventListener('mouseleave', () => {
+                if (creatorAction.type === 'none') {
+                     characterCanvas.style.cursor = 'default';
+                }
+            });
+
+
+            async function saveCreatorCharacter() {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = 400;
+                tempCanvas.height = 400;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Temporarily deselect to render without handles
+                const originalSelection = selectedPartOnCanvas;
+                selectedPartOnCanvas = null;
+                await drawCharacter(); 
+                
+                // Copy final canvas to temp canvas
+                tempCtx.drawImage(characterCanvas, 0, 0);
+                
+                // Restore selection for continued editing
+                selectedPartOnCanvas = originalSelection;
+                await drawCharacter();
+
+                const imageUrl = tempCanvas.toDataURL('image/png');
+                const spriteName = `דמות ${Object.keys(sprites).length + 1}`;
+                
+                // If editing, update existing sprite
+                if (editingSpriteId && sprites[editingSpriteId]) {
+                    const sprite = sprites[editingSpriteId];
+                    sprite.imageUrl = imageUrl;
+                    sprite.characterData = JSON.parse(JSON.stringify(currentCharacter)); // deep copy
+                    
+                    // Update visuals
+                    const cardImg = document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`);
+                    const stageImg = document.querySelector(`#container-${editingSpriteId} img`);
+                    if(cardImg) cardImg.src = imageUrl;
+                    if(stageImg) stageImg.src = imageUrl;
+
+                } else { // Otherwise, create new sprite
+                    createNewSprite(spriteName, imageUrl, 0, 0, true, JSON.parse(JSON.stringify(currentCharacter)));
+                }
+
+                creatorModal.classList.remove('visible');
+                editingSpriteId = null;
+            }
+
             createSpriteHeaderButton.addEventListener('click', () => {
                 editingSpriteId = null;
                 initializeCreator();
@@ -3709,265 +4083,303 @@
                 creatorModal.classList.remove('visible');
                 editingSpriteId = null;
             });
+            creatorSaveButton.addEventListener('click', saveCreatorCharacter);
+            
+            // --- End Character Creator Logic ---
+            
+            // --- Sound Recorder Logic ---
+            const openRecorder = async () => {
+                const recorderModal = document.getElementById('sound-recorder-modal');
+                const recorderMessageEl = document.getElementById('recorder-message');
+                const recorderUiContent = document.getElementById('recorder-ui-content');
+                
+                // Always open the modal, but content depends on permission
+                recorderModal.classList.remove('hidden');
 
-            creatorSaveButton.addEventListener('click', () => {
-                const previouslySelected = selectedPartOnCanvas;
-                selectedPartOnCanvas = null;
-                drawCharacter().then(() => {
-                    try {
-                        const dataUrl = characterCanvas.toDataURL('image/png');
-                        const characterDataToSave = JSON.parse(JSON.stringify(currentCharacter));
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-                        if (editingSpriteId) {
-                            const spriteToEdit = sprites[editingSpriteId];
-                            spriteToEdit.imageUrl = dataUrl;
-                            spriteToEdit.characterData = characterDataToSave;
-                            document.querySelector(`#container-${editingSpriteId} img`).src = dataUrl;
-                            document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`).src = dataUrl;
-                        } else {
-                            createNewSprite('דמות חדשה', dataUrl, 0, 0, true, characterDataToSave);
-                        }
-                        creatorModal.classList.remove('visible');
-                        editingSpriteId = null;
-                    } catch (e) {
-                         console.error("שגיאה בשמירת הדמות:", e);
-                    } finally {
-                        selectedPartOnCanvas = previouslySelected;
+                    // --- Permission Granted ---
+                    recorderMessageEl.classList.add('hidden'); // Hide any previous error message
+                    recorderUiContent.classList.remove('hidden'); // Show recorder UI
+
+                    recorderRecordBtn.classList.remove('hidden');
+                    recorderStopBtn.classList.add('hidden');
+                    recorderRerecordBtn.classList.add('hidden');
+                    recorderSaveBtn.classList.add('hidden');
+                    recorderPreviewContainer.classList.add('hidden');
+                    recorderVisualizer.classList.remove('is-recording');
+                    recorderTimer.textContent = '0.0 / 15.0';
+
+                } catch (err) {
+                    // --- Permission Denied or other error ---
+                    console.error("שגיאה בגישה למיקרופון:", err);
+                    
+                    recorderUiContent.classList.add('hidden'); // Hide recorder UI
+                    recorderMessageEl.classList.remove('hidden'); // Show error message area
+                    
+                    // Customize message based on error type
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                         recorderMessageEl.innerHTML = 'הגישה למיקרופון נדחתה. <br> כדי להקליט, יש לאפשר גישה למיקרופון בהגדרות הדפדפן.';
+                    } else if (err.name === 'NotFoundError') {
+                         recorderMessageEl.innerHTML = 'לא נמצא מיקרופון. <br> יש לוודא שהמיקרופון מחובר ומוגדר כהלכה.';
                     }
-                });
-            });
-
-            // --- Vector Manipulation Logic ---
-            function getCanvasCoordinates(e) {
-                const rect = characterCanvas.getBoundingClientRect();
-                const pointer = e.touches ? e.touches[0] : e;
-                return { x: pointer.clientX - rect.left, y: pointer.clientY - rect.top };
-            }
-
-            function getPartAt(point) {
-                 const reversedParts = [];
-                 DRAW_ORDER.slice().reverse().forEach(category => {
-                    if (category === 'hands' && currentCharacter.hands) {
-                        currentCharacter.hands.slice().reverse().forEach((handPart, index) => reversedParts.push({ part: handPart, selection: { category: 'hands', index: 1-index } }));
-                    } else if (currentCharacter[category] && currentCharacter[category].src) {
-                        reversedParts.push({ part: currentCharacter[category], selection: { category } });
+                    else {
+                        recorderMessageEl.textContent = 'אירעה שגיאה. לא ניתן לגשת למיקרופון.';
                     }
-                });
-
-                for (const { part, selection } of reversedParts) {
-                    ctx.save();
-                    ctx.translate(part.x, part.y);
-                    ctx.rotate(part.rotation);
-                    ctx.beginPath();
-                    ctx.rect(-part.width / 2, -part.height / 2, part.width, part.height);
-                    ctx.restore();
-                    if (ctx.isPointInPath(point.x, point.y)) return selection;
                 }
-                return null;
-            }
+            };
 
-            function getHandleAt(part, point) {
-                const handles = getPartHandles(part);
-                const HANDLE_INTERACTION_SIZE = 12;
+            const closeRecorder = () => {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+                clearInterval(recorderTimerInterval);
 
-                for (const handleName in handles) {
-                    const handle = handles[handleName];
-                    const transformedHandle = {
-                        x: part.x + handle.x * Math.cos(part.rotation) - handle.y * Math.sin(part.rotation),
-                        y: part.y + handle.x * Math.sin(part.rotation) + handle.y * Math.cos(part.rotation),
+                // Reset UI before hiding
+                document.getElementById('sound-recorder-modal').classList.add('hidden');
+                document.getElementById('recorder-ui-content').classList.remove('hidden');
+                document.getElementById('recorder-message').classList.add('hidden');
+            };
+
+            const startRecording = () => {
+                audioChunks = [];
+                recordedBlob = null;
+                mediaRecorder = new MediaRecorder(mediaStream);
+                
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(recordedBlob);
+                    recorderAudioPreview.src = audioUrl;
+                    
+                    recorderStopBtn.classList.add('hidden');
+                    recorderRerecordBtn.classList.remove('hidden');
+                    recorderSaveBtn.classList.remove('hidden');
+                    recorderPreviewContainer.classList.remove('hidden');
+                    recorderSoundName.value = `הקלטה ${Date.now()}`;
+                };
+
+                mediaRecorder.start();
+
+                recorderRecordBtn.classList.add('hidden');
+                recorderStopBtn.classList.remove('hidden');
+                recorderVisualizer.classList.add('is-recording');
+
+                let startTime = Date.now();
+                recorderTimerInterval = setInterval(() => {
+                    const elapsedTime = (Date.now() - startTime) / 1000;
+                    if (elapsedTime >= 15) {
+                        stopRecording();
+                    } else {
+                        recorderTimer.textContent = `${elapsedTime.toFixed(1)} / 15.0`;
+                    }
+                }, 100);
+            };
+
+            const stopRecording = () => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    clearInterval(recorderTimerInterval);
+                    recorderVisualizer.classList.remove('is-recording');
+                }
+            };
+            
+            const saveRecording = () => {
+                const sprite = getActiveSprite();
+                if (!sprite || !recordedBlob) return;
+                
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const base64data = reader.result;
+                    const newSound = {
+                        name: recorderSoundName.value || 'הקלטה',
+                        url: base64data
                     };
-                    if (Math.hypot(point.x - transformedHandle.x, point.y - transformedHandle.y) < HANDLE_INTERACTION_SIZE) {
-                        return handleName;
-                    }
-                }
-                return null;
-            }
+                    sprite.sounds.push(newSound);
+                    renderSpriteSounds(sprite);
+                    Blockly.getMainWorkspace().refreshToolboxSelection();
+                    closeRecorder();
+                };
+                reader.readAsDataURL(recordedBlob);
+            };
+
+            recordSoundHeaderButton.addEventListener('click', openRecorder);
+            recorderCloseBtn.addEventListener('click', closeRecorder);
+            recorderRecordBtn.addEventListener('click', startRecording);
+            recorderStopBtn.addEventListener('click', stopRecording);
+            recorderRerecordBtn.addEventListener('click', () => {
+                recorderRerecordBtn.classList.add('hidden');
+                recorderSaveBtn.classList.add('hidden');
+                recorderPreviewContainer.classList.add('hidden');
+                recorderRecordBtn.classList.remove('hidden');
+                recorderTimer.textContent = '0.0 / 15.0';
+            });
+            recorderSaveBtn.addEventListener('click', saveRecording);
             
-            function updateCursor(e) {
-                const point = getCanvasCoordinates(e);
-                let newCursor = 'default';
-                const partSelection = getPartAt(point);
-                const partObj = partSelection ? (partSelection.category === 'hands' ? currentCharacter.hands[partSelection.index] : currentCharacter[partSelection.category]) : null;
-
-                if (partObj) {
-                    const handle = getHandleAt(partObj, point);
-                    if (handle) {
-                        newCursor = getPartHandles(partObj)[handle].cursor;
-                    } else {
-                        newCursor = 'move';
-                    }
-                }
-                characterCanvas.style.cursor = newCursor;
-            }
+            // --- End Sound Recorder Logic ---
 
 
-            characterCanvas.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                const point = getCanvasCoordinates(e);
-                const partSelection = getPartAt(point);
-                
-                if (partSelection) {
-                    const part = partSelection.category === 'hands' ? currentCharacter.hands[partSelection.index] : currentCharacter[partSelection.category];
-                    const handle = getHandleAt(part, point);
-                    
-                    creatorAction.partSelection = partSelection;
-                    creatorAction.startX = point.x;
-                    creatorAction.startY = point.y;
-                    creatorAction.initialState = JSON.parse(JSON.stringify(part));
-
-                    if (handle) {
-                        creatorAction.type = 'transform';
-                        creatorAction.handle = handle;
-                    } else {
-                        creatorAction.type = 'move';
-                    }
-                } else {
-                    creatorAction.type = 'none';
-                }
-                
-                selectedPartOnCanvas = partSelection;
-                if (selectedPartOnCanvas) {
-                    creatorControlsPanel.classList.remove('hidden');
-                    const labelText = ASSET_CATEGORIES[selectedPartOnCanvas.category === 'hands' ? 'hand' : selectedPartOnCanvas.category].label;
-                    selectedPartLabel.textContent = labelText;
-                    populateColorPalette();
-                    creatorFlipHButton.classList.toggle('hidden', selectedPartOnCanvas.category !== 'hand');
-                } else {
-                    creatorControlsPanel.classList.add('hidden');
-                }
-                drawCharacter();
-            });
-
-            characterCanvas.addEventListener('mousemove', (e) => {
-                if (creatorAction.type === 'none') {
-                    updateCursor(e);
-                    return;
-                }
-                e.preventDefault();
-
-                const point = getCanvasCoordinates(e);
-                const part = creatorAction.partSelection.category === 'hands' ? currentCharacter.hands[creatorAction.partSelection.index] : currentCharacter[creatorAction.partSelection];
-                
-                if (creatorAction.type === 'move') {
-                    part.x = creatorAction.initialState.x + (point.x - creatorAction.startX);
-                    part.y = creatorAction.initialState.y + (point.y - creatorAction.startY);
-                } else if (creatorAction.type === 'transform') {
-                    const handle = creatorAction.handle;
-                    
-                    if (handle === 'rotate') {
-                        const centerX = creatorAction.initialState.x;
-                        const centerY = creatorAction.initialState.y;
-                        const initialAngle = Math.atan2(creatorAction.startY - centerY, creatorAction.startX - centerX);
-                        const currentAngle = Math.atan2(point.y - centerY, point.x - centerX);
-                        part.rotation = creatorAction.initialState.rotation + (currentAngle - initialAngle);
-                    } else { // Resize
-                        // Transform mouse delta into part's local coordinate system
-                        const dx = point.x - creatorAction.startX;
-                        const dy = point.y - creatorAction.startY;
-                        const cos = Math.cos(-part.rotation);
-                        const sin = Math.sin(-part.rotation);
-                        const localDx = dx * cos - dy * sin;
-                        const localDy = dx * sin + dy * cos;
-
-                        let dw = 0, dh = 0, cx = 0, cy = 0;
-                        if (handle.includes('Right')) { dw = localDx; cx = localDx/2; }
-                        if (handle.includes('Left')) { dw = -localDx; cx = localDx/2; }
-                        if (handle.includes('Bottom')) { dh = localDy; cy = localDy/2; }
-                        if (handle.includes('Top')) { dh = -localDy; cy = localDy/2; }
-                        
-                        part.width = creatorAction.initialState.width + dw;
-                        part.height = creatorAction.initialState.height + dh;
-                        
-                        part.x = creatorAction.initialState.x + (cx * cos - cy * sin);
-                        part.y = creatorAction.initialState.y + (cx * sin + cy * cos);
-                    }
-                }
-                drawCharacter();
-            });
-
-            document.addEventListener('mouseup', () => {
-                creatorAction.type = 'none';
-            });
-            
-            creatorColorPalette.addEventListener('click', (e) => {
-                if (e.target.classList.contains('color-swatch') && selectedPartOnCanvas) {
-                    const part = selectedPartOnCanvas.category === 'hands' ? currentCharacter.hands[selectedPartOnCanvas.index] : currentCharacter[selectedPartOnCanvas.category];
-                    part.color = e.target.dataset.color;
-                    drawCharacter();
-                }
-            });
-            
-            creatorFlipHButton.addEventListener('click', () => {
-                if (selectedPartOnCanvas && selectedPartOnCanvas.category === 'hands') {
-                    const hand = currentCharacter.hands[selectedPartOnCanvas.index];
-                    hand.isFlippedH = !hand.isFlippedH;
-                    drawCharacter();
-                }
-            });
-
-
-            // --- Main Animation Loop ---
+            // Game loop for animations
             let lastTime = 0;
-            function mainLoop(timestamp) {
-                if (!lastTime) lastTime = timestamp;
+            function gameLoop(timestamp) {
                 const deltaTime = timestamp - lastTime;
                 lastTime = timestamp;
 
-                if (scriptRunner) scriptRunner.tick();
+                if (scriptRunner) {
+                    scriptRunner.tick();
+                }
+                
                 updateGifAnimations(deltaTime);
 
-                requestAnimationFrame(mainLoop);
+                requestAnimationFrame(gameLoop);
             }
             
+            const initialSounds = [
+                { name: "Boat Start", url: "https://codejredu.github.io/test/assets/sound/BoatStart.mp3" },
+                { name: "Car Door", url: "https://codejredu.github.io/test/assets/sound/CARDOOR.mp3" },
+                { name: "Elevator Ding", url: "https://codejredu.github.io/test/assets/sound/ElevatorDing.mp3" },
+                { name: "Water Emptying", url: "https://codejredu.github.io/test/assets/sound/WaterEmptying.mp3" },
+                { name: "Water Vole Diving", url: "https://codejredu.github.io/test/assets/sound/WaterVole.mp3" },
+                { name: "Air Land", url: "https://codejredu.github.io/test/assets/sound/airland.mp3" },
+                { name: "Airplane Cessna", url: "https://codejredu.github.io/test/assets/sound/airplanecessna.mp3" },
+                { name: "Airplane F15", url: "https://codejredu.github.io/test/assets/sound/airplanef15.mp3" },
+                { name: "Animal Howl", url: "https://codejredu.github.io/test/assets/sound/animals.mp3" },
+                { name: "Crowd", url: "https://codejredu.github.io/test/assets/sound/crowds.mp3" },
+                { name: "Bird Call", url: "https://codejredu.github.io/test/assets/sound/double.mp3" },
+                { name: "Partridge", url: "https://codejredu.github.io/test/assets/sound/grey.mp3" },
+                { name: "Pygmy Shrew", url: "https://codejredu.github.io/test/assets/sound/pygmy.mp3" },
+                { name: "School", url: "https://codejredu.github.io/test/assets/sound/schools.mp3" },
+                { name: "Flycatcher", url: "https://codejredu.github.io/test/assets/sound/vermilion.mp3" },
+                { name: "Ding", url: "https://codejredu.github.io/test/assets/sound/dingsoundeffect2.mp3" },
+                { name: "Dog", url: "https://codejredu.github.io/test/assets/sound/dog.mp3" },
+                { name: "Leopard", url: "https://codejredu.github.io/test/assets/sound/leopard7.mp3" },
+                { name: "Link", url: "https://codejredu.github.io/test/assets/sound/link.mp3" },
+                { name: "Lion Cub", url: "https://codejredu.github.io/test/assets/sound/lioncub.mp3" },
+                { name: "Whale", url: "https://codejredu.github.io/test/assets/sound/whale3.mp3" },
+            ];
+
+            function populateSoundGallery() {
+                soundGalleryGrid.innerHTML = '';
+                initialSounds.forEach(sound => {
+                    const item = document.createElement('div');
+                    item.className = 'sound-gallery-item';
+                    item.dataset.url = sound.url;
+                    item.dataset.name = sound.name;
+                    item.innerHTML = `
+                        <button class="sound-gallery-play-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                            </svg>
+                        </button>
+                        <span class="sound-gallery-name">${sound.name}</span>
+                    `;
+                    soundGalleryGrid.appendChild(item);
+                });
+            }
+
             // --- Initialization ---
             function init() {
-                const uploadSpriteHeaderButton = document.getElementById('upload-sprite-header-button');
-                const spriteUploadInput = document.getElementById('sprite-upload-input');
-                const uploadBackdropHeaderButton = document.getElementById('upload-backdrop-header-button');
-                const backdropUploadInput = document.getElementById('backdrop-upload-input');
+                // Populate galleries
+                populateSoundGallery();
 
-                addSpriteButton.addEventListener('click', () => spriteGallery.classList.add('visible'));
-                closeSpriteGalleryButton.addEventListener('click', () => spriteGallery.classList.remove('visible'));
-                spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
-                uploadSpriteHeaderButton.addEventListener('click', () => spriteUploadInput.click());
-                spriteUploadInput.addEventListener('change', (e) => {
+                // Setup Listeners
+                setupPropertiesPanelListeners();
+                
+                // Backdrops
+                addBackdropButton.addEventListener('click', () => backgroundGallery.classList.add('visible'));
+                closeGalleryButton.addEventListener('click', () => backgroundGallery.classList.remove('visible'));
+                backdropsList.addEventListener('click', handleBackdropSelection);
+                thumbnailsGrid.addEventListener('click', handleGallerySelection);
+                document.getElementById('upload-backdrop-header-button').addEventListener('click', () => document.getElementById('backdrop-upload-input').click());
+                document.getElementById('backdrop-upload-input').addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (file) {
                         const reader = new FileReader();
-                        reader.onload = (event) => createNewSprite(file.name.split('.')[0], event.target.result);
-                        reader.readAsDataURL(file);
-                    }
-                    e.target.value = null;
-                });
-
-                addBackdropButton.addEventListener('click', () => backgroundGallery.classList.add('visible'));
-                closeGalleryButton.addEventListener('click', () => backgroundGallery.classList.remove('visible'));
-                thumbnailsGrid.addEventListener('click', handleGallerySelection);
-                uploadBackdropHeaderButton.addEventListener('click', () => backdropUploadInput.click());
-                backdropUploadInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if(file) {
-                        const reader = new FileReader();
                         reader.onload = (event) => {
-                           const newCard = createBackdropCard(event.target.result);
-                           window.switchBackdrop(event.target.result);
+                            const newCard = createBackdropCard(event.target.result);
+                            window.switchBackdrop(event.target.result);
                         };
                         reader.readAsDataURL(file);
                     }
                     e.target.value = null;
                 });
-                
-                backdropsList.addEventListener('click', handleBackdropSelection);
 
+                // Sprites
+                addSpriteButton.addEventListener('click', () => spriteGallery.classList.add('visible'));
+                closeSpriteGalleryButton.addEventListener('click', () => spriteGallery.classList.remove('visible'));
+                spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
+                document.getElementById('upload-sprite-header-button').addEventListener('click', () => document.getElementById('sprite-upload-input').click());
+                document.getElementById('sprite-upload-input').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            createNewSprite(file.name.replace(/\..+$/, ''), event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    e.target.value = null;
+                });
+
+                // Sounds
+                addSoundButton.addEventListener('click', () => soundGallery.classList.add('visible'));
+                closeSoundGalleryButton.addEventListener('click', () => {
+                     soundGallery.classList.remove('visible');
+                     if(currentPreviewAudio) { currentPreviewAudio.pause(); currentPreviewAudio = null; }
+                });
+                document.getElementById('upload-sound-header-button').addEventListener('click', () => document.getElementById('sound-upload-input').click());
+                document.getElementById('sound-upload-input').addEventListener('change', (e) => {
+                     const file = e.target.files[0];
+                     const sprite = getActiveSprite();
+                    if (file && sprite) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            sprite.sounds.push({ name: file.name.replace(/\..+$/, ''), url: event.target.result });
+                            renderSpriteSounds(sprite);
+                            Blockly.getMainWorkspace().refreshToolboxSelection();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    e.target.value = null;
+                });
+                soundGalleryGrid.addEventListener('click', (e) => {
+                    const item = e.target.closest('.sound-gallery-item');
+                    const playBtn = e.target.closest('.sound-gallery-play-btn');
+                    
+                    if (playBtn) {
+                        e.stopPropagation();
+                        if (currentPreviewAudio) currentPreviewAudio.pause();
+                        currentPreviewAudio = new Audio(item.dataset.url);
+                        currentPreviewAudio.play();
+                    } else if (item) {
+                        const sprite = getActiveSprite();
+                        if (sprite) {
+                             sprite.sounds.push({ name: item.dataset.name, url: item.dataset.url });
+                             renderSpriteSounds(sprite);
+                             Blockly.getMainWorkspace().refreshToolboxSelection();
+                             soundGallery.classList.remove('visible');
+                        }
+                    }
+                });
+
+                // Create initial state
                 createDefaultBackdrop();
                 createDefaultSprite();
-                setupPropertiesPanelListeners();
 
-                requestAnimationFrame(mainLoop);
+                // Start game loop
+                requestAnimationFrame(gameLoop);
             }
 
             init();
         });
     </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
