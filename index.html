@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -61,41 +60,57 @@
             </div>
             
             <div id="sprite-properties-panel" class="section hidden">
-                <div class="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-                    <div class="flex items-center gap-2">
-                        <label for="prop-name" class="font-medium">דמות:</label>
-                        <input type="text" id="prop-name" class="p-1 border rounded-lg w-24">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-3 text-sm">
+                    <div class="flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-2 py-1 shadow-sm">
+                        <div class="w-8 h-8 rounded-lg bg-[#9B51E0] flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src="https://codejredu.github.io/test/assets/blocklyicon/name.svg" class="h-full w-full object-contain" style="filter: brightness(0) invert(1);" alt="שם הדמות" aria-hidden="true">
+                        </div>
+                        <input type="text" id="prop-name" class="p-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-24 bg-gray-50" aria-label="שם הדמות">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <label for="prop-x" class="font-medium">X:</label>
-                        <input type="number" id="prop-x" class="p-1 border rounded-lg w-16 text-center">
+                    <div class="flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-2 py-1 shadow-sm">
+                        <div class="w-8 h-8 rounded-lg bg-[#9B51E0] flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src="https://codejredu.github.io/test/assets/blocklyicon/X.svg" class="h-full w-full object-contain" style="filter: brightness(0) invert(1);" alt="מיקום X" aria-hidden="true">
+                        </div>
+                        <input type="number" id="prop-x" class="p-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-16 text-center bg-gray-50" aria-label="מיקום X">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <label for="prop-y" class="font-medium">Y:</label>
-                        <input type="number" id="prop-y" class="p-1 border rounded-lg w-16 text-center">
+                    <div class="flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-2 py-1 shadow-sm">
+                        <div class="w-8 h-8 rounded-lg bg-[#9B51E0] flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src="https://codejredu.github.io/test/assets/blocklyicon/Y.svg" class="h-full w-full object-contain" style="filter: brightness(0) invert(1);" alt="מיקום Y" aria-hidden="true">
+                        </div>
+                        <input type="number" id="prop-y" class="p-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-16 text-center bg-gray-50" aria-label="מיקום Y">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <label for="prop-size" class="font-medium">גודל:</label>
-                        <input type="number" id="prop-size" min="0" class="p-1 border rounded-lg w-16 text-center">
+                    <div class="flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-2 py-1 shadow-sm">
+                        <div class="w-8 h-8 rounded-lg bg-[#9B51E0] flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src="https://codejredu.github.io/test/assets/blocklyicon/aspect_ratio.svg" class="h-full w-full object-contain" style="filter: brightness(0) invert(1);" alt="גודל" aria-hidden="true">
+                        </div>
+                        <input type="number" id="prop-size" min="0" class="p-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-16 text-center bg-gray-50" aria-label="גודל">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <label for="prop-direction" class="font-medium">כיוון:</label>
-                        <input type="number" id="prop-direction" class="p-1 border rounded-lg w-16 text-center">
+                    <div class="flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-2 py-1 shadow-sm">
+                        <div class="w-8 h-8 rounded-lg bg-[#9B51E0] flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src="https://codejredu.github.io/test/assets/blocklyicon/compassa.svg" class="h-full w-full object-contain" style="filter: brightness(0) invert(1);" alt="כיוון" aria-hidden="true">
+                        </div>
+                        <input type="number" id="prop-direction" class="p-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-16 text-center bg-gray-50" aria-label="כיוון">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <label class="font-medium">הצגה:</label>
-                        <div class="flex bg-gray-200 rounded-lg p-0.5">
+                    <div class="flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-2 py-1 shadow-sm">
+                        <div class="w-8 h-8 rounded-lg bg-[#9B51E0] flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src="https://codejredu.github.io/test/assets/blocklyicon/visible.svg" class="h-full w-full object-contain" style="filter: brightness(0) invert(1);" alt="הצגה" aria-hidden="true">
+                        </div>
+                        <div class="flex bg-gray-200 rounded-lg p-0.5" aria-label="בקרת הצגה">
                             <button id="prop-show" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="הצג">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C3.732 4.943 7.523 3 10 3s6.268 1.943 9.542 7c-3.274 5.057-7.27 7-9.542 7S3.732 15.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
                             </button>
                             <button id="prop-hide" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="הסתר">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.27 8.138 16.545 7 14.66 6.36l-1.07-1.071A9.95 9.95 0 0010 3C4.943 3 1.943 7.732 1.458 9.227l-1.473-1.473a1 1 0 00-1.414 0zM10 12a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /><path d="M10 15a5 5 0 004.95-4.286l-1.543-1.543A3.001 3.001 0 0110 13a3 3 0 01-2.43-1.088l-1.528-1.528A4.982 4.982 0 005.05 10.714 5 5 0 0010 15z" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10.83 12a2 2 0 00-2.83-2.83L10.83 12zM18.54 9.23C16.78 6.44 13.62 4.5 10 4.5c-1.6 0-3.12.5-4.47 1.33L7.1 7.4a4 4 0 015.5 5.5l1.58 1.58c1.33-1.01 2.4-2.32 3.16-3.83.31-.63.31-1.34 0-1.97zM2.71 3.27L1.41 4.59l1.98 1.98C1.55 7.83.46 9.82 1.46 10.77c1.76 2.79 4.91 4.73 8.54 4.73 1.6 0 3.12-.5 4.47-1.33L16.41 15.4l1.3-1.3-15-15z"/>
+                                </svg>
                             </button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <label class="font-medium">סיבוב:</label>
-                        <div id="prop-rotation-style" class="flex bg-gray-200 rounded-lg p-0.5">
+                    <div class="flex items-center gap-2 border border-gray-200 bg-white rounded-lg px-2 py-1 shadow-sm">
+                        <div class="w-8 h-8 rounded-lg bg-[#9B51E0] flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src="https://codejredu.github.io/test/assets/blocklyicon/spine.svg" class="h-full w-full object-contain" style="filter: brightness(0) invert(1);" alt="סגנון סיבוב" aria-hidden="true">
+                        </div>
+                        <div id="prop-rotation-style" class="flex bg-gray-200 rounded-lg p-0.5" aria-label="בקרת סגנון סיבוב">
                             <button id="rotation-all-around" class="p-1.5 rounded-md flex justify-center items-center focus:outline-none" title="לכל הכיוונים">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
@@ -290,9 +305,14 @@
                     </div>
                 </div>
                 <div id="sound-gallery" class="gallery-container">
-                    <button class="close-gallery-button" id="close-sound-gallery-button">X</button>
-                    <h2 class="text-xl font-bold text-center mb-4">גלריית צלילים</h2>
-                    <div id="sound-gallery-grid" class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">גלריית צלילים</h2>
+                        <div class="flex items-center">
+                            <button id="add-selected-sounds-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">הוסף</button>
+                            <button class="close-gallery-button !static !inline-flex !ml-2" id="close-sound-gallery-button">&times;</button>
+                        </div>
+                    </div>
+                    <div id="sound-gallery-grid" class="thumbnail-grid">
                         <!-- Sounds will be dynamically added here by JS -->
                     </div>
                     <input type="file" id="sound-upload-input" class="hidden" accept="audio/mpeg, audio/wav, audio/ogg">
@@ -844,6 +864,7 @@
             const soundGallery = document.getElementById('sound-gallery');
             const closeSoundGalleryButton = document.getElementById('close-sound-gallery-button');
             const soundGalleryGrid = document.getElementById('sound-gallery-grid');
+            const addSelectedSoundsButton = document.getElementById('add-selected-sounds-button');
             
             const fullscreenButton = document.getElementById('fullscreen-button');
             const enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
@@ -893,6 +914,19 @@
             const recorderStopBtn = document.getElementById('recorder-stop-btn');
             const recorderRerecordBtn = document.getElementById('recorder-rerecord-btn');
             const recorderSaveBtn = document.getElementById('recorder-save-btn');
+            const recorderMessage = document.getElementById('recorder-message');
+            const recorderUIContent = document.getElementById('recorder-ui-content');
+
+            const allGalleries = [spriteGallery, backgroundGallery, soundGallery];
+
+            const openGallery = (galleryToOpen) => {
+                allGalleries.forEach(gallery => {
+                    if (gallery !== galleryToOpen) {
+                        gallery.classList.remove('visible');
+                    }
+                });
+                galleryToOpen.classList.add('visible');
+            };
 
             const STAGE_WIDTH = 480;
             const STAGE_HEIGHT = 360;
@@ -907,6 +941,9 @@
             let collisionState = new Set(); // Stores pairs of collided sprites
             let scriptRunner = null;
             let currentPreviewAudio = null;
+            let selectedSoundsForAdd = new Set();
+            let preloadedSounds = [];
+
 
             // Sound Recorder state
             let mediaRecorder;
@@ -927,6 +964,7 @@
             const selectedPartLabel = document.getElementById('selected-part-label');
             const creatorColorPalette = document.getElementById('creator-color-palette');
             const creatorFlipHButton = document.getElementById('creator-flip-h-button');
+            const creatorActionsGroup = document.getElementById('creator-actions-group');
             const ctx = characterCanvas.getContext('2d');
             
             let activeCreatorCategory = 'shirt';
@@ -1406,7 +1444,7 @@
                 initialMouseY = y;
                 initialSpriteX = spriteData.x;
                 initialSpriteY = spriteData.y;
-                document.getElementById(dragSpriteId).style.transition = 'none';
+                document.querySelector(`#container-${dragSpriteId} .sprite-wrapper`).style.transition = 'none';
                 log('הדמות נתפסה לגרירה.');
             };
 
@@ -1444,7 +1482,7 @@
                     }
 
                     const spriteData = sprites[dragSpriteId];
-                    document.getElementById(dragSpriteId).style.transition = 'transform 0.5s ease-out';
+                    document.querySelector(`#container-${dragSpriteId} .sprite-wrapper`).style.transition = 'transform 0.5s ease-out';
                     updatePropertiesPanel(); // Final update
                     log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
                 }
@@ -3120,6 +3158,7 @@
 
                     } catch (error) {
                         console.error("שגיאה בטעינת הפרויקטים:", error);
+                        alert("שגיאה בטעינת הפרויקטים:\n" + error.message);
                     } finally {
                         e.target.value = null;
                         setTimeout(() => { isLoadingProject = false; }, 100); // Unset flag after a short delay
@@ -3693,243 +3732,134 @@
             }
 
             function getPartHandles(part) {
-                const ROTATE_HANDLE_OFFSET = 20;
-                const halfW = part.width / 2;
-                const halfH = part.height / 2;
-                return {
-                    topLeft:     { x: -halfW, y: -halfH, type: 'resize', cursor: 'nwse-resize' },
-                    topRight:    { x: halfW,  y: -halfH, type: 'resize', cursor: 'nesw-resize' },
-                    bottomRight: { x: halfW,  y: halfH,  type: 'resize', cursor: 'nwse-resize' },
-                    bottomLeft:  { x: -halfW, y: halfH,  type: 'resize', cursor: 'nesw-resize' },
-                    rotate:      { x: 0,      y: -halfH - ROTATE_HANDLE_OFFSET, type: 'rotate', cursor: 'crosshair' }
-                };
-            }
-
-            function drawTransformHandles(part) {
-                const HANDLE_SIZE = 8;
-
-                ctx.save();
-                ctx.translate(part.x, part.y);
-                ctx.rotate(part.rotation);
-
-                ctx.strokeStyle = '#4C97FF';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([4, 2]);
-                ctx.strokeRect(-part.width / 2, -part.height / 2, part.width, part.height);
-                ctx.setLineDash([]);
-
-                const handles = getPartHandles(part);
-                ctx.fillStyle = 'white';
-                ctx.strokeStyle = '#4C97FF';
-                ctx.lineWidth = 2;
+                const ROTATE_HANDLE_OFFSET = 30;
+                const HANDLE_SIZE = 10;
                 
-                Object.values(handles).forEach(handle => {
-                    if (handle.type === 'resize') {
-                       ctx.strokeRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
-                       ctx.fillRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
-                    } else if (handle.type === 'rotate') {
-                        ctx.beginPath();
-                        ctx.moveTo(0, -part.height / 2);
-                        ctx.lineTo(handle.x, handle.y + HANDLE_SIZE / 2);
-                        ctx.stroke();
+                const cos = Math.cos(part.rotation);
+                const sin = Math.sin(part.rotation);
 
-                        ctx.beginPath();
-                        ctx.arc(handle.x, handle.y, HANDLE_SIZE / 2, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.stroke();
-                    }
+                const tl = { x: -part.width / 2, y: -part.height / 2 };
+                const tr = { x: part.width / 2, y: -part.height / 2 };
+                const bl = { x: -part.width / 2, y: part.height / 2 };
+                const br = { x: part.width / 2, y: part.height / 2 };
+
+                const rotatePoint = (p) => ({
+                    x: part.x + (p.x * cos - p.y * sin) * (part.isFlippedH ? -1 : 1),
+                    y: part.y + p.x * sin + p.y * cos
                 });
                 
+                const rotateHandle = {
+                    x: part.x,
+                    y: part.y - part.height / 2 - ROTATE_HANDLE_OFFSET
+                };
+
+                return {
+                    tl: rotatePoint(tl),
+                    tr: rotatePoint(tr),
+                    bl: rotatePoint(bl),
+                    br: rotatePoint(br),
+                    rotate: {
+                        x: part.x + (rotateHandle.x - part.x) * cos - (rotateHandle.y - part.y) * sin,
+                        y: part.y + (rotateHandle.x - part.x) * sin + (rotateHandle.y - part.y) * cos
+                    },
+                    size: HANDLE_SIZE
+                };
+            }
+            
+            function drawTransformHandles(part) {
+                const handles = getPartHandles(part);
+                
+                ctx.save();
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 1.5;
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+                
+                // Bounding box
+                ctx.beginPath();
+                ctx.moveTo(handles.tl.x, handles.tl.y);
+                ctx.lineTo(handles.tr.x, handles.tr.y);
+                ctx.lineTo(handles.br.x, handles.br.y);
+                ctx.lineTo(handles.bl.x, handles.bl.y);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.fill();
+
+                // Handles
+                Object.entries(handles).forEach(([key, pos]) => {
+                    if (key !== 'size') {
+                         ctx.fillStyle = '#ffffff';
+                         ctx.strokeStyle = '#3b82f6';
+                         ctx.lineWidth = 2;
+                         ctx.beginPath();
+                         ctx.arc(pos.x, pos.y, handles.size / 2, 0, Math.PI * 2);
+                         ctx.fill();
+                         ctx.stroke();
+                    }
+                });
+
+                // Line to rotation handle
+                ctx.beginPath();
+                const midTop = {
+                    x: (handles.tl.x + handles.tr.x) / 2,
+                    y: (handles.tl.y + handles.tr.y) / 2
+                };
+                ctx.moveTo(midTop.x, midTop.y);
+                ctx.lineTo(handles.rotate.x, handles.rotate.y);
+                ctx.stroke();
+
                 ctx.restore();
             }
 
-            function selectPart(category, partSrc, thumbElement) {
-                if (category === 'hand') {
-                    const getSelectedPartObject = () => (!selectedPartOnCanvas || selectedPartOnCanvas.category !== 'hands') ? null : currentCharacter.hands[selectedPartOnCanvas.index];
-                    const selectedHand = getSelectedPartObject();
+            function getHandleAtPosition(x, y) {
+                const part = selectedPartOnCanvas && (selectedPartOnCanvas.category === 'hands' 
+                    ? currentCharacter.hands[selectedPartOnCanvas.index] 
+                    : currentCharacter[selectedPartOnCanvas.category]);
+                    
+                if (!part) return null;
 
-                    if (selectedHand) {
-                        selectedHand.src = partSrc;
-                    } else if (currentCharacter.hands.length < 2) {
-                        const props = PART_PROPORTIONS.hand;
-                        const w = characterCanvas.width * props.scale.w;
-                        const h = characterCanvas.height * props.scale.h;
-                        const xOffset = currentCharacter.hands.length === 0 ? props.offset.x : 1 - props.offset.x;
-                        currentCharacter.hands.push({ 
-                            category: 'hand', src: partSrc, 
-                            x: xOffset * characterCanvas.width, y: props.offset.y * characterCanvas.height,
-                            width: w, height: h, rotation: 0, color: null, isFlippedH: false 
-                        });
-                    }
-                } else {
-                    if (currentCharacter[category]) currentCharacter[category].src = partSrc;
-                    if (category === 'dresses') {
-                        if(currentCharacter.shirt) currentCharacter.shirt.src = '';
-                        if(currentCharacter.pants) currentCharacter.pants.src = '';
-                    } else if (['shirt', 'pants'].includes(category)) {
-                        if (currentCharacter.dresses) currentCharacter.dresses.src = '';
-                    }
-                }
-
-                thumbElement.parentElement.querySelectorAll('.part-thumbnail').forEach(t => t.classList.remove('selected'));
-                thumbElement.classList.add('selected');
-                drawCharacter();
-            }
-
-            function populateParts(category) {
-                activeCreatorCategory = category;
-                creatorPartsGrid.innerHTML = '';
-                const categoryData = ASSET_CATEGORIES[category];
-
-                if (categoryData) {
-                    categoryData.parts.forEach(partSrc => {
-                        const thumb = document.createElement('div');
-                        thumb.className = 'part-thumbnail';
-                        if (category !== 'hand' && currentCharacter[category]?.src === partSrc) {
-                            thumb.classList.add('selected');
-                        }
-                        thumb.innerHTML = `<img src="${partSrc}">`;
-                        thumb.addEventListener('click', () => selectPart(category, partSrc, thumb));
-                        creatorPartsGrid.appendChild(thumb);
-                    });
-                }
-            }
-
-            function selectCategory(category, buttonElement) {
-                creatorCategoriesContainer.querySelectorAll('.category-button').forEach(b => b.classList.remove('active'));
-                buttonElement.classList.add('active');
-                populateParts(category);
-            }
-
-            function initializeCreator() {
-                 creatorCategoriesContainer.innerHTML = '';
-                 for (const key in ASSET_CATEGORIES) {
-                    const category = ASSET_CATEGORIES[key];
-                    const button = document.createElement('button');
-                    button.className = 'category-button';
-                    button.textContent = category.label;
-                    button.dataset.category = key;
-                    if (key === activeCreatorCategory) button.classList.add('active');
-                    button.addEventListener('click', () => selectCategory(key, button));
-                    creatorCategoriesContainer.appendChild(button);
-                 }
-                 
-                 currentCharacter = { hands: [] };
-                 DRAW_ORDER.forEach(cat => {
-                    if (cat !== 'hands' && ASSET_CATEGORIES[cat]) {
-                        const isDefaultPart = cat !== 'dresses';
-                        const firstPartSrc = isDefaultPart ? ASSET_CATEGORIES[cat]?.parts[0] : '';
-                        const props = PART_PROPORTIONS[cat];
-                        currentCharacter[cat] = { 
-                            category: cat, src: firstPartSrc, 
-                            x: props.offset.x * characterCanvas.width, y: props.offset.y * characterCanvas.height,
-                            width: characterCanvas.width * props.scale.w, height: characterCanvas.height * props.scale.h, 
-                            rotation: 0, color: null 
-                        };
-                    }
-                 });
-                 
-                selectedPartOnCanvas = null;
-                creatorControlsPanel.classList.add('hidden');
-                populateParts(activeCreatorCategory);
-                drawCharacter();
-            }
-            
-            function openCreatorForEdit(spriteId) {
-                const spriteData = sprites[spriteId];
-                if (!spriteData || !spriteData.isCustom || !spriteData.characterData) return;
-                editingSpriteId = spriteId;
-                currentCharacter = JSON.parse(JSON.stringify(spriteData.characterData));
-                if (!currentCharacter.hands) currentCharacter.hands = [];
-                activeCreatorCategory = Object.keys(ASSET_CATEGORIES)[0];
-                
-                creatorCategoriesContainer.innerHTML = '';
-                 for (const key in ASSET_CATEGORIES) {
-                    const category = ASSET_CATEGORIES[key];
-                    const button = document.createElement('button');
-                    button.className = 'category-button';
-                    button.textContent = category.label;
-                    button.dataset.category = key;
-                    if (key === activeCreatorCategory) button.classList.add('active');
-                    button.addEventListener('click', () => selectCategory(key, button));
-                    creatorCategoriesContainer.appendChild(button);
-                 }
-                
-                populateParts(activeCreatorCategory);
-                selectedPartOnCanvas = null;
-                creatorControlsPanel.classList.add('hidden');
-                drawCharacter();
-                creatorModal.classList.add('visible');
-            }
-
-
-            function populateColorPalette() {
-                creatorColorPalette.innerHTML = '';
-                const category = selectedPartOnCanvas?.category === 'hands' ? 'hand' : selectedPartOnCanvas?.category;
-                const colorsToShow = (category === 'hand' || category === 'head') ? SKIN_TONE_PALETTE : COLOR_PALETTE;
-
-                colorsToShow.forEach(color => {
-                    const swatch = document.createElement('div');
-                    swatch.className = 'color-swatch';
-                    swatch.style.backgroundColor = color;
-                    swatch.dataset.color = color;
-                    creatorColorPalette.appendChild(swatch);
-                });
-            }
-
-            creatorColorPalette.addEventListener('click', (e) => {
-                const swatch = e.target.closest('.color-swatch');
-                if (!swatch || !selectedPartOnCanvas) return;
-                
-                const newColor = swatch.dataset.color;
-                if (selectedPartOnCanvas.category === 'hands') {
-                    currentCharacter.hands[selectedPartOnCanvas.index].color = newColor;
-                } else if (currentCharacter[selectedPartOnCanvas.category]) {
-                    currentCharacter[selectedPartOnCanvas.category].color = newColor;
-                }
-                drawCharacter();
-            });
-
-            creatorFlipHButton.addEventListener('click', () => {
-                if (!selectedPartOnCanvas) return;
-                if (selectedPartOnCanvas.category === 'hands') {
-                    currentCharacter.hands[selectedPartOnCanvas.index].isFlippedH = !currentCharacter.hands[selectedPartOnCanvas.index].isFlippedH;
-                } // Flipping other parts might not make sense, add if needed
-                drawCharacter();
-            });
-
-
-            function getPartAtPosition(x, y) {
-                // Iterate backwards (top layers first)
-                const reversedDrawOrder = [...DRAW_ORDER].reverse();
-                for (const category of reversedDrawOrder) {
-                    const partsToCheck = [];
-                     if (category === 'hands' && currentCharacter.hands) {
-                        currentCharacter.hands.forEach((hand, index) => partsToCheck.push({part: hand, selection: {category: 'hands', index}}));
-                    } else if (currentCharacter[category] && currentCharacter[category].src) {
-                        partsToCheck.push({part: currentCharacter[category], selection: {category}});
-                    }
-
-                    for (const { part, selection } of partsToCheck) {
-                        const dx = x - part.x;
-                        const dy = y - part.y;
-                        const rotatedX = dx * Math.cos(-part.rotation) - dy * Math.sin(-part.rotation);
-                        const rotatedY = dx * Math.sin(-part.rotation) + dy * Math.cos(-part.rotation);
-
-                        if (Math.abs(rotatedX) <= part.width / 2 && Math.abs(rotatedY) <= part.height / 2) {
-                             const handles = getPartHandles(part);
-                             for (const handleName in handles) {
-                                const handle = handles[handleName];
-                                const dist = Math.sqrt(Math.pow(rotatedX - handle.x, 2) + Math.pow(rotatedY - handle.y, 2));
-                                if (dist < 10) { // 10px handle click radius
-                                    return { type: 'handle', handle: handleName, selection };
-                                }
-                             }
-                            return { type: 'part', selection };
+                const handles = getPartHandles(part);
+                for (const [key, pos] of Object.entries(handles)) {
+                    if (key !== 'size') {
+                        const dist = Math.hypot(x - pos.x, y - pos.y);
+                        if (dist <= handles.size) {
+                            return key;
                         }
                     }
                 }
                 return null;
+            }
+
+            function getPartAtPosition(x, y) {
+                 for (let i = DRAW_ORDER.length - 1; i >= 0; i--) {
+                    const category = DRAW_ORDER[i];
+                    if (category === 'hands' && currentCharacter.hands) {
+                        for (let j = currentCharacter.hands.length - 1; j >= 0; j--) {
+                            const part = currentCharacter.hands[j];
+                            if (isPointInPart(x, y, part)) return { category: 'hands', index: j };
+                        }
+                    } else if (currentCharacter[category] && currentCharacter[category].src) {
+                        const part = currentCharacter[category];
+                        if (isPointInPart(x, y, part)) return { category };
+                    }
+                }
+                return null;
+            }
+
+            function isPointInPart(x, y, part) {
+                // Translate point to be relative to part's center
+                const relX = x - part.x;
+                const relY = y - part.y;
+                
+                // Inverse rotate the point
+                const cos = Math.cos(-part.rotation);
+                const sin = Math.sin(-part.rotation);
+                const rotatedX = relX * cos - relY * sin;
+                const rotatedY = relX * sin + relY * cos;
+                
+                const finalX = rotatedX * (part.isFlippedH ? -1 : 1);
+
+                // Check if the point is within the non-rotated bounding box
+                return Math.abs(finalX) < part.width / 2 && Math.abs(rotatedY) < part.height / 2;
             }
             
             function updateCursor(e) {
@@ -3938,17 +3868,20 @@
                 const y = e.clientY - rect.top;
 
                 if (creatorAction.type !== 'none') {
-                    // Cursor is already set by the action
+                    // We are already performing an action, don't change cursor
                     return;
                 }
 
-                const hit = getPartAtPosition(x, y);
-                if (hit && hit.type === 'part') {
-                    characterCanvas.style.cursor = 'grab';
-                } else if (hit && hit.type === 'handle') {
-                    const part = hit.selection.category === 'hands' ? currentCharacter.hands[hit.selection.index] : currentCharacter[hit.selection.category];
-                    const handleInfo = getPartHandles(part)[hit.handle];
-                    characterCanvas.style.cursor = handleInfo.cursor;
+                const handle = getHandleAtPosition(x, y);
+                if (handle) {
+                    if (handle === 'rotate') {
+                        characterCanvas.style.cursor = 'grab';
+                    } else {
+                        // More specific resize cursors can be added here
+                        characterCanvas.style.cursor = 'move';
+                    }
+                } else if (getPartAtPosition(x, y)) {
+                    characterCanvas.style.cursor = 'pointer';
                 } else {
                     characterCanvas.style.cursor = 'default';
                 }
@@ -3959,389 +3892,611 @@
                     updateCursor(e);
                     return;
                 }
+                 const rect = characterCanvas.getBoundingClientRect();
+                 const x = e.clientX - rect.left;
+                 const y = e.clientY - rect.top;
 
-                const rect = characterCanvas.getBoundingClientRect();
-                const currentX = e.clientX - rect.left;
-                const currentY = e.clientY - rect.top;
-                const dx = currentX - creatorAction.startX;
-                const dy = currentY - creatorAction.startY;
-                
-                const part = creatorAction.partSelection.category === 'hands' ? currentCharacter.hands[creatorAction.partSelection.index] : currentCharacter[creatorAction.partSelection.category];
+                 const dx = x - creatorAction.startX;
+                 const dy = y - creatorAction.startY;
+                 const part = creatorAction.partSelection.category === 'hands'
+                    ? currentCharacter.hands[creatorAction.partSelection.index]
+                    : currentCharacter[creatorAction.partSelection.category];
 
-                if (creatorAction.type === 'move') {
+                 if (creatorAction.type === 'move') {
                     part.x = creatorAction.initialState.x + dx;
                     part.y = creatorAction.initialState.y + dy;
-                } else if (creatorAction.type === 'rotate') {
-                    const centerX = creatorAction.initialState.x;
-                    const centerY = creatorAction.initialState.y;
-                    const startAngle = Math.atan2(creatorAction.startY - centerY, creatorAction.startX - centerX);
-                    const currentAngle = Math.atan2(currentY - centerY, currentX - centerX);
-                    part.rotation = creatorAction.initialState.rotation + (currentAngle - startAngle);
-                }
-                drawCharacter();
+                 } else if (creatorAction.type === 'rotate') {
+                     const centerX = creatorAction.initialState.x;
+                     const centerY = creatorAction.initialState.y;
+                     const startAngle = Math.atan2(creatorAction.startY - centerY, creatorAction.startX - centerX);
+                     const currentAngle = Math.atan2(y - centerY, x - centerX);
+                     const angleDiff = currentAngle - startAngle;
+                     part.rotation = creatorAction.initialState.rotation + angleDiff;
+                 } else if (creatorAction.type === 'resize') {
+                    // Simple resize based on bottom-right handle for now
+                    const initialDist = Math.hypot(creatorAction.initialState.width, creatorAction.initialState.height);
+                    
+                    const cos = Math.cos(-part.rotation);
+                    const sin = Math.sin(-part.rotation);
+                    const rotatedDx = dx * cos - dy * sin;
+                    
+                    const scaleChange = (rotatedDx * 2) / creatorAction.initialState.width;
+                    
+                    part.width = creatorAction.initialState.width * (1 + scaleChange);
+                    part.height = creatorAction.initialState.height * (1 + scaleChange);
+
+                 }
+
+                 drawCharacter();
             });
 
             characterCanvas.addEventListener('mousedown', (e) => {
-                const rect = characterCanvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const hit = getPartAtPosition(x, y);
-                
-                if (hit) {
-                    selectedPartOnCanvas = hit.selection;
-                    const part = hit.selection.category === 'hands' ? currentCharacter.hands[hit.selection.index] : currentCharacter[hit.selection.category];
-                    
-                    creatorAction.startX = x;
-                    creatorAction.startY = y;
-                    creatorAction.partSelection = hit.selection;
-                    creatorAction.initialState = { ...part };
+                 const rect = characterCanvas.getBoundingClientRect();
+                 const x = e.clientX - rect.left;
+                 const y = e.clientY - rect.top;
+                 
+                 const handle = getHandleAtPosition(x, y);
+                 
+                 if (handle) {
+                     const part = selectedPartOnCanvas.category === 'hands'
+                        ? currentCharacter.hands[selectedPartOnCanvas.index]
+                        : currentCharacter[selectedPartOnCanvas.category];
+                        
+                     creatorAction = {
+                        type: handle === 'rotate' ? 'rotate' : (handle === 'br' ? 'resize' : 'move'),
+                        partSelection: selectedPartOnCanvas,
+                        handle: handle,
+                        startX: x,
+                        startY: y,
+                        initialState: { ...part }
+                    };
+                    if (handle === 'rotate') characterCanvas.style.cursor = 'grabbing';
 
-                    if (hit.type === 'handle') {
-                        creatorAction.type = getPartHandles(part)[hit.handle].type;
-                        creatorAction.handle = hit.handle;
-                    } else {
-                        creatorAction.type = 'move';
-                        characterCanvas.style.cursor = 'grabbing';
-                    }
+                 } else {
+                     const partSelection = getPartAtPosition(x, y);
+                     selectedPartOnCanvas = partSelection;
+                     updateCreatorControls();
 
-                    // Update controls panel
+                     if (partSelection) {
+                         const part = partSelection.category === 'hands'
+                            ? currentCharacter.hands[partSelection.index]
+                            : currentCharacter[partSelection.category];
+                         creatorAction = {
+                            type: 'move',
+                            partSelection: partSelection,
+                            startX: x,
+                            startY: y,
+                            initialState: { ...part }
+                         };
+                     }
+                 }
+                 drawCharacter();
+            });
+            
+            document.addEventListener('mouseup', () => {
+                creatorAction.type = 'none';
+                updateCursor({ clientX: creatorAction.startX, clientY: creatorAction.startY }); // Reset cursor based on last position
+            });
+
+            function updateCreatorControls() {
+                if (selectedPartOnCanvas) {
                     creatorControlsPanel.classList.remove('hidden');
-                    const categoryLabel = ASSET_CATEGORIES[part.category]?.label || part.category;
-                    selectedPartLabel.textContent = categoryLabel;
-                    populateColorPalette();
-                    if (part.category === 'hands') {
-                        creatorFlipHButton.classList.remove('hidden');
-                    } else {
-                        creatorFlipHButton.classList.add('hidden');
-                    }
+                    const part = selectedPartOnCanvas.category === 'hands'
+                        ? currentCharacter.hands[selectedPartOnCanvas.index]
+                        : currentCharacter[selectedPartOnCanvas.category];
+                    const categoryInfo = ASSET_CATEGORIES[part.baseCategory || selectedPartOnCanvas.category];
+                    selectedPartLabel.textContent = categoryInfo.label;
+
+                    const palette = (part.baseCategory || selectedPartOnCanvas.category) === 'head' ? SKIN_TONE_PALETTE : COLOR_PALETTE;
+                    creatorColorPalette.innerHTML = '';
+                    palette.forEach(color => {
+                        const swatch = document.createElement('div');
+                        swatch.className = 'color-swatch';
+                        swatch.style.backgroundColor = color;
+                        swatch.addEventListener('click', () => {
+                            part.color = color;
+                            drawCharacter();
+                        });
+                        creatorColorPalette.appendChild(swatch);
+                    });
+                    
+                    creatorFlipHButton.classList.remove('hidden');
+                    creatorActionsGroup.classList.remove('hidden');
+
                 } else {
-                    selectedPartOnCanvas = null;
                     creatorControlsPanel.classList.add('hidden');
                 }
-                drawCharacter();
-            });
+            }
             
-            characterCanvas.addEventListener('mouseup', () => {
-                creatorAction.type = 'none';
-                updateCursor({clientX: creatorAction.startX, clientY: creatorAction.startY});
-            });
-            
-            characterCanvas.addEventListener('mouseleave', () => {
-                if (creatorAction.type === 'none') {
-                     characterCanvas.style.cursor = 'default';
+            creatorFlipHButton.addEventListener('click', () => {
+                 if (selectedPartOnCanvas) {
+                    const part = selectedPartOnCanvas.category === 'hands'
+                        ? currentCharacter.hands[selectedPartOnCanvas.index]
+                        : currentCharacter[selectedPartOnCanvas.category];
+                    part.isFlippedH = !part.isFlippedH;
+                    drawCharacter();
                 }
             });
 
 
-            async function saveCreatorCharacter() {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = 400;
-                tempCanvas.height = 400;
-                const tempCtx = tempCanvas.getContext('2d');
-                
-                // Temporarily deselect to render without handles
-                const originalSelection = selectedPartOnCanvas;
-                selectedPartOnCanvas = null;
-                await drawCharacter(); 
-                
-                // Copy final canvas to temp canvas
-                tempCtx.drawImage(characterCanvas, 0, 0);
-                
-                // Restore selection for continued editing
-                selectedPartOnCanvas = originalSelection;
-                await drawCharacter();
-
-                const imageUrl = tempCanvas.toDataURL('image/png');
-                const spriteName = `דמות ${Object.keys(sprites).length + 1}`;
-                
-                // If editing, update existing sprite
-                if (editingSpriteId && sprites[editingSpriteId]) {
-                    const sprite = sprites[editingSpriteId];
-                    sprite.imageUrl = imageUrl;
-                    sprite.characterData = JSON.parse(JSON.stringify(currentCharacter)); // deep copy
-                    
-                    // Update visuals
-                    const cardImg = document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`);
-                    const stageImg = document.querySelector(`#container-${editingSpriteId} img`);
-                    if(cardImg) cardImg.src = imageUrl;
-                    if(stageImg) stageImg.src = imageUrl;
-
-                } else { // Otherwise, create new sprite
-                    createNewSprite(spriteName, imageUrl, 0, 0, true, JSON.parse(JSON.stringify(currentCharacter)));
+            function populateCreatorCategories() {
+                creatorCategoriesContainer.innerHTML = '';
+                for (const [key, value] of Object.entries(ASSET_CATEGORIES)) {
+                    const button = document.createElement('button');
+                    button.className = 'category-button';
+                    button.textContent = value.label;
+                    button.dataset.category = key;
+                    if (key === activeCreatorCategory) button.classList.add('active');
+                    button.addEventListener('click', () => {
+                        activeCreatorCategory = key;
+                        populateCreatorCategories();
+                        populateCreatorParts();
+                    });
+                    creatorCategoriesContainer.appendChild(button);
                 }
-
-                creatorModal.classList.remove('visible');
-                editingSpriteId = null;
             }
 
-            createSpriteHeaderButton.addEventListener('click', () => {
-                editingSpriteId = null;
-                initializeCreator();
-                creatorModal.classList.add('visible');
-            });
-            creatorCloseButton.addEventListener('click', () => {
-                creatorModal.classList.remove('visible');
-                editingSpriteId = null;
-            });
-            creatorSaveButton.addEventListener('click', saveCreatorCharacter);
+            function populateCreatorParts() {
+                creatorPartsGrid.innerHTML = '';
+                const parts = ASSET_CATEGORIES[activeCreatorCategory].parts;
+                parts.forEach(src => {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'part-thumbnail';
+                    thumb.innerHTML = `<img src="${src}" alt="Part">`;
+                    
+                    const currentPartSrc = currentCharacter[activeCreatorCategory]?.src;
+                    if (currentPartSrc === src) {
+                        thumb.classList.add('selected');
+                    }
+                    
+                    thumb.addEventListener('click', () => {
+                         selectCharacterPart(activeCreatorCategory, src);
+                         populateCreatorParts(); // Re-render to show selection
+                    });
+                    creatorPartsGrid.appendChild(thumb);
+                });
+            }
+
+            function selectCharacterPart(category, src) {
+                const props = PART_PROPORTIONS[category];
+                if (!props) return;
+                
+                // Special handling for exclusive categories
+                if (category === 'pants' && currentCharacter.dresses) delete currentCharacter.dresses;
+                if (category === 'dresses' && currentCharacter.pants) delete currentCharacter.pants;
+                
+                const newPart = {
+                    src,
+                    x: characterCanvas.width * props.offset.x,
+                    y: characterCanvas.height * props.offset.y,
+                    width: characterCanvas.width * props.scale.w,
+                    height: characterCanvas.height * props.scale.h,
+                    rotation: 0,
+                    isFlippedH: false,
+                    baseCategory: category,
+                };
+
+                currentCharacter[category] = newPart;
+                
+                if (category === 'head') {
+                    // Automatically add default eyes, nose, mouth if they don't exist
+                    if (!currentCharacter.eyes) selectCharacterPart('eyes', ASSET_CATEGORIES.eyes.parts[0]);
+                    if (!currentCharacter.nose) selectCharacterPart('nose', ASSET_CATEGORIES.nose.parts[0]);
+                    if (!currentCharacter.mouth) selectCharacterPart('mouth', ASSET_CATEGORIES.mouth.parts[0]);
+                }
+                
+                drawCharacter();
+            }
             
-            // --- End Character Creator Logic ---
+            function openCreatorForNew() {
+                editingSpriteId = null;
+                currentCharacter = {};
+                // Add some default parts for a better starting experience
+                selectCharacterPart('head', ASSET_CATEGORIES.head.parts[0]);
+                selectCharacterPart('shirt', ASSET_CATEGORIES.shirt.parts[0]);
+                selectCharacterPart('pants', ASSET_CATEGORIES.pants.parts[0]);
+                selectCharacterPart('shoes', ASSET_CATEGORIES.shoes.parts[0]);
+
+                creatorModal.classList.add('visible');
+                populateCreatorCategories();
+                populateCreatorParts();
+                drawCharacter();
+            }
+
+            function openCreatorForEdit(spriteId) {
+                const sprite = sprites[spriteId];
+                if (!sprite || !sprite.isCustom || !sprite.characterData) return;
+                
+                editingSpriteId = spriteId;
+                currentCharacter = JSON.parse(JSON.stringify(sprite.characterData)); // Deep copy
+                creatorModal.classList.add('visible');
+                populateCreatorCategories();
+                populateCreatorParts();
+                drawCharacter();
+            }
+            
+            async function saveCharacter() {
+                 const finalCanvas = document.createElement('canvas');
+                 const finalCtx = finalCanvas.getContext('2d');
+                 
+                 let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+                 const getPartBounds = (part) => {
+                     const cos = Math.abs(Math.cos(part.rotation));
+                     const sin = Math.abs(Math.sin(part.rotation));
+                     const w = part.width * cos + part.height * sin;
+                     const h = part.width * sin + part.height * cos;
+                     return {
+                         left: part.x - w / 2,
+                         top: part.y - h / 2,
+                         right: part.x + w / 2,
+                         bottom: part.y + h / 2
+                     };
+                 };
+
+                 Object.values(currentCharacter).forEach(part => {
+                     if (part && part.src) {
+                         const bounds = getPartBounds(part);
+                         minX = Math.min(minX, bounds.left);
+                         minY = Math.min(minY, bounds.top);
+                         maxX = Math.max(maxX, bounds.right);
+                         maxY = Math.max(maxY, bounds.bottom);
+                     }
+                 });
+                 if (currentCharacter.hands) {
+                     currentCharacter.hands.forEach(part => {
+                         const bounds = getPartBounds(part);
+                         minX = Math.min(minX, bounds.left);
+                         minY = Math.min(minY, bounds.top);
+                         maxX = Math.max(maxX, bounds.right);
+                         maxY = Math.max(maxY, bounds.bottom);
+                     });
+                 }
+
+
+                 const width = maxX - minX;
+                 const height = maxY - minY;
+                 finalCanvas.width = width;
+                 finalCanvas.height = height;
+
+                 finalCtx.translate(-minX, -minY);
+                 
+                // Create a temporary canvas with the same content as characterCanvas to avoid re-drawing
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = characterCanvas.width;
+                tempCanvas.height = characterCanvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                await drawCharacter(); // Ensure characterCanvas is up-to-date
+                tempCtx.drawImage(characterCanvas, 0, 0);
+
+                finalCtx.drawImage(tempCanvas, 0, 0);
+
+                const dataUrl = finalCanvas.toDataURL('image/png');
+                
+                if (editingSpriteId) {
+                    const sprite = sprites[editingSpriteId];
+                    sprite.imageUrl = dataUrl;
+                    sprite.characterData = JSON.parse(JSON.stringify(currentCharacter));
+                    document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`).src = dataUrl;
+                    document.querySelector(`#container-${editingSpriteId} img`).src = dataUrl;
+                    
+                } else {
+                     createNewSprite('דמות חדשה', dataUrl, 0, 0, true, JSON.parse(JSON.stringify(currentCharacter)));
+                }
+
+                creatorModal.classList.remove('visible');
+            }
+            
+            createSpriteHeaderButton.addEventListener('click', openCreatorForNew);
+            creatorSaveButton.addEventListener('click', saveCharacter);
+            creatorCloseButton.addEventListener('click', () => creatorModal.classList.remove('visible'));
+
             
             // --- Sound Recorder Logic ---
-            const openRecorder = async () => {
-                const recorderModal = document.getElementById('sound-recorder-modal');
-                const recorderMessageEl = document.getElementById('recorder-message');
-                const recorderUiContent = document.getElementById('recorder-ui-content');
-                
-                recorderModal.classList.remove('hidden');
+            function showRecorderMessage(msg, isError = true) {
+                recorderMessage.textContent = msg;
+                recorderMessage.className = `w-full text-center p-3 rounded-lg border ${isError ? 'bg-red-100 text-red-700 border-red-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`;
+                recorderMessage.classList.remove('hidden');
+                recorderUIContent.classList.add('hidden');
+            }
+            function hideRecorderMessage() {
+                 recorderMessage.classList.add('hidden');
+                 recorderUIContent.classList.remove('hidden');
+            }
 
+            async function startRecording() {
                 try {
                     mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(mediaStream);
+                    audioChunks = [];
+                    recordedBlob = null;
+                    
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
 
-                    recorderMessageEl.classList.add('hidden');
-                    recorderUiContent.classList.remove('hidden');
+                    mediaRecorder.addEventListener("stop", () => {
+                        recordedBlob = new Blob(audioChunks, { 'type' : 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(recordedBlob);
+                        recorderAudioPreview.src = audioUrl;
+                        
+                        recorderRecordBtn.classList.add('hidden');
+                        recorderStopBtn.classList.add('hidden');
+                        recorderRerecordBtn.classList.remove('hidden');
+                        recorderSaveBtn.classList.remove('hidden');
+                        recorderPreviewContainer.classList.remove('hidden');
+                    });
 
-                    recorderRecordBtn.classList.remove('hidden');
-                    recorderStopBtn.classList.add('hidden');
-                    recorderRerecordBtn.classList.add('hidden');
-                    recorderSaveBtn.classList.add('hidden');
-                    recorderPreviewContainer.classList.add('hidden');
-                    recorderVisualizer.classList.remove('is-recording');
-                    recorderTimer.textContent = '0.0 / 15.0';
-
+                    mediaRecorder.start();
+                    recorderRecordBtn.classList.add('hidden');
+                    recorderStopBtn.classList.remove('hidden');
+                    recorderVisualizer.classList.add('is-recording');
+                    
+                    let startTime = Date.now();
+                    const maxDuration = 15000;
+                    recorderTimerInterval = setInterval(() => {
+                        const elapsedTime = Date.now() - startTime;
+                        const seconds = elapsedTime / 1000;
+                        recorderTimer.textContent = `${seconds.toFixed(1)} / 15.0`;
+                        if (elapsedTime >= maxDuration) {
+                            stopRecording();
+                        }
+                    }, 100);
+                    
                 } catch (err) {
-                    console.error("שגיאה בגישה למיקרופון:", err.name);
-                    
-                    recorderUiContent.classList.add('hidden');
-                    recorderMessageEl.classList.remove('hidden');
-                    
-                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                         recorderMessageEl.innerHTML = 'הגישה למיקרופון נדחתה. <br> כדי להקליט, יש לאפשר גישה למיקרופון בהגדרות הדפדפן.';
-                    } else if (err.name === 'NotFoundError') {
-                         recorderMessageEl.innerHTML = 'לא נמצא מיקרופון. <br> יש לוודא שהמיקרופון מחובר ומוגדר כהלכה.';
-                    }
-                    else {
-                        recorderMessageEl.textContent = 'אירעה שגיאה. לא ניתן לגשת למיקרופון.';
-                    }
+                     console.error("Error accessing microphone:", err);
+                     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        showRecorderMessage("הגישה למיקרופון נדחתה. יש לאפשר גישה בהגדרות הדפדפן.");
+                     } else {
+                        showRecorderMessage("לא ניתן לגשת למיקרופון. ודא שהוא מחובר ופועל.");
+                     }
                 }
-            };
+            }
 
-            const closeRecorder = () => {
-                if (mediaStream) {
+            function stopRecording() {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
                     mediaStream.getTracks().forEach(track => track.stop());
+                    clearInterval(recorderTimerInterval);
+                    recorderVisualizer.classList.remove('is-recording');
                 }
-                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                    mediaRecorder.stop();
-                }
-                clearInterval(recorderTimerInterval);
-                document.getElementById('sound-recorder-modal').classList.add('hidden');
-                document.getElementById('recorder-ui-content').classList.remove('hidden');
-                document.getElementById('recorder-message').classList.add('hidden');
-            };
-
-            const startRecording = () => {
-                audioChunks = [];
-                recordedBlob = null;
-                mediaRecorder = new MediaRecorder(mediaStream);
-                
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioUrl = URL.createObjectURL(recordedBlob);
-                    recorderAudioPreview.src = audioUrl;
-                    
-                    recorderStopBtn.classList.add('hidden');
-                    recorderRerecordBtn.classList.remove('hidden');
-                    recorderSaveBtn.classList.remove('hidden');
-                    recorderPreviewContainer.classList.remove('hidden');
-                    recorderSoundName.value = `הקלטה ${Date.now()}`;
-                };
-
-                mediaRecorder.start();
-
-                recorderRecordBtn.classList.add('hidden');
-                recorderStopBtn.classList.remove('hidden');
-                recorderVisualizer.classList.add('is-recording');
-
-                let startTime = Date.now();
-                recorderTimerInterval = setInterval(() => {
-                    const elapsedTime = (Date.now() - startTime) / 1000;
-                    if (elapsedTime >= 15) {
-                        stopRecording();
-                    } else {
-                        recorderTimer.textContent = `${elapsedTime.toFixed(1)} / 15.0`;
-                    }
-                }, 100);
-            };
-            
-            const stopRecording = () => {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                }
-                clearInterval(recorderTimerInterval);
-                recorderVisualizer.classList.remove('is-recording');
-            };
-
-            const saveRecording = () => {
-                const sprite = getActiveSprite();
-                if (!sprite || !recordedBlob) return;
-
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64String = reader.result;
-                    const newSound = {
-                        name: recorderSoundName.value || 'הקלטה',
-                        url: base64String
-                    };
-                    sprite.sounds.push(newSound);
-                    renderSpriteSounds(sprite);
-                    Blockly.getMainWorkspace().refreshToolboxSelection();
-                    closeRecorder();
-                };
-                reader.readAsDataURL(recordedBlob);
-            };
-
-            recordSoundHeaderButton.addEventListener('click', openRecorder);
-            recorderCloseBtn.addEventListener('click', closeRecorder);
-            recorderRecordBtn.addEventListener('click', startRecording);
-            recorderStopBtn.addEventListener('click', stopRecording);
-            recorderRerecordBtn.addEventListener('click', () => {
-                recorderRecordBtn.classList.remove('hidden');
-                recorderPreviewContainer.classList.add('hidden');
-                recorderRerecordBtn.classList.add('hidden');
-                recorderSaveBtn.classList.add('hidden');
-                recorderTimer.textContent = '0.0 / 15.0';
-            });
-            recorderSaveBtn.addEventListener('click', saveRecording);
-            
-
-            // --- Main Game Loop ---
-            let lastTime = 0;
-            function gameLoop(timestamp) {
-                if (!lastTime) lastTime = timestamp;
-                const deltaTime = timestamp - lastTime;
-                lastTime = timestamp;
-
-                if (scriptRunner) {
-                    scriptRunner.tick();
-                }
-
-                updateGifAnimations(deltaTime);
-                
-                requestAnimationFrame(gameLoop);
             }
             
-            function init() {
-                // Initialize UI components
-                addBackdropButton.addEventListener('click', () => backgroundGallery.classList.add('visible'));
-                closeGalleryButton.addEventListener('click', () => backgroundGallery.classList.remove('visible'));
-                thumbnailsGrid.addEventListener('click', handleGallerySelection);
-                backdropsList.addEventListener('click', handleBackdropSelection);
-
-                addSpriteButton.addEventListener('click', () => spriteGallery.classList.add('visible'));
-                closeSpriteGalleryButton.addEventListener('click', () => spriteGallery.classList.remove('visible'));
-                spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
+            function resetRecorder() {
+                hideRecorderMessage();
+                stopRecording();
+                audioChunks = [];
+                recordedBlob = null;
+                recorderAudioPreview.src = '';
+                recorderSoundName.value = '';
+                recorderTimer.textContent = '0.0 / 15.0';
                 
-                const soundLibrary = [
-                    { name: "Boat Start", url: "https://codejredu.github.io/test/assets/sound/BoatStart.mp3" },
-                    { name: "Car Door", url: "https://codejredu.github.io/test/assets/sound/CARDOOR.mp3" },
-                    { name: "Elevator Ding", url: "https://codejredu.github.io/test/assets/sound/ElevatorDing.mp3" },
-                    { name: "Water Emptying", url: "https://codejredu.github.io/test/assets/sound/WaterEmptying.mp3" },
-                    { name: "Water Vole Diving", url: "https://codejredu.github.io/test/assets/sound/WaterVole.mp3" },
-                    { name: "Air Land", url: "https://codejredu.github.io/test/assets/sound/airland.mp3" },
-                    { name: "Airplane Cessna", url: "https://codejredu.github.io/test/assets/sound/airplanecessna.mp3" },
-                    { name: "Airplane F15", url: "https://codejredu.github.io/test/assets/sound/airplanef15.mp3" },
-                    { name: "Animal Howl", url: "https://codejredu.github.io/test/assets/sound/animals.mp3" },
-                    { name: "Crowd", url: "https://codejredu.github.io/test/assets/sound/crowds.mp3" },
-                    { name: "Bird Call", url: "https://codejredu.github.io/test/assets/sound/double.mp3" },
-                    { name: "Partridge", url: "https://codejredu.github.io/test/assets/sound/grey.mp3" },
-                    { name: "Pygmy Shrew", url: "https://codejredu.github.io/test/assets/sound/pygmy.mp3" },
-                    { name: "School", url: "https://codejredu.github.io/test/assets/sound/schools.mp3" },
-                    { name: "Flycatcher", url: "https://codejredu.github.io/test/assets/sound/vermilion.mp3" },
-                    { name: "Ding", url: "https://codejredu.github.io/test/assets/sound/dingsoundeffect2.mp3" },
-                    { name: "Dog", url: "https://codejredu.github.io/test/assets/sound/dog.mp3" },
-                    { name: "Leopard", url: "https://codejredu.github.io/test/assets/sound/leopard7.mp3" },
-                    { name: "Link", url: "https://codejredu.github.io/test/assets/sound/link.mp3" },
-                    { name: "Lion Cub", url: "https://codejredu.github.io/test/assets/sound/lioncub.mp3" },
-                    { name: "Whale", url: "https://codejredu.github.io/test/assets/sound/whale3.mp3" },
-                ];
+                recorderRecordBtn.classList.remove('hidden');
+                recorderStopBtn.classList.add('hidden');
+                recorderRerecordBtn.classList.add('hidden');
+                recorderSaveBtn.classList.add('hidden');
+                recorderPreviewContainer.classList.add('hidden');
+            }
 
-                soundGalleryGrid.innerHTML = soundLibrary.map(sound => `
-                    <div class="sound-gallery-item" data-name="${sound.name}" data-url="${sound.url}">
-                        <button class="sound-gallery-play-btn">
-                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <span class="sound-gallery-name">${sound.name}</span>
-                    </div>`).join('');
+            recordSoundHeaderButton.addEventListener('click', () => {
+                 const sprite = getActiveSprite();
+                 if (!sprite) {
+                    alert("יש לבחור דמות לפני הקלטת צליל.");
+                    return;
+                 }
+                 resetRecorder();
+                 soundRecorderModal.classList.remove('hidden');
+            });
+
+            recorderRecordBtn.addEventListener('click', startRecording);
+            recorderStopBtn.addEventListener('click', stopRecording);
+            recorderRerecordBtn.addEventListener('click', resetRecorder);
+            recorderCloseBtn.addEventListener('click', () => {
+                stopRecording();
+                soundRecorderModal.classList.add('hidden');
+            });
+            recorderSaveBtn.addEventListener('click', () => {
+                const sprite = getActiveSprite();
+                if (!sprite || !recordedBlob) return;
                 
-                soundGalleryGrid.addEventListener('click', (e) => {
-                    const item = e.target.closest('.sound-gallery-item');
-                    if (!item) return;
+                const name = recorderSoundName.value.trim() || `הקלטה ${sprite.sounds.length + 1}`;
+                const url = URL.createObjectURL(recordedBlob);
+                sprite.sounds.push({ name, url });
+                renderSpriteSounds(sprite);
+                Blockly.getMainWorkspace().refreshToolboxSelection();
+                soundRecorderModal.classList.add('hidden');
+            });
 
-                    const playBtn = e.target.closest('.sound-gallery-play-btn');
+
+            // --- General Asset Loading Logic ---
+            function setupAssetLoading() {
+                const uploadSpriteHeaderButton = document.getElementById('upload-sprite-header-button');
+                const spriteUploadInput = document.getElementById('sprite-upload-input');
+                
+                const uploadBackdropHeaderButton = document.getElementById('upload-backdrop-header-button');
+                const backdropUploadInput = document.getElementById('backdrop-upload-input');
+                
+                const uploadSoundHeaderButton = document.getElementById('upload-sound-header-button');
+                const soundUploadInput = document.getElementById('sound-upload-input');
+
+                const handleFileUpload = (input, callback) => {
+                    input.addEventListener('change', (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                callback(event.target.result, file.name);
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                        e.target.value = null; // Reset input
+                    });
+                    input.click();
+                };
+
+                uploadSpriteHeaderButton.addEventListener('click', () => {
+                    handleFileUpload(spriteUploadInput, (dataUrl, fileName) => {
+                        const name = fileName.split('.').slice(0, -1).join('.') || 'דמות שהועלתה';
+                        createNewSprite(name, dataUrl);
+                        spriteGallery.classList.remove('visible'); // Close gallery if open
+                    });
+                });
+                
+                uploadBackdropHeaderButton.addEventListener('click', () => {
+                     handleFileUpload(backdropUploadInput, (dataUrl) => {
+                         const newCard = createBackdropCard(dataUrl);
+                         window.switchBackdrop(dataUrl);
+                         backgroundGallery.classList.remove('visible');
+                    });
+                });
+                
+                uploadSoundHeaderButton.addEventListener('click', () => {
                     const sprite = getActiveSprite();
-                    
-                    if (playBtn) {
-                        e.stopPropagation();
-                        if (currentPreviewAudio) currentPreviewAudio.pause();
-                        currentPreviewAudio = new Audio(item.dataset.url);
-                        currentPreviewAudio.play();
-                    } else if (sprite) {
-                        const newSound = { name: item.dataset.name, url: item.dataset.url };
-                        sprite.sounds.push(newSound);
+                    if (!sprite) {
+                       alert("יש לבחור דמות לפני העלאת צליל.");
+                       return;
+                    }
+                    handleFileUpload(soundUploadInput, (dataUrl, fileName) => {
+                        const name = fileName.split('.').slice(0, -1).join('.') || 'צליל שהועלה';
+                        sprite.sounds.push({ name, url: dataUrl });
                         renderSpriteSounds(sprite);
-                        workspace.refreshToolboxSelection();
+                        Blockly.getMainWorkspace().refreshToolboxSelection();
                         soundGallery.classList.remove('visible');
+                    });
+                });
+            }
+
+             async function preloadSoundAssets() {
+                const soundAssets = [
+                     { name: 'פופ', url: 'https://codejredu.github.io/test/assets/sounds/pop.mp3' },
+                     { name: 'מיאו', url: 'https://codejredu.github.io/test/assets/sounds/meow.mp3' },
+                     { name: 'לייזר', url: 'https://codejredu.github.io/test/assets/sounds/laser.mp3' },
+                     { name: 'מטבע', url: 'https://codejredu.github.io/test/assets/sounds/coin.mp3' },
+                     { name: 'בום', url: 'https://codejredu.github.io/test/assets/sounds/boom.mp3' },
+                     { name: 'קפיצה', url: 'https://codejredu.github.io/test/assets/sounds/jump.mp3' },
+                     { name: 'ניצחון', url: 'https://codejredu.github.io/test/assets/sounds/win.mp3' },
+                     { name: 'הפסד', url: 'https://codejredu.github.io/test/assets/sounds/lose.mp3' },
+                     { name: 'ביפ', url: 'https://codejredu.github.io/test/assets/sounds/beep.mp3' },
+                     { name: 'פעמון', url: 'https://codejredu.github.io/test/assets/sounds/bell.mp3' },
+                ];
+                
+                // We don't actually fetch the data here anymore, just populate the list.
+                // The browser will fetch on demand when the user plays or adds the sound.
+                preloadedSounds = soundAssets;
+                populateSoundGallery();
+             }
+
+            function populateSoundGallery() {
+                soundGalleryGrid.innerHTML = '';
+                preloadedSounds.forEach(sound => {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'sound-thumbnail';
+                    thumb.dataset.url = sound.url;
+                    thumb.dataset.name = sound.name;
+                    thumb.innerHTML = `
+                        <input type="checkbox" class="sound-thumbnail-checkbox">
+                        <svg class="sound-thumbnail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                           <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM12 9l-5 4h3v2h4v-2h3l-5-4z"/>
+                        </svg>
+                        <span class="sound-thumbnail-name">${sound.name}</span>
+                    `;
+                    soundGalleryGrid.appendChild(thumb);
+                    
+                    thumb.addEventListener('click', (e) => {
+                        const checkbox = thumb.querySelector('.sound-thumbnail-checkbox');
+                        if (e.target !== checkbox) {
+                            // This part handles playing the sound on click
+                             if (currentPreviewAudio) {
+                                currentPreviewAudio.pause();
+                                if (currentPreviewAudio.src === sound.url) {
+                                    currentPreviewAudio = null;
+                                    return; // Stop if clicking the same sound again
+                                }
+                            }
+                            currentPreviewAudio = new Audio(sound.url);
+                            currentPreviewAudio.play().catch(err => console.error("Audio playback error:", err));
+                        } else {
+                            // This part handles the selection logic via the checkbox
+                            if (checkbox.checked) {
+                                selectedSoundsForAdd.add(sound);
+                                thumb.classList.add('selected-for-add');
+                            } else {
+                                selectedSoundsForAdd.delete(sound);
+                                thumb.classList.remove('selected-for-add');
+                            }
+                        }
+                    });
+                });
+            }
+            
+            addSelectedSoundsButton.addEventListener('click', () => {
+                const sprite = getActiveSprite();
+                if (!sprite) return;
+                
+                selectedSoundsForAdd.forEach(sound => {
+                    if (!sprite.sounds.some(s => s.url === sound.url)) {
+                        sprite.sounds.push(sound);
                     }
                 });
 
-                addSoundButton.addEventListener('click', () => soundGallery.classList.add('visible'));
-                closeSoundGalleryButton.addEventListener('click', () => soundGallery.classList.remove('visible'));
+                renderSpriteSounds(sprite);
+                Blockly.getMainWorkspace().refreshToolboxSelection();
+                soundGallery.classList.remove('visible');
+            });
 
-                const setupFileUpload = (headerButtonId, fileInputId, handler) => {
-                    const headerButton = document.getElementById(headerButtonId);
-                    const fileInput = document.getElementById(fileInputId);
-                    headerButton.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', handler);
-                };
 
-                const handleFileUpload = (file, callback) => {
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => callback(e.target.result, file.name);
-                        reader.readAsDataURL(file);
-                    }
-                };
-
-                setupFileUpload('upload-sprite-header-button', 'sprite-upload-input', (e) => handleFileUpload(e.target.files[0], (url, name) => {
-                    createNewSprite(name.replace(/\.[^/.]+$/, ""), url);
-                }));
-                setupFileUpload('upload-backdrop-header-button', 'backdrop-upload-input', (e) => handleFileUpload(e.target.files[0], (url) => {
-                    const newCard = createBackdropCard(url);
-                    window.switchBackdrop(url);
-                }));
-                setupFileUpload('upload-sound-header-button', 'sound-upload-input', (e) => handleFileUpload(e.target.files[0], (url, name) => {
-                    const sprite = getActiveSprite();
-                    if (sprite) {
-                        sprite.sounds.push({ name: name.replace(/\.[^/.]+$/, ""), url });
-                        renderSpriteSounds(sprite);
-                        workspace.refreshToolboxSelection();
-                    }
-                }));
-
-                setupPropertiesPanelListeners();
+            // --- Initialization ---
+            function init() {
                 createDefaultBackdrop();
                 createDefaultSprite();
+                preloadSoundAssets();
+                setupPropertiesPanelListeners();
+                setupAssetLoading();
+                
+                addBackdropButton.addEventListener('click', () => openGallery(backgroundGallery));
+                closeGalleryButton.addEventListener('click', () => backgroundGallery.classList.remove('visible'));
+                thumbnailsGrid.addEventListener('click', handleGallerySelection);
+                backdropsList.addEventListener('click', handleBackdropSelection);
+                
+                addSpriteButton.addEventListener('click', () => openGallery(spriteGallery));
+                closeSpriteGalleryButton.addEventListener('click', () => spriteGallery.classList.remove('visible'));
+                spriteThumbnailsGrid.addEventListener('click', handleSpriteGallerySelection);
+
+                addSoundButton.addEventListener('click', () => {
+                    if (!getActiveSprite()) {
+                        alert("Please select a sprite first!");
+                        return;
+                    }
+                    selectedSoundsForAdd.clear();
+                     document.querySelectorAll('.sound-thumbnail').forEach(t => {
+                        t.classList.remove('selected-for-add');
+                        t.querySelector('.sound-thumbnail-checkbox').checked = false;
+                    });
+                    openGallery(soundGallery);
+                });
+                closeSoundGalleryButton.addEventListener('click', () => {
+                     if (currentPreviewAudio) {
+                        currentPreviewAudio.pause();
+                        currentPreviewAudio = null;
+                    }
+                    soundGallery.classList.remove('visible');
+                });
+
+                let lastTime = 0;
+                function gameLoop(timestamp) {
+                    const deltaTime = timestamp - lastTime;
+                    lastTime = timestamp;
+
+                    if (scriptRunner) {
+                        scriptRunner.tick();
+                    }
+                    updateGifAnimations(deltaTime);
+                    requestAnimationFrame(gameLoop);
+                }
                 requestAnimationFrame(gameLoop);
             }
-            
-            init();
 
+            init();
         });
     </script>
 </body>
