@@ -449,14 +449,101 @@
             box-shadow: 0 0 #00000033;
         }
 
-        /* Sprite Properties Panel */
-        #prop-show.active, #prop-hide.active, #prop-rotation-style button.active {
-            background-color: #60a5fa; /* Lighter blue for active state */
-            color: white;
+        /* Sprite Properties Panel - New Icon Styles */
+        .prop-control-group {
+            display: flex;
+            align-items: center;
+            background-color: #E5E7EB; /* Light gray background */
+            border: 1px solid #D1D5DB; /* Subtle border */
+            border-radius: 20px; /* Fully rounded ends */
+            padding: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
         }
-        #prop-show, #prop-hide, #prop-rotation-style button {
-            transition: background-color 0.2s, color 0.2s;
+        
+        .prop-icon-wrapper {
+            background-color: #3b82f6; /* Blue accent, like add sprite button */
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
         }
+        
+        .prop-icon {
+            width: 18px;
+            height: 18px;
+            filter: brightness(0) invert(1); /* Make icon white */
+        }
+        
+        #sprite-properties-panel input[type="text"],
+        #sprite-properties-panel input[type="number"] {
+            border: none;
+            background: white;
+            padding: 4px 8px;
+            margin-left: 4px;
+            border-radius: 16px;
+            font-weight: 500;
+            color: #333;
+            outline: none;
+            transition: box-shadow 0.2s;
+            height: 28px;
+            box-sizing: border-box;
+        }
+        
+        #sprite-properties-panel #prop-name { width: 80px; }
+        #sprite-properties-panel #prop-x,
+        #sprite-properties-panel #prop-y,
+        #sprite-properties-panel #prop-size,
+        #sprite-properties-panel #prop-direction { 
+            width: 50px; 
+        }
+        
+        #sprite-properties-panel input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); /* Blue focus ring */
+        }
+        
+        /* Specific styling for show/hide and rotation controls */
+        .prop-control-group .control-set {
+            display: flex;
+            background-color: white;
+            border-radius: 16px;
+            padding: 2px;
+            margin-left: 4px;
+            height: 28px;
+            box-sizing: border-box;
+            gap: 2px;
+        }
+        
+        .prop-control-group .control-set button {
+            background-color: transparent;
+            border-radius: 14px;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .prop-control-group .control-set button.active {
+            background-color: #fee2e2; /* Light red for active background */
+        }
+        
+        .prop-control-group .control-set button.active svg {
+            color: #ef4444; /* Red for active icon */
+        }
+        .prop-control-group .control-set button svg {
+            width: 20px;
+            height: 20px;
+            color: #22c55e; /* Green icon color */
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+        
         #prop-direction {
             cursor: pointer;
         }
