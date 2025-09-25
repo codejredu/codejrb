@@ -1,3 +1,5 @@
+
+
 import { initCharacterCreator } from './Caracter.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -345,6 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let collisionState = new Set();
     let scriptRunner = null;
     let lastTimestamp = 0;
+    // Make frameDeltaTime accessible globally so the generated code can see it.
+    window.frameDeltaTime = 1000 / 60; // Time in ms for one frame at 60fps.
     
     // --- Sound System State ---
     let currentPreviewAudio = null;
@@ -1075,9 +1079,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_ATOMIC) || '10';
         return `
             if (sprite) {
+                const SCRATCH_FPS = 30;
+                const stepsPerSecond = Number(${steps}) * SCRATCH_FPS;
+                const distanceThisFrame = stepsPerSecond * (window.frameDeltaTime / 1000.0);
+
                 const radians = sprite.direction * Math.PI / 180;
-                sprite.x += (${steps}) * Math.sin(radians);
-                sprite.y += (${steps}) * Math.cos(radians);
+                sprite.x += distanceThisFrame * Math.sin(radians);
+                sprite.y += distanceThisFrame * Math.cos(radians);
                 
                 const halfWidth = ${STAGE_WIDTH / 2};
                 const halfHeight = ${STAGE_HEIGHT / 2};
@@ -1101,7 +1109,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 updateSpriteAppearance(sprite.id);
                 window.updateActiveSpritePanel();
-                log(sprite.name + ' זזה ' + (${steps}) + ' צעדים.');
             }
             yield;
         `;
@@ -1122,10 +1129,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                 sprite.direction += (${degrees});
-                 updateSpriteAppearance(sprite.id);
-                 window.updateActiveSpritePanel();
-                log(sprite.name + ' הסתובבה ימינה ב-' + (${degrees}) + ' מעלות.');
+                const SCRATCH_FPS = 30;
+                const degreesPerSecond = Number(${degrees}) * SCRATCH_FPS;
+                const rotationThisFrame = degreesPerSecond * (window.frameDeltaTime / 1000.0);
+
+                sprite.direction += rotationThisFrame;
+                updateSpriteAppearance(sprite.id);
+                window.updateActiveSpritePanel();
             }
             yield;
         `;
@@ -1146,10 +1156,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                sprite.direction -= (${degrees});
+                const SCRATCH_FPS = 30;
+                const degreesPerSecond = Number(${degrees}) * SCRATCH_FPS;
+                const rotationThisFrame = degreesPerSecond * (window.frameDeltaTime / 1000.0);
+
+                sprite.direction -= rotationThisFrame;
                 updateSpriteAppearance(sprite.id);
                 window.updateActiveSpritePanel();
-                log(sprite.name + ' הסתובבה שמאלה ב-' + (${degrees}) + ' מעלות.');
             }
             yield;
         `;
@@ -1506,7 +1519,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 log('חזרה מספר: ' + (i + 1));
                 ${branch}
                 if (getExecutionCancelled()) break;
-                yield;
             }
         `;
     };
@@ -1579,17 +1591,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startY = sprite.y;
                 const endX = (${x});
                 const endY = (${y});
-                const durationTicks = Math.max(1, Math.round((${secs}) * 30)); // 30 FPS target
+                const durationMs = Math.max(0, (${secs}) * 1000);
+                const startTime = Date.now();
+                let elapsedTime = 0;
 
-                for (let i = 0; i <= durationTicks; i++) {
-                     if (getExecutionCancelled()) break;
-                     const progress = i / durationTicks;
-                     sprite.x = startX + (endX - startX) * progress;
-                     sprite.y = startY + (endY - startY) * progress;
-                     updateSpriteAppearance(sprite.id);
-                     window.updateActiveSpritePanel();
-                     yield;
+                while (elapsedTime < durationMs) {
+                    if (getExecutionCancelled()) break;
+                    
+                    elapsedTime = Date.now() - startTime;
+                    const progress = Math.min(1, elapsedTime / durationMs);
+                    
+                    sprite.x = startX + (endX - startX) * progress;
+                    sprite.y = startY + (endY - startY) * progress;
+                    
+                    updateSpriteAppearance(sprite.id);
+                    window.updateActiveSpritePanel();
+                    yield;
                 }
+                
                 if (!getExecutionCancelled()) {
                     sprite.x = endX;
                     sprite.y = endY;
@@ -1620,16 +1639,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             if (sprite) {
                 const JUMP_HEIGHT = (${height});
-                const DURATION_TICKS = 15; // Approx 500ms at 30fps
+                const DURATION_MS = 500;
                 const startY = sprite.y;
+                const startTime = Date.now();
+                let elapsedTime = 0;
                 log(sprite.name + ' מתחילה לקפוץ...');
 
-                for (let i = 0; i <= DURATION_TICKS; i++) {
-                    if (getExecutionCancelled()) {
+                while (elapsedTime < DURATION_MS) {
+                     if (getExecutionCancelled()) {
                         sprite.y = startY;
                         break;
                     }
-                    const progress = i / DURATION_TICKS;
+                    elapsedTime = Date.now() - startTime;
+                    const progress = Math.min(1, elapsedTime / DURATION_MS);
+                    
+                    // Parabolic function for jump arc: y = -4h * x * (x - 1)
+                    // where h is height and x is progress (0 to 1)
                     const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
                     sprite.y = startY + parabolicProgress;
                     
@@ -1637,6 +1662,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.updateActiveSpritePanel();
                     yield;
                 }
+
                 if (!getExecutionCancelled()) {
                     sprite.y = startY;
                     updateSpriteAppearance(sprite.id);
@@ -1900,6 +1926,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!code) return null;
 
+        // The generated code will access window.frameDeltaTime, which is updated every tick.
         const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
         const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
         
@@ -1932,6 +1959,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const code = Blockly.JavaScript.blockToCode(block);
         const sprite = getActiveSprite();
         const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
+        // The generated code will access window.frameDeltaTime, which is updated every tick.
         const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
         const generator = func(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
         
@@ -1982,6 +2010,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         enterFullscreenIcon.classList.toggle('hidden', isExpanded);
         exitFullscreenIcon.classList.toggle('hidden', !isExpanded);
+        
+        if (isExpanded) {
+            fullscreenButton.title = 'צא ממסך מלא'; // Exit fullscreen
+        } else {
+            fullscreenButton.title = 'מסך מלא'; // Fullscreen
+        }
         
         setTimeout(() => {
             window.dispatchEvent(new Event('resize')); 
@@ -2786,14 +2820,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!lastTimestamp) {
             lastTimestamp = timestamp;
         }
-        const deltaTime = timestamp - lastTimestamp;
+        // Calculate delta time, with a fallback for the first frame or pauses
+        const deltaTime = (timestamp - lastTimestamp) || (1000 / 60);
         lastTimestamp = timestamp;
+        // Cap delta time to prevent huge jumps if the tab was inactive
+        window.frameDeltaTime = Math.min(deltaTime, 100);
 
         if (scriptRunner) {
             scriptRunner.tick();
         }
         
-        updateGifAnimations(deltaTime);
+        // GIF animations are updated based on real time for smoothness
+        updateGifAnimations(window.frameDeltaTime);
 
         requestAnimationFrame(tick);
     }
