@@ -374,11 +374,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getActiveSprite = () => sprites[activeSpriteId] || null;
     
-    window.updateActiveSpritePanel = () => {
-        if (activeSpriteId && sprites[activeSpriteId]) {
-            updatePropertiesPanel();
+    const updatePropertiesPanel = () => {
+        const sprite = getActiveSprite();
+        if (sprite) {
+            propertiesPanel.classList.remove('hidden');
+            
+            propName.value = sprite.name;
+            propX.value = Math.round(sprite.x);
+            propY.value = Math.round(sprite.y);
+            propSize.value = sprite.size;
+            // Always display the normalized direction (0-359)
+            propDirection.value = Math.round(((sprite.direction % 360) + 360) % 360);
+
+            if (sprite.opacity === 1) {
+                propShow.classList.add('active');
+                propHide.classList.remove('active');
+            } else {
+                propShow.classList.remove('active');
+                propHide.classList.add('active');
+            }
+            
+            // Update rotation style buttons
+            propRotationAllAround.classList.toggle('active', sprite.rotationStyle === 'all-around');
+            propRotationLeftRight.classList.toggle('active', sprite.rotationStyle === 'left-right');
+            propRotationDontRotate.classList.toggle('active', sprite.rotationStyle === 'dont-rotate');
+
+            if (sprite.isGif && sprite.animation) {
+                gifAnimationPanel.classList.remove('hidden');
+                gifSpeedSlider.value = sprite.gifSpeed;
+                gifSpeedValue.textContent = `${Number(sprite.gifSpeed).toFixed(1)}x`;
+                const isPlaying = sprite.animation.previewIsPlaying;
+                gifPlayIcon.classList.toggle('hidden', isPlaying);
+                gifPauseIcon.classList.toggle('hidden', !isPlaying);
+            } else {
+                gifAnimationPanel.classList.add('hidden');
+            }
+
+        } else {
+            propertiesPanel.classList.add('hidden');
         }
-    }
+    };
 
     window.switchBackdrop = (url) => {
         if (!url || url === 'NONE') return;
@@ -561,45 +596,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const updatePropertiesPanel = () => {
-        const sprite = getActiveSprite();
-        if (sprite) {
-            propertiesPanel.classList.remove('hidden');
-            
-            propName.value = sprite.name;
-            propX.value = Math.round(sprite.x);
-            propY.value = Math.round(sprite.y);
-            propSize.value = sprite.size;
-            propDirection.value = sprite.direction;
-
-            if (sprite.opacity === 1) {
-                propShow.classList.add('active');
-                propHide.classList.remove('active');
-            } else {
-                propShow.classList.remove('active');
-                propHide.classList.add('active');
-            }
-            
-            // Update rotation style buttons
-            propRotationAllAround.classList.toggle('active', sprite.rotationStyle === 'all-around');
-            propRotationLeftRight.classList.toggle('active', sprite.rotationStyle === 'left-right');
-            propRotationDontRotate.classList.toggle('active', sprite.rotationStyle === 'dont-rotate');
-
-            if (sprite.isGif && sprite.animation) {
-                gifAnimationPanel.classList.remove('hidden');
-                gifSpeedSlider.value = sprite.gifSpeed;
-                gifSpeedValue.textContent = `${Number(sprite.gifSpeed).toFixed(1)}x`;
-                const isPlaying = sprite.animation.previewIsPlaying;
-                gifPlayIcon.classList.toggle('hidden', isPlaying);
-                gifPauseIcon.classList.toggle('hidden', !isPlaying);
-            } else {
-                gifAnimationPanel.classList.add('hidden');
-            }
-
-        } else {
-            propertiesPanel.classList.add('hidden');
+    /**
+     * Centralized function to update a sprite's appearance on stage
+     * and its properties in the panel if it's the active sprite.
+     * @param {object} sprite The sprite object to refresh.
+     */
+    window.refreshSprite = (sprite) => {
+        if (!sprite) return;
+        updateSpriteAppearance(sprite.id);
+        if (sprite.id === activeSpriteId) {
+            updatePropertiesPanel();
         }
     };
+
 
     const createNewSprite = (name, imageUrl, initialX = 0, initialY = 0, isCustom = false, characterData = null, gifSpeed = 1.0) => {
         const id = `sprite-${Date.now()}`;
@@ -803,8 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
             spriteData.x = initialSpriteX + deltaX * scaleX;
             spriteData.y = initialSpriteY - deltaY * scaleY;
             
-            updateSpriteAppearance(dragSpriteId);
-            updatePropertiesPanel();
+            window.refreshSprite(spriteData);
         }
     };
 
@@ -824,7 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const spriteData = sprites[dragSpriteId];
             document.querySelector(`#container-${dragSpriteId} .sprite-wrapper`).style.transition = 'transform 0.5s ease-out';
-            updatePropertiesPanel(); // Final update
+            window.refreshSprite(spriteData); // Final update
             log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
         }
         isDragging = false;
@@ -906,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const numberPadDisplay = document.getElementById('number-pad-display');
             
             numberPad.currentField = this;
-            numberPadDisplay.textContent = this.getValue() || '0';
+            numberPadDisplay.textContent = ''; // Clear display on open
 
             // Show pad to start calculations
             numberPad.style.display = 'block';
@@ -1079,13 +1087,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_ATOMIC) || '10';
         return `
             if (sprite) {
-                const SCRATCH_FPS = 30;
-                const stepsPerSecond = Number(${steps}) * SCRATCH_FPS;
-                const distanceThisFrame = stepsPerSecond * (window.frameDeltaTime / 1000.0);
-
+                const distance = Number(${steps});
                 const radians = sprite.direction * Math.PI / 180;
-                sprite.x += distanceThisFrame * Math.sin(radians);
-                sprite.y += distanceThisFrame * Math.cos(radians);
+                sprite.x += distance * Math.sin(radians);
+                sprite.y += distance * Math.cos(radians);
                 
                 const halfWidth = ${STAGE_WIDTH / 2};
                 const halfHeight = ${STAGE_HEIGHT / 2};
@@ -1107,8 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     sprite.y = halfHeight + spriteHalfHeight;
                 }
 
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                window.refreshSprite(sprite);
             }
             yield;
         `;
@@ -1129,13 +1133,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                const SCRATCH_FPS = 30;
-                const degreesPerSecond = Number(${degrees}) * SCRATCH_FPS;
-                const rotationThisFrame = degreesPerSecond * (window.frameDeltaTime / 1000.0);
-
-                sprite.direction += rotationThisFrame;
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                let newDirection = sprite.direction + Number(${degrees});
+                sprite.direction = ((newDirection % 360) + 360) % 360;
+                window.refreshSprite(sprite);
             }
             yield;
         `;
@@ -1156,13 +1156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                const SCRATCH_FPS = 30;
-                const degreesPerSecond = Number(${degrees}) * SCRATCH_FPS;
-                const rotationThisFrame = degreesPerSecond * (window.frameDeltaTime / 1000.0);
-
-                sprite.direction -= rotationThisFrame;
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                let newDirection = sprite.direction - Number(${degrees});
+                sprite.direction = ((newDirection % 360) + 360) % 360;
+                window.refreshSprite(sprite);
             }
             yield;
         `;
@@ -1174,8 +1170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (getActiveSprite()) {
                     let sprite = getActiveSprite();
                     sprite.direction = Number(newValue);
-                    updateSpriteAppearance(sprite.id);
-                    updatePropertiesPanel();
+                    window.refreshSprite(sprite);
                 }
                 return newValue;
             };
@@ -1195,10 +1190,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = block.getFieldValue('DEGREES');
         return `
             if (sprite) {
-                sprite.direction = ${degrees};
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
-                log(sprite.name + ' קבעה כיוון ל-' + ${degrees} + ' מעלות.');
+                let newDirection = Number(${degrees});
+                sprite.direction = ((newDirection % 360) + 360) % 360;
+                window.refreshSprite(sprite);
+                log(sprite.name + ' קבעה כיוון ל-' + sprite.direction + ' מעלות.');
             }
             yield;
         `;
@@ -1279,8 +1274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             if (sprite) {
                 sprite.opacity = 1;
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                window.refreshSprite(sprite);
                 log(sprite.name + ' הוצגה.');
             }
             yield;
@@ -1299,8 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             if (sprite) {
                 sprite.opacity = 0;
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                window.refreshSprite(sprite);
                 log(sprite.name + ' הוסתרה.');
             }
             yield;
@@ -1325,8 +1318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             if (sprite) {
                 sprite.size += Number(${size});
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                window.refreshSprite(sprite);
                 log(sprite.name + ' גדלה לגודל ' + sprite.size);
             }
             yield;
@@ -1351,8 +1343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             if (sprite) {
                 sprite.size = Math.max(5, sprite.size - Number(${size})); // Don't let size go below 5
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                window.refreshSprite(sprite);
                 log(sprite.name + ' קטנה לגודל ' + sprite.size);
             }
             yield;
@@ -1377,8 +1368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             if (sprite) {
                 sprite.size = Math.max(5, Number(${size})); // Don't let size go below 5
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                window.refreshSprite(sprite);
                 log(sprite.name + ' קבע גודל ל-' + sprite.size);
             }
             yield;
@@ -1561,8 +1551,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sprite) {
                 sprite.x = (${x});
                 sprite.y = (${y});
-                updateSpriteAppearance(sprite.id);
-                window.updateActiveSpritePanel();
+                window.refreshSprite(sprite);
                 log(sprite.name + ' עברה למיקום: ' + sprite.x.toFixed(0) + ', ' + sprite.y.toFixed(0));
             }
             yield;
@@ -1604,16 +1593,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     sprite.x = startX + (endX - startX) * progress;
                     sprite.y = startY + (endY - startY) * progress;
                     
-                    updateSpriteAppearance(sprite.id);
-                    window.updateActiveSpritePanel();
+                    window.refreshSprite(sprite);
                     yield;
                 }
                 
                 if (!getExecutionCancelled()) {
                     sprite.x = endX;
                     sprite.y = endY;
-                    updateSpriteAppearance(sprite.id);
-                    window.updateActiveSpritePanel();
+                    window.refreshSprite(sprite);
                     log(sprite.name + ' סיימה לגלוש.');
                 }
             }
@@ -1658,15 +1645,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const parabolicProgress = -4 * JUMP_HEIGHT * progress * (progress - 1);
                     sprite.y = startY + parabolicProgress;
                     
-                    updateSpriteAppearance(sprite.id);
-                    window.updateActiveSpritePanel();
+                    window.refreshSprite(sprite);
                     yield;
                 }
 
                 if (!getExecutionCancelled()) {
                     sprite.y = startY;
-                    updateSpriteAppearance(sprite.id);
-                    window.updateActiveSpritePanel();
+                    window.refreshSprite(sprite);
                     log(sprite.name + ' סיימה לקפוץ.');
                 }
             }
@@ -1928,9 +1913,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // The generated code will access window.frameDeltaTime, which is updated every tick.
         const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
-        const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
+        const func = new GeneratorFunction('sprite', 'log', 'getExecutionCancelled', 'window', code);
         
-        return func(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
+        return func(sprite, log, getExecutionCancelled, window);
     }
 
     function runScriptStack(startBlock) {
@@ -1960,8 +1945,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const sprite = getActiveSprite();
         const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
         // The generated code will access window.frameDeltaTime, which is updated every tick.
-        const func = new GeneratorFunction('sprite', 'updateSpriteAppearance', 'log', 'getExecutionCancelled', 'window', code);
-        const generator = func(sprite, updateSpriteAppearance, log, getExecutionCancelled, window);
+        const func = new GeneratorFunction('sprite', 'log', 'getExecutionCancelled', 'window', code);
+        const generator = func(sprite, log, getExecutionCancelled, window);
         
         if (!scriptRunner || !scriptRunner.isRunning) {
             scriptRunner = new ScriptRunner();
@@ -2355,11 +2340,19 @@ document.addEventListener('DOMContentLoaded', () => {
     numberPadGrid.addEventListener('click', (e) => {
         if (e.target.tagName === 'BUTTON') {
             const value = e.target.dataset.value;
+            let currentDisplay = numberPadDisplay.textContent;
+
             if (value === 'backspace') {
-                numberPadDisplay.textContent = numberPadDisplay.textContent.slice(0, -1);
+                numberPadDisplay.textContent = currentDisplay.slice(0, -1);
+            } else if (value === '-') {
+                if (currentDisplay.startsWith('-')) {
+                    numberPadDisplay.textContent = currentDisplay.substring(1);
+                } else {
+                    numberPadDisplay.textContent = '-' + currentDisplay;
+                }
             } else {
                 // Prevent multiple decimals
-                if (value === '.' && numberPadDisplay.textContent.includes('.')) return;
+                if (value === '.' && currentDisplay.includes('.')) return;
                 numberPadDisplay.textContent += value;
             }
         }
@@ -2557,29 +2550,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.x = Number(e.target.value);
-                updateSpriteAppearance(sprite.id);
+                window.refreshSprite(sprite);
             }
         });
         propY.addEventListener('change', (e) => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.y = Number(e.target.value);
-                updateSpriteAppearance(sprite.id);
+                window.refreshSprite(sprite);
             }
         });
         propSize.addEventListener('change', (e) => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.size = Number(e.target.value);
-                updateSpriteAppearance(sprite.id);
+                window.refreshSprite(sprite);
             }
         });
         
         propDirection.addEventListener('change', (e) => {
             const sprite = getActiveSprite();
             if (sprite) {
-                sprite.direction = Number(e.target.value);
-                updateSpriteAppearance(sprite.id);
+                const newDirection = Number(e.target.value);
+                // Normalize the direction to be within 0-359
+                sprite.direction = ((newDirection % 360) + 360) % 360;
+                window.refreshSprite(sprite);
             }
         });
         
@@ -2612,16 +2607,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.opacity = 1;
-                updateSpriteAppearance(sprite.id);
-                updatePropertiesPanel();
+                window.refreshSprite(sprite);
             }
         });
         propHide.addEventListener('click', () => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.opacity = 0;
-                updateSpriteAppearance(sprite.id);
-                updatePropertiesPanel();
+                window.refreshSprite(sprite);
             }
         });
         
@@ -2630,24 +2623,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.rotationStyle = 'all-around';
-                updateSpriteAppearance(sprite.id);
-                updatePropertiesPanel();
+                window.refreshSprite(sprite);
             }
         });
         propRotationLeftRight.addEventListener('click', () => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.rotationStyle = 'left-right';
-                updateSpriteAppearance(sprite.id);
-                updatePropertiesPanel();
+                window.refreshSprite(sprite);
             }
         });
         propRotationDontRotate.addEventListener('click', () => {
             const sprite = getActiveSprite();
             if (sprite) {
                 sprite.rotationStyle = 'dont-rotate';
-                updateSpriteAppearance(sprite.id);
-                updatePropertiesPanel();
+                window.refreshSprite(sprite);
             }
         });
 
@@ -2693,7 +2683,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sprite.direction = degrees;
         propDirection.value = degrees;
         anglePickerHandle.style.transform = `rotate(${degrees - 90}deg)`;
-        updateSpriteAppearance(sprite.id);
+        window.refreshSprite(sprite);
     };
 
     anglePickerDial.addEventListener('mousedown', (e) => {
@@ -2856,14 +2846,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { name: "Bird Call", url: "https://codejredu.github.io/test/assets/sound/double.mp3" },
             { name: "Partridge", url: "https://codejredu.github.io/test/assets/sound/grey.mp3" },
             { name: "Pygmy Shrew", url: "https://codejredu.github.io/test/assets/sound/pygmy.mp3" },
-            { name: "School", url: "https://codejredu.github.io/test/assets/sound/schools.mp3" },
-            { name: "Flycatcher", url: "https://codejredu.github.io/test/assets/sound/vermilion.mp3" },
-            { name: "Ding", url: "https://codejredu.github.io/test/assets/sound/dingsoundeffect2.mp3" },
-            { name: "Dog", url: "https://codejredu.github.io/test/assets/sound/dog.mp3" },
-            { name: "Leopard", url: "https://codejredu.github.io/test/assets/sound/leopard7.mp3" },
-            { name: "Link", url: "https://codejredu.github.io/test/assets/sound/link.mp3" },
-            { name: "Lion Cub", url: "https://codejredu.github.io/test/assets/sound/lioncub.mp3" },
-            { name: "Whale", url: "https://codejredu.github.io/test/assets/sound/whale3.mp3" },
+            { name: "School", url: "https://codejredu.github.io/test/assets/sound/school.mp3" },
         ];
 
         allSounds.forEach(sound => {
@@ -2873,301 +2856,314 @@ document.addEventListener('DOMContentLoaded', () => {
             thumb.dataset.name = sound.name;
             thumb.innerHTML = `
                 <input type="checkbox" class="sound-thumbnail-checkbox">
-                <svg class="sound-thumbnail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                <svg class="sound-thumbnail-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                 </svg>
                 <span class="sound-thumbnail-name">${sound.name}</span>
             `;
-            soundGalleryGrid.appendChild(thumb);
-            
-            const checkbox = thumb.querySelector('.sound-thumbnail-checkbox');
-
             thumb.addEventListener('click', (e) => {
-                 if (e.target !== checkbox) {
-                     if (currentPreviewAudio) currentPreviewAudio.pause();
-                     currentPreviewAudio = new Audio(sound.url);
-                     currentPreviewAudio.play();
-                 }
-            });
-
-            checkbox.addEventListener('change', () => {
-                if (checkbox.checked) {
-                    selectedSoundsForAdd.add(sound);
-                    thumb.classList.add('selected-for-add');
+                if (e.target.type === 'checkbox') {
+                    // Handle checkbox click
+                    if (e.target.checked) {
+                        selectedSoundsForAdd.add(sound.url);
+                        thumb.classList.add('selected-for-add');
+                    } else {
+                        selectedSoundsForAdd.delete(sound.url);
+                        thumb.classList.remove('selected-for-add');
+                    }
                 } else {
-                    selectedSoundsForAdd.delete(sound);
-                    thumb.classList.remove('selected-for-add');
+                    // Handle thumbnail click (play preview)
+                    if (currentPreviewAudio && !currentPreviewAudio.paused) {
+                        currentPreviewAudio.pause();
+                        if (currentPreviewAudio.src === sound.url) {
+                            currentPreviewAudio = null;
+                            return;
+                        }
+                    }
+                    currentPreviewAudio = new Audio(sound.url);
+                    currentPreviewAudio.play();
                 }
             });
+            soundGalleryGrid.appendChild(thumb);
         });
     }
 
-    function addSelectedSounds() {
-        const sprite = getActiveSprite();
-        if (sprite && selectedSoundsForAdd.size > 0) {
-            selectedSoundsForAdd.forEach(soundToAdd => {
-                if (!sprite.sounds.some(s => s.url === soundToAdd.url)) {
-                    sprite.sounds.push({ name: soundToAdd.name, url: soundToAdd.url });
-                }
-            });
-            renderSpriteSounds(sprite);
-            workspace.refreshToolboxSelection();
-            if (soundGallery) soundGallery.classList.remove('visible');
-        }
-    }
-
-    function handleSoundUpload(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const sprite = getActiveSprite();
-                if(sprite) {
-                    sprite.sounds.push({ name: file.name.replace(/\.[^/.]+$/, ""), url: event.target.result });
-                    renderSpriteSounds(sprite);
-                    workspace.refreshToolboxSelection();
-                }
-            };
-            reader.readAsDataURL(file);
-            e.target.value = null; // Reset input
-        }
+    function addSoundsToSprite(sprite, sounds) {
+        sounds.forEach(sound => {
+            if (!sprite.sounds.some(s => s.url === sound.url)) {
+                sprite.sounds.push(sound);
+            }
+        });
+        renderSpriteSounds(sprite);
+        workspace.refreshToolboxSelection();
     }
     
+    function deleteSoundFromSprite(sprite, soundUrl) {
+        sprite.sounds = sprite.sounds.filter(s => s.url !== soundUrl);
+        renderSpriteSounds(sprite);
+        workspace.refreshToolboxSelection();
+    }
+
     function renderSpriteSounds(sprite) {
         soundsList.innerHTML = '';
-        if (!sprite || !sprite.sounds || sprite.sounds.length === 0) {
-             soundsList.innerHTML = '<div class="text-gray-500 italic px-4">אין צלילים לדמות זו</div>';
-            return;
-        }
+        if (!sprite || !sprite.sounds) return;
 
-        sprite.sounds.forEach((sound, index) => {
-            const soundCard = document.createElement('div');
-            soundCard.className = 'sound-card';
-            soundCard.innerHTML = `
-                <div class="delete-button">&times;</div>
-                <svg class="sound-card-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+        sprite.sounds.forEach(sound => {
+            const card = document.createElement('div');
+            card.className = 'sound-card';
+            card.dataset.url = sound.url;
+            card.innerHTML = `
+                <div class="delete-button">X</div>
+                <svg class="sound-card-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
                 <span class="sound-card-name">${sound.name}</span>
             `;
-
-            soundCard.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-button')) return;
-                if (currentPreviewAudio) currentPreviewAudio.pause();
-                currentPreviewAudio = new Audio(sound.url);
-                currentPreviewAudio.play();
-            });
-            
-            soundCard.querySelector('.delete-button').addEventListener('click', (e) => {
+            card.querySelector('.delete-button').addEventListener('click', (e) => {
                 e.stopPropagation();
-                sprite.sounds.splice(index, 1);
-                renderSpriteSounds(sprite);
-                workspace.refreshToolboxSelection();
+                deleteSoundFromSprite(sprite, sound.url);
             });
-
-            soundsList.appendChild(soundCard);
+            card.addEventListener('click', () => {
+                const audio = new Audio(sound.url);
+                audio.play();
+            });
+            soundsList.appendChild(card);
         });
     }
 
-    // Sound Recorder Functions
-    function resetRecorderUI() {
-        recorderRecordBtn.classList.remove('hidden');
-        recorderStopBtn.classList.add('hidden');
-        recorderRerecordBtn.classList.add('hidden');
-        recorderSaveBtn.classList.add('hidden');
-        recorderPreviewContainer.classList.add('hidden');
-        recorderAudioPreview.src = '';
-        recorderSoundName.value = '';
-        recorderTimer.textContent = '0.0 / 15.0';
-        recorderVisualizer.classList.remove('is-recording');
-        recordedBlob = null;
-        audioChunks = [];
+    addSoundButton.addEventListener('click', () => {
+        populateSoundGallery();
+        openGallery(soundGallery);
+        selectedSoundsForAdd.clear();
+        soundGalleryGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        soundGalleryGrid.querySelectorAll('.sound-thumbnail').forEach(t => t.classList.remove('selected-for-add'));
+    });
+    
+    closeSoundGalleryButton.addEventListener('click', () => {
+        soundGallery.classList.remove('visible');
+        if (currentPreviewAudio) {
+            currentPreviewAudio.pause();
+            currentPreviewAudio = null;
+        }
+    });
+
+    addSelectedSoundsButton.addEventListener('click', () => {
+        const sprite = getActiveSprite();
+        if (!sprite) return;
+
+        const soundsToAdd = [];
+        selectedSoundsForAdd.forEach(url => {
+            const thumb = soundGalleryGrid.querySelector(`.sound-thumbnail[data-url="${url}"]`);
+            if (thumb) {
+                soundsToAdd.push({ name: thumb.dataset.name, url: url });
+            }
+        });
+
+        addSoundsToSprite(sprite, soundsToAdd);
+        soundGallery.classList.remove('visible');
+    });
+
+    // --- Sound Recorder Logic ---
+
+    function showRecorderMessage(msg, isError = true) {
+        recorderMessage.textContent = msg;
+        recorderMessage.className = `w-full text-center p-3 rounded-lg border ${isError ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200'}`;
+        recorderMessage.classList.remove('hidden');
+    }
+    
+    function hideRecorderMessage() {
+         recorderMessage.classList.add('hidden');
     }
 
-    function closeRecorder() {
-        if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-            mediaStream = null;
-        }
-        if (recorderTimerInterval) {
-            clearInterval(recorderTimerInterval);
-        }
-        soundRecorderModal.classList.add('hidden');
-    }
-
-    async function openRecorder() {
-        soundRecorderModal.classList.remove('hidden');
-        recorderMessage.classList.add('hidden');
-        recorderUIContent.classList.remove('hidden');
-        resetRecorderUI();
-        recorderRecordBtn.disabled = true;
-
+    async function startRecording() {
+        hideRecorderMessage();
         try {
             mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            recorderRecordBtn.disabled = false;
-            log('Microphone permission granted.');
+            mediaRecorder = new MediaRecorder(mediaStream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(recordedBlob);
+                recorderAudioPreview.src = audioUrl;
+                updateRecorderUI('preview');
+                mediaStream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            updateRecorderUI('recording');
+            
+            let seconds = 0;
+            recorderTimer.textContent = `0.0 / 15.0`;
+            recorderTimerInterval = setInterval(() => {
+                seconds += 0.1;
+                recorderTimer.textContent = `${seconds.toFixed(1)} / 15.0`;
+                if (seconds >= 15) {
+                    stopRecording();
+                }
+            }, 100);
+
         } catch (err) {
-            console.error('Error getting microphone access:', err);
-            recorderMessage.textContent = 'נדחתה גישה למיקרופון. אנא אפשר גישה בהגדרות הדפדפן.';
-            recorderMessage.classList.remove('hidden');
-            recorderUIContent.classList.add('hidden');
-            recorderRecordBtn.disabled = true;
+            console.error("Error starting recording:", err);
+            showRecorderMessage('לא ניתן לגשת למיקרופון. אנא בדוק הרשאות.');
+            updateRecorderUI('idle');
         }
     }
-
-    function startRecording() {
-        if (!mediaStream) {
-             alert('אין גישה למיקרופון.');
-             return;
-        }
-        mediaRecorder = new MediaRecorder(mediaStream);
-        mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
-        
-        mediaRecorder.onstop = () => {
-            recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            const audioUrl = URL.createObjectURL(recordedBlob);
-            recorderAudioPreview.src = audioUrl;
-            recorderPreviewContainer.classList.remove('hidden');
-            recorderRecordBtn.classList.add('hidden');
-            recorderStopBtn.classList.add('hidden');
-            recorderRerecordBtn.classList.remove('hidden');
-            recorderSaveBtn.classList.remove('hidden');
-        };
-        
-        audioChunks = [];
-        mediaRecorder.start();
-        recorderVisualizer.classList.add('is-recording');
-        recorderRecordBtn.classList.add('hidden');
-        recorderStopBtn.classList.remove('hidden');
-
-        let startTime = Date.now();
-        recorderTimerInterval = setInterval(() => {
-            const elapsedTime = (Date.now() - startTime) / 1000;
-            recorderTimer.textContent = `${elapsedTime.toFixed(1)} / 15.0`;
-            if (elapsedTime >= 15) stopRecording();
-        }, 100);
-    }
-
+    
     function stopRecording() {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        recorderVisualizer.classList.remove('is-recording');
-        if (recorderTimerInterval) clearInterval(recorderTimerInterval);
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
+        clearInterval(recorderTimerInterval);
     }
-
+    
     function saveRecording() {
         const sprite = getActiveSprite();
-        if (!sprite || !recordedBlob) return;
-        
         const soundName = recorderSoundName.value.trim() || `הקלטה ${sprite.sounds.length + 1}`;
-        
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64Url = reader.result;
-            sprite.sounds.push({ name: soundName, url: base64Url });
-            renderSpriteSounds(sprite);
-            workspace.refreshToolboxSelection();
-            closeRecorder();
-        };
-        reader.readAsDataURL(recordedBlob);
+        if (recordedBlob && sprite) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const dataUrl = event.target.result;
+                addSoundsToSprite(sprite, [{ name: soundName, url: dataUrl }]);
+                soundRecorderModal.classList.add('hidden');
+                updateRecorderUI('idle');
+            };
+            reader.readAsDataURL(recordedBlob);
+        }
     }
 
-    // --- Initialization ---
-    function initializeApp() {
-        // Initialize popups/galleries
-        const setupGallery = (addButtonId, galleryId, closeButtonId, selectionHandler, uploadInputId, uploadHandlerId, fileHandler) => {
-            const addButton = document.getElementById(addButtonId);
-            const gallery = document.getElementById(galleryId);
-            const closeButton = document.getElementById(closeButtonId);
-            const grid = gallery.querySelector('.thumbnail-grid');
-            const uploadButton = document.getElementById(uploadHandlerId);
-            const uploadInput = document.getElementById(uploadInputId);
-            
-            if(addButton) addButton.addEventListener('click', () => openGallery(gallery));
-            if(closeButton) closeButton.addEventListener('click', () => gallery.classList.remove('visible'));
-            if(grid) grid.addEventListener('click', selectionHandler);
-
-            if (uploadButton && uploadInput) {
-                uploadButton.addEventListener('click', () => uploadInput.click());
-                uploadInput.addEventListener('change', fileHandler);
-            }
-        };
-
-        const handleFileUpload = (e, createFunction) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    createFunction(file.name.replace(/\.[^/.]+$/, ""), event.target.result);
-                };
-                reader.readAsDataURL(file);
-                e.target.value = null; // Reset input
-            }
-        };
+    function updateRecorderUI(state) {
+        recorderRecordBtn.classList.toggle('hidden', state !== 'idle');
+        recorderStopBtn.classList.toggle('hidden', state !== 'recording');
+        recorderRerecordBtn.classList.toggle('hidden', state !== 'preview');
+        recorderSaveBtn.classList.toggle('hidden', state !== 'preview');
+        recorderPreviewContainer.classList.toggle('hidden', state !== 'preview');
+        recorderVisualizer.classList.toggle('is-recording', state === 'recording');
         
-        // Sprite Gallery
-        setupGallery('add-sprite-button', 'sprite-gallery', 'close-sprite-gallery-button', handleSpriteGallerySelection, 'sprite-upload-input', 'upload-sprite-header-button', (e) => handleFileUpload(e, createNewSprite));
+        if (state === 'idle') {
+            recorderTimer.textContent = '0.0 / 15.0';
+            recorderSoundName.value = '';
+        }
+    }
+    
+    recordSoundHeaderButton.addEventListener('click', () => {
+        if(!getActiveSprite()) {
+            alert("יש לבחור דמות לפני הקלטת צליל.");
+            return;
+        }
+        soundRecorderModal.classList.remove('hidden');
+        updateRecorderUI('idle');
+        hideRecorderMessage();
+    });
 
-        // Backdrop Gallery
-        setupGallery('add-backdrop-button', 'background-gallery', 'close-gallery-button', handleGallerySelection, 'backdrop-upload-input', 'upload-backdrop-header-button', (e) => handleFileUpload(e, (name, url) => {
-            const newCard = createBackdropCard(url);
-            window.switchBackdrop(url);
-        }));
+    recorderCloseBtn.addEventListener('click', () => {
+        stopRecording();
+        if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+        soundRecorderModal.classList.add('hidden');
+    });
+
+    recorderRecordBtn.addEventListener('click', startRecording);
+    recorderStopBtn.addEventListener('click', stopRecording);
+    recorderRerecordBtn.addEventListener('click', () => updateRecorderUI('idle'));
+    recorderSaveBtn.addEventListener('click', saveRecording);
+
+
+    // --- File Upload Logic ---
+    function handleFileUpload(file, type) {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            const name = file.name.split('.')[0];
+            
+            if (type === 'sprite') {
+                createNewSprite(name, dataUrl, 0, 0);
+            } else if (type === 'backdrop') {
+                const newCard = createBackdropCard(dataUrl);
+                window.switchBackdrop(dataUrl);
+            } else if (type === 'sound') {
+                const sprite = getActiveSprite();
+                if (sprite) {
+                    addSoundsToSprite(sprite, [{ name: name, url: dataUrl }]);
+                } else {
+                     alert("יש לבחור דמות לפני העלאת צליל.");
+                }
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // --- Gallery Initialization and Listeners ---
+    function initGalleries() {
+        document.getElementById('add-sprite-button').addEventListener('click', () => openGallery(spriteGallery));
+        document.getElementById('upload-sprite-header-button').addEventListener('click', () => document.getElementById('sprite-upload-input').click());
+        document.getElementById('sprite-upload-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'sprite'));
+        document.getElementById('close-sprite-gallery-button').addEventListener('click', () => spriteGallery.classList.remove('visible'));
+        document.getElementById('sprite-thumbnails-grid').addEventListener('click', handleSpriteGallerySelection);
+
+        document.getElementById('add-backdrop-button').addEventListener('click', () => openGallery(backgroundGallery));
+        document.getElementById('upload-backdrop-header-button').addEventListener('click', () => document.getElementById('backdrop-upload-input').click());
+        document.getElementById('backdrop-upload-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'backdrop'));
+        document.getElementById('close-gallery-button').addEventListener('click', () => backgroundGallery.classList.remove('visible'));
+        document.getElementById('thumbnails-grid').addEventListener('click', handleGallerySelection);
+        
+        uploadSoundHeaderButton.addEventListener('click', () => {
+             if (!getActiveSprite()) {
+                alert("יש לבחור דמות לפני העלאת צליל.");
+                return;
+            }
+            soundUploadInput.click();
+        });
+        soundUploadInput.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'sound'));
 
         backdropsList.addEventListener('click', handleBackdropSelection);
-
-        // Initialize Character Creator
-        const onSaveCharacter = (data) => {
-            const { name, dataUrl, characterData, editingSpriteId } = data;
-            if (editingSpriteId && sprites[editingSpriteId]) {
-                const spriteToUpdate = sprites[editingSpriteId];
-                spriteToUpdate.imageUrl = dataUrl;
-                spriteToUpdate.characterData = JSON.parse(JSON.stringify(characterData));
-                
-                // Update visuals
-                const cardImg = document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`);
-                if (cardImg) cardImg.src = dataUrl;
-                const stageImg = document.querySelector(`#container-${editingSpriteId} img`);
-                if (stageImg) stageImg.src = dataUrl;
+    }
+    
+    // Initialize Character Creator
+    window.characterCreator = initCharacterCreator({
+        onSave: ({ name, dataUrl, characterData, editingSpriteId }) => {
+            if (editingSpriteId) {
+                const sprite = sprites[editingSpriteId];
+                if (sprite) {
+                    sprite.imageUrl = dataUrl;
+                    sprite.characterData = characterData;
+                    // Update visuals
+                    document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`).src = dataUrl;
+                    document.querySelector(`#container-${editingSpriteId} img`).src = dataUrl;
+                }
             } else {
-                const finalName = name || `דמות ${Object.keys(sprites).length + 1}`;
-                createNewSprite(finalName, dataUrl, 0, 0, true, JSON.parse(JSON.stringify(characterData)));
+                 createNewSprite(name || 'דמות חדשה', dataUrl, 0, 0, true, characterData);
             }
-        };
-        
-        window.characterCreator = initCharacterCreator({
-            onSave: onSaveCharacter,
-            getSprite: (id) => sprites[id],
-        });
+        },
+        getSprite: (spriteId) => sprites[spriteId] || null
+    });
+    
+    document.getElementById('create-sprite-header-button').addEventListener('click', () => {
+        window.characterCreator.open();
+    });
 
-        document.getElementById('create-sprite-header-button').addEventListener('click', () => window.characterCreator.open());
-
-
+    // --- Application Initialization ---
+    function initialize() {
+        initGalleries();
+        setupPropertiesPanelListeners();
         createDefaultBackdrop();
         createDefaultSprite();
-        setupPropertiesPanelListeners();
         
-        // --- Sound System Initialization (Rebuilt) ---
-        populateSoundGallery();
-        addSoundButton.addEventListener('click', () => {
-            selectedSoundsForAdd.clear();
-            soundGallery.querySelectorAll('.sound-thumbnail').forEach(t => t.classList.remove('selected-for-add'));
-            soundGallery.querySelectorAll('.sound-thumbnail-checkbox').forEach(c => c.checked = false);
-            openGallery(soundGallery);
-        });
-        closeSoundGalleryButton.addEventListener('click', () => soundGallery.classList.remove('visible'));
-        addSelectedSoundsButton.addEventListener('click', addSelectedSounds);
-        uploadSoundHeaderButton.addEventListener('click', () => soundUploadInput.click());
-        soundUploadInput.addEventListener('change', handleSoundUpload);
-        recordSoundHeaderButton.addEventListener('click', openRecorder);
-        recorderCloseBtn.addEventListener('click', closeRecorder);
-        recorderRecordBtn.addEventListener('click', startRecording);
-        recorderStopBtn.addEventListener('click', stopRecording);
-        recorderRerecordBtn.addEventListener('click', resetRecorderUI);
-        recorderSaveBtn.addEventListener('click', saveRecording);
-
+        const firstSpriteId = Object.keys(sprites)[0];
+        if (firstSpriteId) {
+            setActiveSprite(firstSpriteId);
+        } else {
+             updatePropertiesPanel();
+        }
+        
         requestAnimationFrame(tick);
-        log("האפליקציה אותחלה.");
+        log('האפליקציה אותחלה.');
     }
 
-    initializeApp();
+    initialize();
 });

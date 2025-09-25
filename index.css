@@ -385,8 +385,8 @@
             user-select: none;
         }
         .number-pad-display {
-            background-color: #FFF6E0; /* Light cream */
-            border: 1px solid #FFECCF;
+            background-color: #FFFFFF; /* White background as requested */
+            border: 1px solid #E0E0E0; /* Adjusted border for white background */
             border-radius: 6px;
             padding: 6px; /* Further reduced padding */
             text-align: right;
@@ -427,7 +427,8 @@
         .number-pad-grid button[data-value="9"],
         .number-pad-grid button[data-value="6"],
         .number-pad-grid button[data-value="3"] { background-color: #f97316; }
-        .number-pad-grid button[data-value="."] { background-color: #8b5cf6; }
+        .number-pad-grid button[data-value="."],
+        .number-pad-grid button[data-value="-"] { background-color: #8b5cf6; }
         .number-pad-grid button[data-value="backspace"] { background-color: #eab308; }
         .number-pad-done {
             width: 100%;
@@ -494,11 +495,13 @@
         }
         
         #sprite-properties-panel #prop-name { width: 80px; }
-        #sprite-properties-panel #prop-x,
-        #sprite-properties-panel #prop-y,
         #sprite-properties-panel #prop-size,
         #sprite-properties-panel #prop-direction { 
             width: 50px; 
+        }
+        #sprite-properties-panel #prop-x,
+        #sprite-properties-panel #prop-y { 
+            width: 60px; /* Accommodate up to 4 characters (e.g., -240) */
         }
         
         #sprite-properties-panel input:focus {
