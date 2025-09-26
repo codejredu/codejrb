@@ -190,18 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const top = readUInt16();
                 const w = readUInt16();
                 const h = readUInt16();
-                const packed = readByte();
-                const lctFlag = (packed & 0x80) !== 0;
-                const interlace = (packed & 0x40) !== 0;
-                const lctSize = 2 << (packed & 0x07);
+                const imagePacked = readByte();
+                const lctFlag = (imagePacked & 0x80) !== 0;
+                const interlace = (imagePacked & 0x40) !== 0;
+                const lctSize = 2 << (imagePacked & 0x07);
                 const ct = lctFlag ? readColorTable(lctSize) : gct;
 
                 const minCodeSize = readByte();
                 const lzwData = [];
-                while (true) {
-                    const size = readByte();
-                    if (size === 0) break;
-                    for(let i=0; i<size; ++i) lzwData.push(data[pos++]);
+                let lzwBlockSize;
+                while ((lzwBlockSize = readByte()) !== 0) {
+                    for(let i=0; i < lzwBlockSize; ++i) lzwData.push(data[pos++]);
                 }
                 
                 const pixelIndices = [];
@@ -221,10 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const extType = readByte();
                 if (extType === 0xF9) { // Graphic Control Extension
                     readByte(); // block size
-                    const packed = readByte();
-                    const transparentFlag = (packed & 1) !== 0;
+                    const gcePacked = readByte();
+                    const transparentFlag = (gcePacked & 1) !== 0;
                     gce = {
-                        disposalMethod: (packed >> 2) & 7,
+                        disposalMethod: (gcePacked >> 2) & 7,
                         delay: readUInt16(),
                         transparentColorIndex: transparentFlag ? readByte() : null,
                     };
@@ -237,15 +236,15 @@ document.addEventListener('DOMContentLoaded', () => {
                        loopCount = readUInt16();
                        readByte(); // block terminator
                    } else {
-                       while(true) {
-                           const size = readByte(); if (size === 0) break;
-                           pos += size;
+                       let appExtSize;
+                       while((appExtSize = readByte()) !== 0) {
+                           pos += appExtSize;
                        }
                    }
                 } else {
-                     while(true) {
-                        const size = readByte(); if (size === 0) break;
-                        pos += size;
+                     let unknownExtSize;
+                     while((unknownExtSize = readByte()) !== 0) {
+                        pos += unknownExtSize;
                     }
                 }
             } else if (blockType === 0x3B) { // Trailer
@@ -1214,6 +1213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     Blockly.JavaScript['looks_say_for_secs'] = function(block) {
         const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "''";
         const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '2';
+        // Sanitize the block ID to create a valid JavaScript variable name.
+        const varName = `endTime_${block.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
         return `
             if (sprite) {
                 const spriteEl = document.getElementById(sprite.id);
@@ -1223,8 +1224,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     bubble.classList.add('visible');
                     log(sprite.name + ' אומרת: ' + ${message});
                     
-                    const endTime = Date.now() + (${secs}) * 1000;
-                    while (Date.now() < endTime) {
+                    const ${varName} = Date.now() + (${secs}) * 1000;
+                    while (Date.now() < ${varName}) {
                         if (getExecutionCancelled()) break;
                         yield;
                     }
@@ -1475,10 +1476,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     Blockly.JavaScript['control_wait_secs'] = function(block) {
         const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+        // Sanitize the block ID to create a valid JavaScript variable name.
+        const varName = `endTime_${block.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
         return `
             log('המתנה של ' + (${secs}) + ' שניות...');
-            const endTime = Date.now() + (${secs}) * 1000;
-            while (Date.now() < endTime) {
+            const ${varName} = Date.now() + (${secs}) * 1000;
+            while (Date.now() < ${varName}) {
                 if (getExecutionCancelled()) break;
                 yield;
             }
