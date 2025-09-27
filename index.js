@@ -277,6 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveButton = document.getElementById('save-button');
     const loadButton = document.getElementById('load-button');
     const loadInput = document.getElementById('load-input');
+    const fullscreenRunButton = document.getElementById('fullscreen-run-button');
+    const fullscreenResetButton = document.getElementById('fullscreen-reset-button');
 
     // --- Sprite Properties Panel Elements ---
     const propertiesPanel = document.getElementById('sprite-properties-panel');
@@ -429,9 +431,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Frame-Based Script Execution Engine (like Scratch) ---
     class ScriptRunner {
-        constructor() {
+        constructor(onScriptsComplete) {
             this.threads = [];
             this.isRunning = false;
+            this.onScriptsComplete = onScriptsComplete; // Callback for when all scripts are done.
             log('מנוע ריצה חדש נוצר.');
         }
 
@@ -450,7 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         stop() {
-            this.isRunning = false;
             this.threads = [];
             executionCancelled = true;
             log('מנוע ריצה נעצר.');
@@ -468,8 +470,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (this.threads.length === 0) {
-                log('כל התסריטים הסתיימו.');
-                this.stop(); 
+                this.isRunning = false; // Set running to false before calling callback
+                // All scripts finished naturally. Call the completion callback.
+                if (this.onScriptsComplete) {
+                    this.onScriptsComplete();
+                }
             }
         }
     }
@@ -568,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'left-right':
                     const normalizedDir = ((spriteData.direction % 360) + 360) % 360;
                     // The sprite should face right for directions 0-179 and left for 180-359.
-                    const isFlipped = normalizedDir >= 180;
+                    const isFlipped = normalizedDir >= 180 && normalizedDir < 360;
                     rotationTransform = isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
                     break;
                 case 'dont-rotate':
@@ -595,6 +600,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    const updateGoToXYBlockInToolbox = (x, y) => {
+        const toolbox = workspace?.getToolbox();
+        if (!toolbox) return;
+
+        const flyout = toolbox.getFlyout();
+        if (!flyout || !flyout.isVisible()) {
+            return;
+        }
+
+        const flyoutWorkspace = flyout.getWorkspace();
+        const blocks = flyoutWorkspace.getTopBlocks(false);
+
+        for (const block of blocks) {
+            if (block.type === 'motion_go_to_xy') {
+                try {
+                    const shadowX = block.getInput('X')?.connection?.targetBlock();
+                    if (shadowX && shadowX.isShadow()) {
+                        shadowX.setFieldValue(Math.round(x), 'NUM');
+                    }
+                    const shadowY = block.getInput('Y')?.connection?.targetBlock();
+                    if (shadowY && shadowY.isShadow()) {
+                        shadowY.setFieldValue(Math.round(y), 'NUM');
+                    }
+                } catch (e) {
+                    console.warn('Could not update toolbox block.', e);
+                }
+                break; 
+            }
+        }
+    };
+
     /**
      * Centralized function to update a sprite's appearance on stage
      * and its properties in the panel if it's the active sprite.
@@ -605,6 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSpriteAppearance(sprite.id);
         if (sprite.id === activeSpriteId) {
             updatePropertiesPanel();
+            updateGoToXYBlockInToolbox(sprite.x, sprite.y);
         }
     };
 
@@ -720,7 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const setActiveSprite = (spriteId) => {
-        if (scriptRunner && scriptRunner.isRunning || activeSpriteId === spriteId) return;
+        if ((scriptRunner && scriptRunner.isRunning) || activeSpriteId === spriteId) return;
 
         // 1. Save current workspace
         if (activeSpriteId && sprites[activeSpriteId]) {
@@ -913,7 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const numberPadDisplay = document.getElementById('number-pad-display');
             
             numberPad.currentField = this;
-            numberPadDisplay.textContent = ''; // Clear display on open
+            numberPadDisplay.textContent = this.getValue() || '';
 
             // Show pad to start calculations
             numberPad.style.display = 'block';
@@ -1536,10 +1573,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         `;
     };
+
     Blockly.Blocks['motion_go_to_xy'] = {
         init: function() {
-            this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("x:");
-            this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("y:");
+            this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/iconsx.svg", 24, 24, "X"));
+            this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/iconsy.svg", 24, 24, "Y"));
             this.setInputsInline(true);
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -1562,10 +1602,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     Blockly.Blocks['motion_glide_to_xy'] = {
         init: function() {
-            this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("גלוש");
-            this.appendDummyInput().appendField("שניות למיקום");
-            this.appendValueInput("X").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("x:");
-            this.appendValueInput("Y").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField("y:");
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/surffingEmoji.svg", 34, 34, "גלוש"));
+            this.appendValueInput("SECS")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/wait.svg", 24, 24, "שניות"));
+            this.appendValueInput("X")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/iconsx.svg", 24, 24, "X"));
+            this.appendValueInput("Y")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/iconsy.svg", 24, 24, "Y"));
             this.setInputsInline(true);
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -1932,7 +1982,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const generator = createGeneratorForStack(startBlock, sprite);
         if (generator) {
             if (!scriptRunner || !scriptRunner.isRunning) {
-                 scriptRunner = new ScriptRunner();
+                 scriptRunner = new ScriptRunner(stopAllScripts);
+                 document.getElementById('run-button').classList.add('hidden');
+                 document.getElementById('reset-button').classList.remove('hidden');
+                 fullscreenRunButton.classList.add('hidden');
+                 fullscreenResetButton.classList.remove('hidden');
             }
             scriptRunner.add(generator);
         }
@@ -1952,7 +2006,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const generator = func(sprite, log, getExecutionCancelled, window);
         
         if (!scriptRunner || !scriptRunner.isRunning) {
-            scriptRunner = new ScriptRunner();
+            scriptRunner = new ScriptRunner(stopAllScripts);
+            document.getElementById('run-button').classList.add('hidden');
+            document.getElementById('reset-button').classList.remove('hidden');
+            fullscreenRunButton.classList.add('hidden');
+            fullscreenResetButton.classList.remove('hidden');
         }
         scriptRunner.add(generator);
     }
@@ -1991,6 +2049,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('run-button').addEventListener('click', runCode);
     document.getElementById('reset-button').addEventListener('click', stopAllScripts);
+    fullscreenRunButton.addEventListener('click', runCode);
+    fullscreenResetButton.addEventListener('click', stopAllScripts);
     
     fullscreenButton.addEventListener('click', () => {
         containerWrapper.classList.toggle('stage-expanded');
@@ -2023,8 +2083,14 @@ document.addEventListener('DOMContentLoaded', () => {
             log('תסריט כבר רץ. לחץ על עצור לפני הפעלה מחדש.');
             return;
         }
+
+        document.getElementById('run-button').classList.add('hidden');
+        document.getElementById('reset-button').classList.remove('hidden');
+        fullscreenRunButton.classList.add('hidden');
+        fullscreenResetButton.classList.remove('hidden');
+        
         saveActiveSpriteWorkspace();
-        scriptRunner = new ScriptRunner();
+        scriptRunner = new ScriptRunner(stopAllScripts);
         
         log('התסריט הופעל.');
 
@@ -2059,6 +2125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!scriptsFound) {
              log('לא נמצאו תסריטים שמתחילים בדגל ירוק.');
              scriptRunner.stop(); // Stop immediately if no scripts to run
+             stopAllScripts(); // Also reset UI
         }
     }
     
@@ -2071,7 +2138,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function runBroadcastScripts(message) {
         saveActiveSpriteWorkspace();
         if (!scriptRunner || !scriptRunner.isRunning) {
-            scriptRunner = new ScriptRunner();
+            scriptRunner = new ScriptRunner(stopAllScripts);
+            document.getElementById('run-button').classList.add('hidden');
+            document.getElementById('reset-button').classList.remove('hidden');
+            fullscreenRunButton.classList.add('hidden');
+            fullscreenResetButton.classList.remove('hidden');
         }
 
         Object.values(sprites).forEach(sprite => {
@@ -2107,7 +2178,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!sprite || !sprite.workspaceXml) return;
 
         if (!scriptRunner || !scriptRunner.isRunning) {
-            scriptRunner = new ScriptRunner();
+            scriptRunner = new ScriptRunner(stopAllScripts);
+             document.getElementById('run-button').classList.add('hidden');
+             document.getElementById('reset-button').classList.remove('hidden');
+             fullscreenRunButton.classList.add('hidden');
+             fullscreenResetButton.classList.remove('hidden');
         }
         
         const tempWorkspace = new Blockly.Workspace();
@@ -2168,7 +2243,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function triggerBumpScripts(id1, id2) {
         saveActiveSpriteWorkspace();
         if (!scriptRunner || !scriptRunner.isRunning) {
-            scriptRunner = new ScriptRunner();
+            scriptRunner = new ScriptRunner(stopAllScripts);
+            document.getElementById('run-button').classList.add('hidden');
+            document.getElementById('reset-button').classList.remove('hidden');
+            fullscreenRunButton.classList.add('hidden');
+            fullscreenResetButton.classList.remove('hidden');
         }
 
         const runForSprite = (sprite) => {
@@ -2199,7 +2278,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         saveActiveSpriteWorkspace();
         if (!scriptRunner || !scriptRunner.isRunning) {
-            scriptRunner = new ScriptRunner();
+            scriptRunner = new ScriptRunner(stopAllScripts);
+             document.getElementById('run-button').classList.add('hidden');
+             document.getElementById('reset-button').classList.remove('hidden');
+             fullscreenRunButton.classList.add('hidden');
+             fullscreenResetButton.classList.remove('hidden');
         }
 
         Object.values(sprites).forEach(sprite => {
@@ -2225,8 +2308,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', handleKeyPress);
 
     function stopAllScripts() {
-        log('לחצן עצור נלחץ.');
         if (scriptRunner) {
+            log('עצירת כל התסריטים.');
+            scriptRunner.isRunning = false;
             scriptRunner.stop();
         }
         
@@ -2248,7 +2332,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updatePropertiesPanel(); // To update play/pause button state
-        log('כל התסריטים נעצרו.');
+        
+        document.getElementById('run-button').classList.remove('hidden');
+        document.getElementById('reset-button').classList.add('hidden');
+        fullscreenRunButton.classList.remove('hidden');
+        fullscreenResetButton.classList.add('hidden');
     }
 
     function deleteBackdrop(cardElement) {
@@ -2366,7 +2454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (field) {
             let newValue = parseFloat(numberPadDisplay.textContent);
             if (isNaN(newValue)) {
-                newValue = 0;
+                newValue = field.getValue(); // Revert to old value if input is invalid
             }
             field.setValue(newValue);
         }
@@ -2377,7 +2465,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Hide number pad when clicking outside
     document.addEventListener('click', (e) => {
         // If the click is not on the number pad and not on a blockly field
-        if (numberPad.style.display === 'block' && !numberPad.contains(e.target) && !e.target.closest('.blocklyText')) {
+        if (numberPad.style.display === 'block' && !numberPad.contains(e.target) && !e.target.closest('.blocklyDraggable')) {
             numberPadDone.click();
         }
     }, true);
@@ -3108,6 +3196,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sprite-upload-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'sprite'));
         document.getElementById('close-sprite-gallery-button').addEventListener('click', () => spriteGallery.classList.remove('visible'));
         document.getElementById('sprite-thumbnails-grid').addEventListener('click', handleSpriteGallerySelection);
+        
+        document.getElementById('create-sprite-header-button').addEventListener('click', () => {
+            if (window.characterCreator) {
+                window.characterCreator.open();
+            }
+        });
 
         document.getElementById('add-backdrop-button').addEventListener('click', () => openGallery(backgroundGallery));
         document.getElementById('upload-backdrop-header-button').addEventListener('click', () => document.getElementById('backdrop-upload-input').click());
@@ -3131,41 +3225,46 @@ document.addEventListener('DOMContentLoaded', () => {
     window.characterCreator = initCharacterCreator({
         onSave: ({ name, dataUrl, characterData, editingSpriteId }) => {
             if (editingSpriteId) {
-                const sprite = sprites[editingSpriteId];
-                if (sprite) {
-                    sprite.imageUrl = dataUrl;
-                    sprite.characterData = characterData;
-                    // Update visuals
-                    document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`).src = dataUrl;
-                    document.querySelector(`#container-${editingSpriteId} img`).src = dataUrl;
+                const spriteToUpdate = sprites[editingSpriteId];
+                if (spriteToUpdate) {
+                    spriteToUpdate.imageUrl = dataUrl;
+                    spriteToUpdate.characterData = characterData;
+                    spriteToUpdate.isGif = false; // Saved character is a static PNG
+                    spriteToUpdate.animation = null;
+
+                    // Update sprite card image
+                    const cardImg = document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`);
+                    if (cardImg) cardImg.src = dataUrl;
+                    
+                    // Update stage sprite image
+                    const stageSpriteImg = document.querySelector(`#container-${editingSpriteId} img`);
+                    const stageSpriteCanvas = document.querySelector(`#container-${editingSpriteId} canvas`);
+                    if (stageSpriteImg) stageSpriteImg.src = dataUrl;
+                    if (stageSpriteCanvas) stageSpriteCanvas.classList.add('hidden');
+                    if (stageSpriteImg) stageSpriteImg.classList.remove('hidden');
+
+
+                    window.refreshSprite(spriteToUpdate);
+                    log(`דמות "${spriteToUpdate.name}" עודכנה.`);
                 }
             } else {
-                 createNewSprite(name || 'דמות חדשה', dataUrl, 0, 0, true, characterData);
+                createNewSprite(name || 'דמות מותאמת', dataUrl, 0, 0, true, characterData);
             }
         },
-        getSprite: (spriteId) => sprites[spriteId] || null
+        getSprite: (spriteId) => sprites[spriteId]
     });
-    
-    document.getElementById('create-sprite-header-button').addEventListener('click', () => {
-        window.characterCreator.open();
-    });
+
 
     // --- Application Initialization ---
     function initialize() {
+        log('מאתחל את היישום...');
         initGalleries();
         setupPropertiesPanelListeners();
         createDefaultBackdrop();
         createDefaultSprite();
-        
-        const firstSpriteId = Object.keys(sprites)[0];
-        if (firstSpriteId) {
-            setActiveSprite(firstSpriteId);
-        } else {
-             updatePropertiesPanel();
-        }
-        
+        stopAllScripts(); // Set initial button state
         requestAnimationFrame(tick);
-        log('האפליקציה אותחלה.');
+        log('היישום אותחל.');
     }
 
     initialize();
