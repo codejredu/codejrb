@@ -573,9 +573,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let rotationTransform = '';
             switch(spriteData.rotationStyle) {
                 case 'left-right':
+                    // Normalize direction to [0, 360)
                     const normalizedDir = ((spriteData.direction % 360) + 360) % 360;
-                    // The sprite should face right for directions 0-179 and left for 180-359.
-                    const isFlipped = normalizedDir >= 180 && normalizedDir < 360;
+                    // Flip when direction is pointing left-ish (in the range (90, 270))
+                    const isFlipped = normalizedDir > 90 && normalizedDir < 270;
                     rotationTransform = isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
                     break;
                 case 'dont-rotate':
@@ -952,7 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const numberPadDisplay = document.getElementById('number-pad-display');
             
             numberPad.currentField = this;
-            numberPadDisplay.textContent = this.getValue() || '';
+            numberPadDisplay.textContent = '';
 
             // Show pad to start calculations
             numberPad.style.display = 'block';
@@ -1171,8 +1172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                let newDirection = sprite.direction + Number(${degrees});
-                sprite.direction = ((newDirection % 360) + 360) % 360;
+                sprite.direction += Number(${degrees});
                 window.refreshSprite(sprite);
             }
             yield;
@@ -1194,8 +1194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                let newDirection = sprite.direction - Number(${degrees});
-                sprite.direction = ((newDirection % 360) + 360) % 360;
+                sprite.direction -= Number(${degrees});
                 window.refreshSprite(sprite);
             }
             yield;
@@ -1228,8 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = block.getFieldValue('DEGREES');
         return `
             if (sprite) {
-                let newDirection = Number(${degrees});
-                sprite.direction = ((newDirection % 360) + 360) % 360;
+                sprite.direction = Number(${degrees});
                 window.refreshSprite(sprite);
                 log(sprite.name + ' קבעה כיוון ל-' + sprite.direction + ' מעלות.');
             }
@@ -1892,6 +1890,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const toolbox = workspace.getToolbox();
     if (toolbox) {
+        // Prevent the flyout (block menu) from closing when a block is dragged out.
+        // This provides a more Scratch-like experience.
+        const flyout = toolbox.getFlyout();
+        if (flyout) {
+            flyout.autoClose = false;
+        }
+
         // Prevent the toolbox from clearing the category selection when the workspace is clicked.
         // This keeps the currently selected category visually highlighted.
         toolbox.clearSelection = () => {
@@ -2734,9 +2739,7 @@ document.addEventListener('DOMContentLoaded', () => {
         propDirection.addEventListener('change', (e) => {
             const sprite = getActiveSprite();
             if (sprite) {
-                const newDirection = Number(e.target.value);
-                // Normalize the direction to be within 0-359
-                sprite.direction = ((newDirection % 360) + 360) % 360;
+                sprite.direction = Number(e.target.value);
                 window.refreshSprite(sprite);
             }
         });
