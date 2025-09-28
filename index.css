@@ -829,7 +829,8 @@
         }
         .container-wrapper.stage-expanded #stage-header h2,
         .container-wrapper.stage-expanded #run-button,
-        .container-wrapper.stage-expanded #reset-button {
+        .container-wrapper.stage-expanded #reset-button,
+        .container-wrapper.stage-expanded #toggle-grid-button {
             display: none;
         }
         .hidden {
@@ -1143,4 +1144,24 @@
             height: 18px;
             width: 18px;
          }
+
+        /* Grid Canvas Styles */
+        #grid-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Make it non-interactive */
+            z-index: 5; /* Above background, below sprites */
+            border-radius: 12px;
+        }
+
+        #toggle-grid-button.active {
+            background-color: #f59e0b; /* Amber color for active state */
+        }
+
+        #toggle-grid-button.active:hover {
+            background-color: #d97706; /* Darker amber on hover */
+        }
 /* END OF FILE index.css */

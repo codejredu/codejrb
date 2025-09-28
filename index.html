@@ -58,6 +58,12 @@
                           <path d="M4 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H4z" />
                         </svg>
                     </button>
+                    <button id="toggle-grid-button" class="w-10 h-10 bg-blue-500 text-white font-bold rounded-full flex justify-center items-center shadow-md hover:bg-blue-600 transition-colors" title="הצג רשת">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 4v16m4-16v16M4 10h16M4 14h16"></path>
+                        </svg>
+                    </button>
                     <button id="fullscreen-button" class="w-10 h-10 bg-blue-500 text-white font-bold rounded-full flex justify-center items-center shadow-md hover:bg-blue-600 transition-colors" title="מסך מלא">
                          <img id="enter-fullscreen-icon" src="https://codejredu.github.io/test/assets/blocklyicon/fullscreen.svg" class="h-7 w-7">
                          <img id="exit-fullscreen-icon" src="https://codejredu.github.io/test/assets/blocklyicon/fullscreen_exit.svg" class="h-7 w-7 hidden">
@@ -65,7 +71,9 @@
                 </div>
             </div>
             <div id="stage-aspect-ratio-wrapper" class="w-full relative">
-                <div id="stage-area"></div>
+                <div id="stage-area">
+                    <canvas id="grid-canvas" class="hidden"></canvas>
+                </div>
             </div>
             
             <div id="sprite-properties-panel" class="section hidden">

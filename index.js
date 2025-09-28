@@ -279,6 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadInput = document.getElementById('load-input');
     const fullscreenRunButton = document.getElementById('fullscreen-run-button');
     const fullscreenResetButton = document.getElementById('fullscreen-reset-button');
+    const toggleGridButton = document.getElementById('toggle-grid-button');
+    const gridCanvas = document.getElementById('grid-canvas');
 
     // --- Sprite Properties Panel Elements ---
     const propertiesPanel = document.getElementById('sprite-properties-panel');
@@ -2070,6 +2072,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     });
 
+    let gridIsDrawn = false;
+    function drawGrid() {
+        if (gridIsDrawn) return;
+
+        const ctx = gridCanvas.getContext('2d');
+        const width = STAGE_WIDTH;
+        const height = STAGE_HEIGHT;
+        gridCanvas.width = width;
+        gridCanvas.height = height;
+
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const step = 40;
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Grid lines
+        ctx.strokeStyle = '#dddddd';
+        ctx.lineWidth = 0.5;
+        for (let x = centerX + step; x < width; x += step) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+        }
+        for (let x = centerX - step; x > 0; x -= step) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+        }
+        for (let y = centerY + step; y < height; y += step) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+        }
+        for (let y = centerY - step; y > 0; y -= step) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#aaaaaa';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(width, centerY); ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = '#555555';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        ctx.fillText('0', centerX + 15, centerY + 15);
+        ctx.textAlign = 'right';
+        ctx.fillText(String(STAGE_WIDTH / 2), width - 5, centerY + 15);
+        ctx.textAlign = 'left';
+        ctx.fillText(String(-STAGE_WIDTH / 2), 5, centerY + 15);
+        ctx.textAlign = 'center';
+        ctx.fillText(String(STAGE_HEIGHT / 2), centerX + 20, 15);
+        ctx.fillText(String(-STAGE_HEIGHT / 2), centerX + 25, height - 15);
+        
+        gridIsDrawn = true;
+    }
+
+    toggleGridButton.addEventListener('click', () => {
+        const isVisible = !gridCanvas.classList.contains('hidden');
+        if (isVisible) {
+            gridCanvas.classList.add('hidden');
+            toggleGridButton.classList.remove('active');
+            toggleGridButton.title = 'הצג רשת';
+        } else {
+            drawGrid(); // Will only draw once
+            gridCanvas.classList.remove('hidden');
+            toggleGridButton.classList.add('active');
+            toggleGridButton.title = 'הסתר רשת';
+        }
+    });
+
 
     function saveActiveSpriteWorkspace() {
          if (activeSpriteId && sprites[activeSpriteId]) {
@@ -3207,65 +3279,43 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('upload-backdrop-header-button').addEventListener('click', () => document.getElementById('backdrop-upload-input').click());
         document.getElementById('backdrop-upload-input').addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'backdrop'));
         document.getElementById('close-gallery-button').addEventListener('click', () => backgroundGallery.classList.remove('visible'));
+        backdropsList.addEventListener('click', handleBackdropSelection);
         document.getElementById('thumbnails-grid').addEventListener('click', handleGallerySelection);
         
-        uploadSoundHeaderButton.addEventListener('click', () => {
-             if (!getActiveSprite()) {
-                alert("יש לבחור דמות לפני העלאת צליל.");
-                return;
-            }
-            soundUploadInput.click();
-        });
+        uploadSoundHeaderButton.addEventListener('click', () => soundUploadInput.click());
         soundUploadInput.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'sound'));
-
-        backdropsList.addEventListener('click', handleBackdropSelection);
     }
-    
-    // Initialize Character Creator
+
+    // --- Character Creator Integration ---
     window.characterCreator = initCharacterCreator({
+        getSprite: (spriteId) => sprites[spriteId],
         onSave: ({ name, dataUrl, characterData, editingSpriteId }) => {
-            if (editingSpriteId) {
-                const spriteToUpdate = sprites[editingSpriteId];
-                if (spriteToUpdate) {
-                    spriteToUpdate.imageUrl = dataUrl;
-                    spriteToUpdate.characterData = characterData;
-                    spriteToUpdate.isGif = false; // Saved character is a static PNG
-                    spriteToUpdate.animation = null;
+            if (editingSpriteId && sprites[editingSpriteId]) {
+                // Update existing sprite
+                const sprite = sprites[editingSpriteId];
+                sprite.imageUrl = dataUrl;
+                sprite.characterData = characterData;
+                
+                // Update on stage
+                const wrapper = document.getElementById(sprite.id);
+                if(wrapper) wrapper.querySelector('img').src = dataUrl;
 
-                    // Update sprite card image
-                    const cardImg = document.querySelector(`.sprite-card[data-sprite-id="${editingSpriteId}"] img`);
-                    if (cardImg) cardImg.src = dataUrl;
-                    
-                    // Update stage sprite image
-                    const stageSpriteImg = document.querySelector(`#container-${editingSpriteId} img`);
-                    const stageSpriteCanvas = document.querySelector(`#container-${editingSpriteId} canvas`);
-                    if (stageSpriteImg) stageSpriteImg.src = dataUrl;
-                    if (stageSpriteCanvas) stageSpriteCanvas.classList.add('hidden');
-                    if (stageSpriteImg) stageSpriteImg.classList.remove('hidden');
-
-
-                    window.refreshSprite(spriteToUpdate);
-                    log(`דמות "${spriteToUpdate.name}" עודכנה.`);
-                }
+                // Update card
+                const card = document.querySelector(`.sprite-card[data-sprite-id="${sprite.id}"]`);
+                if(card) card.querySelector('img').src = dataUrl;
             } else {
-                createNewSprite(name || 'דמות מותאמת', dataUrl, 0, 0, true, characterData);
+                 // Create new sprite
+                const newName = name || `דמות ${Object.keys(sprites).length + 1}`;
+                createNewSprite(newName, dataUrl, 0, 0, true, characterData);
             }
-        },
-        getSprite: (spriteId) => sprites[spriteId]
+        }
     });
 
 
-    // --- Application Initialization ---
-    function initialize() {
-        log('מאתחל את היישום...');
-        initGalleries();
-        setupPropertiesPanelListeners();
-        createDefaultBackdrop();
-        createDefaultSprite();
-        stopAllScripts(); // Set initial button state
-        requestAnimationFrame(tick);
-        log('היישום אותחל.');
-    }
-
-    initialize();
+    // --- App Initialization ---
+    setupPropertiesPanelListeners();
+    initGalleries();
+    createDefaultBackdrop();
+    createDefaultSprite();
+    requestAnimationFrame(tick);
 });
