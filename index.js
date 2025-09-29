@@ -350,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let collisionState = new Set();
     let scriptRunner = null;
     let lastTimestamp = 0;
+    let nextZIndex = 10;
     // Make frameDeltaTime accessible globally so the generated code can see it.
     window.frameDeltaTime = 1000 / 60; // Time in ms for one frame at 60fps.
     
@@ -597,6 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Position the main container which holds the wrapper
             container.style.transform = `translate(${stageX}px, ${stageY}px)`;
+            container.style.zIndex = spriteData.zIndex;
             
             // After any visual update, check for collisions
             checkCollisions();
@@ -648,6 +650,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    /**
+     * Refreshes any 'event_when_bump' blocks in the currently visible workspace
+     * to reflect changes in the available sprites.
+     */
+    function refreshVisibleBumpBlocks() {
+        if (!workspace) return;
+        const allBlocks = workspace.getAllBlocks(false);
+        allBlocks.forEach(block => {
+            if (block.type === 'event_when_bump') {
+                const field = block.getField('TARGET_SPRITE');
+                if (field) {
+                    const currentValue = field.getValue();
+                    const activeSprite = getActiveSprite();
+                    const otherSpritesCount = activeSprite 
+                        ? Object.keys(sprites).filter(id => id !== activeSprite.id).length 
+                        : Object.keys(sprites).length -1;
+                    
+                    if (otherSpritesCount <= 0 && currentValue !== 'NONE') {
+                        field.setValue('NONE');
+                    } else if (otherSpritesCount > 0 && currentValue === 'NONE') {
+                        field.setValue('ANY');
+                    } else {
+                        const options = field.getOptions(false);
+                        const currentSelectionExists = options.some(opt => opt[1] === currentValue);
+                        if (!currentSelectionExists && currentValue !== 'ANY') {
+                            field.setValue('ANY');
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     const createNewSprite = (name, imageUrl, initialX = 0, initialY = 0, isCustom = false, characterData = null, gifSpeed = 1.0) => {
         const id = `sprite-${Date.now()}`;
@@ -670,6 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
             animation: null,
             gifSpeed: gifSpeed,
             sounds: [],
+            zIndex: nextZIndex++,
         };
         
         sprites[id] = spriteData;
@@ -736,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setActiveSprite(id);
         updateSpriteAppearance(id);
+        refreshVisibleBumpBlocks(); // Refresh blocks on other sprites
         return spriteData;
     };
 
@@ -754,7 +790,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 updatePropertiesPanel();
                 renderSpriteSounds(null);
+                refreshVisibleBumpBlocks();
             }
+        } else {
+             refreshVisibleBumpBlocks();
         }
         log(`הדמות ${id} נמחקה.`);
     };
@@ -801,6 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 6. Update properties panel and sounds list
         updatePropertiesPanel();
         renderSpriteSounds(newSprite);
+        refreshVisibleBumpBlocks();
         
         // 7. Refresh toolbox to update dynamic fields (like sounds)
         workspace.refreshToolboxSelection();
@@ -833,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initialMouseY = y;
         initialSpriteX = spriteData.x;
         initialSpriteY = spriteData.y;
-        document.querySelector(`#container-${dragSpriteId} .sprite-wrapper`).style.transition = 'none';
+        document.querySelector(`#container-${dragSpriteId}`).style.transition = 'none';
         log('הדמות נתפסה לגרירה.');
     };
 
@@ -870,7 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const spriteData = sprites[dragSpriteId];
-            document.querySelector(`#container-${dragSpriteId} .sprite-wrapper`).style.transition = 'transform 0.5s ease-out';
+            document.querySelector(`#container-${dragSpriteId}`).style.transition = 'transform 0.5s ease-out';
             window.refreshSprite(spriteData); // Final update
             log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
         }
@@ -979,9 +1019,9 @@ document.addEventListener('DOMContentLoaded', () => {
         init: function() {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/flag.svg", 35, 35, { alt: "green flag", flipRtl: false }))
-                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                .appendField('\u00A0'.repeat(12));
             this.setNextStatement(true, null);
-            this.setColour("#FFE75A");
+            this.setColour("#FFC107");
             this.setTooltip("התחל את התסריט כאשר הדגל הירוק נלחץ.");
             this.setHelpUrl("");
         }
@@ -992,9 +1032,9 @@ document.addEventListener('DOMContentLoaded', () => {
         init: function() {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/whenprees.svg", 35, 35, "*"))
-                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                .appendField('\u00A0'.repeat(12));
             this.setNextStatement(true, null);
-            this.setColour("#FFE75A");
+            this.setColour("#FFC107");
             this.setTooltip("התחל את התסריט כאשר לוחצים על הדמות.");
             this.setHelpUrl("");
         }
@@ -1052,23 +1092,121 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/keyboard.svg", 35, 35, { alt: "keyboard icon", flipRtl: false }))
-                .appendField(new Blockly.FieldDropdown(keyOptions), "KEY");
+                .appendField(new Blockly.FieldDropdown(keyOptions), "KEY")
+                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
             this.setNextStatement(true, null);
-            this.setColour("#FFE75A");
+            this.setColour("#FFC107");
             this.setTooltip("הפעל את התסריט כאשר המקש הנבחר נלחץ.");
             this.setHelpUrl("");
         }
     };
     Blockly.JavaScript['event_when_key_pressed'] = function(block) { return ''; };
     
+    // Custom field for sprite selection
+    class FieldSprite extends Blockly.FieldDropdown {
+        constructor() {
+            super(FieldSprite.generateOptions);
+        }
+
+        static generateOptions() {
+            const spriteIds = Object.keys(sprites);
+            const activeSprite = getActiveSprite();
+            
+            const otherSprites = activeSprite 
+                ? spriteIds.filter(id => id !== activeSprite.id).map(id => sprites[id])
+                : [];
+
+            if (otherSprites.length === 0) {
+                return [[{
+                    src: '', // Intentionally blank to show an empty field
+                    width: 48,
+                    height: 48,
+                    alt: 'אין דמויות אחרות',
+                }, 'NONE']];
+            }
+
+            const options = otherSprites.map(sprite => {
+                return [
+                    {
+                        src: sprite.imageUrl,
+                        width: 48,
+                        height: 48,
+                        alt: sprite.name,
+                    },
+                    sprite.id
+                ];
+            });
+            
+            options.unshift([
+                 {
+                    src: 'https://codejredu.github.io/test/assets/blocklyicon/allman.svg',
+                    width: 48,
+                    height: 48,
+                    alt: 'כל דמות',
+                 },
+                'ANY'
+            ]);
+
+            return options;
+        }
+
+        initView() {
+            super.initView();
+            this.imageElement_ = Blockly.utils.dom.createSvgElement('image', {
+                'height': '36px',
+                'width': '36px',
+                'y': -10,
+                'x': 5
+            }, this.fieldGroup_);
+            this.updateImageView_();
+        }
+
+        showEditor_() {
+            const options = this.getOptions(false);
+            if (options.length === 1 && options[0][1] === 'NONE') {
+                return; // Prevent dropdown from showing if there are no options
+            }
+            super.showEditor_(...arguments);
+        }
+
+        doValueUpdate_(newValue) {
+            super.doValueUpdate_(newValue);
+            this.updateImageView_();
+        }
+
+        updateImageView_() {
+            if (!this.value_ || !this.imageElement_) {
+                return;
+            }
+
+            const options = this.getOptions(false);
+            const selectedOption = options.find(opt => opt[1] === this.value_);
+
+            if (selectedOption && typeof selectedOption[0] === 'object' && selectedOption[0].src) {
+                this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', selectedOption[0].src);
+                if (this.textElement_) {
+                    this.textElement_.style.display = 'none';
+                }
+            } else {
+                // If src is empty or not present, clear the image and hide the text.
+                this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '');
+                if (this.textElement_) {
+                    this.textElement_.style.display = 'none';
+                }
+            }
+        }
+    }
+    Blockly.fieldRegistry.register('field_sprite', FieldSprite);
+
     Blockly.Blocks['event_when_bump'] = {
         init: function() {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/collision.svg", 35, 35, "*"))
-                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                .appendField(new FieldSprite(), 'TARGET_SPRITE')
+                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
             this.setNextStatement(true, null);
-            this.setColour("#FFE75A");
-            this.setTooltip("התחל את התסריט כאשר דמות זו נוגעת בדמות אחרת.");
+            this.setColour("#FFC107");
+            this.setTooltip("התחל את התסריט כאשר דמות זו נוגעת בדמות שנבחרה.");
         }
     };
     Blockly.JavaScript['event_when_bump'] = function(block) { return ''; };
@@ -1079,10 +1217,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/send.svg", 35, 35, "*"))
                 .appendField(new FieldMessage(), 'MESSAGE')
-                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
-            this.setColour("#FFE75A");
+            this.setColour("#FFC107");
             this.setTooltip("שולח מסר לכל הדמויות.");
         }
     };
@@ -1102,9 +1240,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/receive.svg", 35, 35, "*"))
                 .appendField(new FieldMessage(), 'MESSAGE')
-                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0');
+                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
             this.setNextStatement(true, null);
-            this.setColour("#FFE75A");
+            this.setColour("#FFC107");
             this.setTooltip("מתחיל תסריט כאשר מתקבל מסר ספציפי.");
         }
     };
@@ -1214,8 +1352,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/compass.svg", 34, 34, { alt: "compass icon", flipRtl: false }))
-                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0')
-                .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES');
+                .appendField(new Blockly.FieldAngle('90', angleValidator), 'DEGREES')
+                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
             this.setInputsInline(true);
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -1480,7 +1618,8 @@ document.addEventListener('DOMContentLoaded', () => {
         init: function() {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/bg/bgimage.svg", 34, 34, "*"))
-                .appendField(new FieldBackdrop(), 'BACKDROP');
+                .appendField(new FieldBackdrop(), 'BACKDROP')
+                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour("#9966FF");
@@ -1499,7 +1638,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return ''; // Do nothing if no backdrop is selected
     };
 
+    Blockly.Blocks['looks_change_layer'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/layers.svg", 34, 34, { alt: "layers icon", flipRtl: false }))
+                .appendField(new Blockly.FieldDropdown([
+                    [{ src: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M12 19V5'/><path d='m5 12 7-7 7 7'/></svg>`, width: 24, height: 24, alt: 'אחת קדימה' }, 'FORWARD'],
+                    [{ src: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M12 5v14'/><path d='m19 12-7 7-7-7'/></svg>`, width: 24, height: 24, alt: 'אחת אחורה' }, 'BACKWARD'],
+                    [{ src: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='m17 11-5-5-5 5'/><path d='m17 18-5-5-5 5'/></svg>`, width: 24, height: 24, alt: 'לקדמה' }, 'FRONT'],
+                    [{ src: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='m7 13 5 5 5-5'/><path d='m7 6 5 5 5-5'/></svg>`, width: 24, height: 24, alt: 'לאחור' }, 'BACK']
+                ]), "ACTION")
+                .appendField('\u00A0'.repeat(10));
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour("#9966FF");
+            this.setTooltip("שנה את סדר השכבות של הדמות.");
+        }
+    };
 
+    Blockly.JavaScript['looks_change_layer'] = function(block) {
+        const action = block.getFieldValue('ACTION');
+        return `window.changeSpriteLayer(sprite, '${action}'); yield;`;
+    };
     
     Blockly.Blocks['control_wait_secs'] = {
         init: function() {
@@ -1822,8 +1982,8 @@ document.addEventListener('DOMContentLoaded', () => {
         init: function() {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/audio.svg", 34, 34, "*"))
-                .appendField('\u00A0\u00A0')
-                .appendField(new FieldSound(), "SOUND");
+                .appendField(new FieldSound(), "SOUND")
+                .appendField('\u00A0\u00A0\u00A0\u00A0\u00A0');
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour("#CF63CF");
@@ -2327,16 +2487,20 @@ document.addEventListener('DOMContentLoaded', () => {
             fullscreenResetButton.classList.remove('hidden');
         }
 
-        const runForSprite = (sprite) => {
-            if (!sprite.workspaceXml) return;
+        const runForSprite = (spriteToCheck, otherSpriteId) => {
+            if (!spriteToCheck.workspaceXml) return;
             const tempWorkspace = new Blockly.Workspace();
             try {
-                Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(sprite.workspaceXml), tempWorkspace);
-                const bumpScript = tempWorkspace.getTopBlocks(true).find(block => block.type === 'event_when_bump');
-                if (bumpScript) {
-                    const generator = createGeneratorForStack(bumpScript, sprite);
-                    if(generator) scriptRunner.add(generator);
-                }
+                Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(spriteToCheck.workspaceXml), tempWorkspace);
+                const bumpScripts = tempWorkspace.getTopBlocks(true).filter(block => block.type === 'event_when_bump');
+                
+                bumpScripts.forEach(scriptBlock => {
+                    const targetSpriteId = scriptBlock.getFieldValue('TARGET_SPRITE');
+                    if (targetSpriteId === 'ANY' || targetSpriteId === otherSpriteId) {
+                        const generator = createGeneratorForStack(scriptBlock, spriteToCheck);
+                        if (generator) scriptRunner.add(generator);
+                    }
+                });
             } catch (e) {
                 console.error("Error processing bump script workspace", e);
             } finally {
@@ -2344,8 +2508,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        runForSprite(sprites[id1]);
-        runForSprite(sprites[id2]);
+        runForSprite(sprites[id1], id2);
+        runForSprite(sprites[id2], id1);
     }
 
 
@@ -2584,7 +2748,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadSpriteFromData = (spriteData) => {
-        const { id, name, imageUrl, x, y, direction, opacity, size, rotationStyle, isCustom, characterData, isGif, gifSpeed, sounds } = spriteData;
+        const { id, name, imageUrl, x, y, direction, opacity, size, rotationStyle, isCustom, characterData, isGif, gifSpeed, sounds, zIndex } = spriteData;
 
         spriteData.size = size || 100;
         spriteData.rotationStyle = rotationStyle || 'all-around'; // Add for compatibility
@@ -2592,6 +2756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         spriteData.gifSpeed = gifSpeed || 1.0;
         spriteData.animation = null; // Will be loaded async
         spriteData.sounds = sounds || [];
+        spriteData.zIndex = zIndex || nextZIndex++; // Use loaded zIndex or assign a new one
         sprites[id] = spriteData;
 
         const spriteCard = document.createElement('div');
@@ -2674,12 +2839,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeSpriteId = null;
                 workspace.clear();
                 backdropsList.innerHTML = '';
+                nextZIndex = 10;
                 
                 projectData.backdrops.forEach(createBackdropCard);
 
                 window.switchBackdrop(projectData.currentBackdrop);
 
-                Object.values(projectData.sprites).forEach(loadSpriteFromData);
+                let maxZ = 9;
+                Object.values(projectData.sprites).forEach(spriteData => {
+                    loadSpriteFromData(spriteData);
+                    if (spriteData.zIndex && spriteData.zIndex > maxZ) {
+                        maxZ = spriteData.zIndex;
+                    }
+                });
+                nextZIndex = maxZ + 1;
                 
                 const firstSpriteId = Object.keys(projectData.sprites)[0];
                 if (firstSpriteId) {
@@ -3313,6 +3486,47 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // --- Layer Control Logic ---
+    window.changeSpriteLayer = (sprite, action) => {
+        if (!sprite) return;
+        const sortedSprites = Object.values(sprites).sort((a, b) => (a.zIndex || 10) - (b.zIndex || 10));
+        const currentIndex = sortedSprites.findIndex(s => s.id === sprite.id);
+        if (currentIndex === -1) return;
+
+        switch (action) {
+            case 'FRONT':
+                if (currentIndex < sortedSprites.length - 1) {
+                    const topZ = sortedSprites[sortedSprites.length - 1].zIndex;
+                    sprite.zIndex = topZ + 1;
+                    window.refreshSprite(sprite);
+                }
+                break;
+            case 'BACK':
+                if (currentIndex > 0) {
+                    const bottomZ = sortedSprites[0].zIndex;
+                    sprite.zIndex = bottomZ - 1;
+                    window.refreshSprite(sprite);
+                }
+                break;
+            case 'FORWARD':
+                if (currentIndex < sortedSprites.length - 1) {
+                    const nextSprite = sortedSprites[currentIndex + 1];
+                    [sprite.zIndex, nextSprite.zIndex] = [nextSprite.zIndex, sprite.zIndex];
+                    window.refreshSprite(sprite);
+                    window.refreshSprite(nextSprite);
+                }
+                break;
+            case 'BACKWARD':
+                if (currentIndex > 0) {
+                    const prevSprite = sortedSprites[currentIndex - 1];
+                    [sprite.zIndex, prevSprite.zIndex] = [prevSprite.zIndex, sprite.zIndex];
+                    window.refreshSprite(sprite);
+                    window.refreshSprite(prevSprite);
+                }
+                break;
+        }
+    };
 
 
     // --- App Initialization ---
