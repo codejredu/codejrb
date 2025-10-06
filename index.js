@@ -1261,7 +1261,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_ATOMIC) || '10';
         return `
             if (sprite) {
-                const distance = Number(${steps});
+                // Normalize movement to a target of 30 FPS for consistent speed
+                const distance = Number(${steps}) * 30 * (window.frameDeltaTime / 1000);
                 const radians = sprite.direction * Math.PI / 180;
                 sprite.x += distance * Math.sin(radians);
                 sprite.y += distance * Math.cos(radians);
@@ -1307,7 +1308,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                sprite.direction += Number(${degrees});
+                // Normalize rotation to a target of 30 FPS for consistent speed
+                const rotationAmount = Number(${degrees}) * 30 * (window.frameDeltaTime / 1000);
+                sprite.direction += rotationAmount;
                 window.refreshSprite(sprite);
             }
             yield;
@@ -1329,7 +1332,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const degrees = Blockly.JavaScript.valueToCode(block, 'DEGREES', Blockly.JavaScript.ORDER_ATOMIC) || '15';
         return `
             if (sprite) {
-                sprite.direction -= Number(${degrees});
+                // Normalize rotation to a target of 30 FPS for consistent speed
+                const rotationAmount = Number(${degrees}) * 30 * (window.frameDeltaTime / 1000);
+                sprite.direction -= rotationAmount;
                 window.refreshSprite(sprite);
             }
             yield;
@@ -1490,7 +1495,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
         return `
             if (sprite) {
-                sprite.size += Number(${size});
+                // Normalize size change to a target of 30 FPS for consistent speed
+                const sizeChange = Number(${size}) * 30 * (window.frameDeltaTime / 1000);
+                sprite.size += sizeChange;
                 window.refreshSprite(sprite);
                 log(sprite.name + ' גדלה לגודל ' + sprite.size);
             }
@@ -1515,7 +1522,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
         return `
             if (sprite) {
-                sprite.size = Math.max(5, sprite.size - Number(${size})); // Don't let size go below 5
+                // Normalize size change to a target of 30 FPS for consistent speed
+                const sizeChange = Number(${size}) * 30 * (window.frameDeltaTime / 1000);
+                sprite.size = Math.max(5, sprite.size - sizeChange); // Don't let size go below 5
                 window.refreshSprite(sprite);
                 log(sprite.name + ' קטנה לגודל ' + sprite.size);
             }
