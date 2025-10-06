@@ -1,5 +1,6 @@
 
 
+
 import { initCharacterCreator } from './Caracter.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -910,7 +911,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const spriteData = sprites[dragSpriteId];
-            document.querySelector(`#container-${dragSpriteId}`).style.transition = 'transform 0.5s ease-out';
             window.refreshSprite(spriteData); // Final update
             log(`הדמות נגררה למיקום חדש (x: ${spriteData.x.toFixed(0)}, y: ${spriteData.y.toFixed(0)})`);
         }

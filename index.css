@@ -876,6 +876,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px; /* Space between icon and text */
+            position: relative; /* Add for positioning context of the background circle */
         }
         .blocklyTreeLabelText {
             font-weight: bold;
@@ -887,6 +888,8 @@
             width: 28px;
             height: 28px;
             transition: filter 0.2s;
+            position: relative; /* Ensure it's on top of the pseudo-element */
+            z-index: 1;
         }
         .value-bubble {
             position: fixed; /* Use fixed to position relative to viewport */
@@ -909,9 +912,20 @@
             border-right-color: var(--category-color);
         }
 
-        .blocklyTreeRow.kidi-category-selected .kidi-category-icon {
-            filter: brightness(0) invert(1);
+        .blocklyTreeRow.kidi-category-selected .blocklyTreeLabel::before {
+            content: '';
+            position: absolute;
+            z-index: 0;
+            width: 36px;
+            height: 36px;
+            background-color: white;
+            border-radius: 50%;
+            top: -4px; /* (28px icon height - 36px circle height) / 2 */
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.2s;
         }
+
         .blocklyTreeRow.kidi-category-selected .blocklyTreeLabelText {
             color: white;
         }
