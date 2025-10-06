@@ -1,6 +1,3 @@
-
-
-
 import { initCharacterCreator } from './Caracter.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -3527,6 +3524,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
     };
+    
+    // --- Add unload listener ---
+    window.addEventListener('beforeunload', (event) => {
+        // Standard way to trigger the browser's own confirmation dialog.
+        event.preventDefault(); // Required for some browsers.
+        event.returnValue = 'האם אתה בטוח? שינויים שביצעת עלולים שלא להישמר.'; // Required for legacy browsers.
+    });
 
 
     // --- App Initialization ---
