@@ -361,6 +361,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let recorderTimerInterval = null;
     let recordedBlob = null;
     
+    // --- Script Copy Drag/Drop State ---
+    let isDraggingBlockForCopy = false;
+    let draggedBlockXml = null;
+    let sourceSpriteIdForCopy = null;
+    let hoveredSpriteIdForDrop = null;
+
     const log = (message) => {
         console.log(message);
     };
@@ -427,6 +433,46 @@ document.addEventListener('DOMContentLoaded', () => {
             log(`הרקע הוחלף ל: ${url}`);
         } catch (e) {
             console.error("Failed to switch backdrop:", e);
+        }
+    };
+    
+    window.switchToNextBackdrop = () => {
+        const backdropCards = Array.from(document.querySelectorAll('#backdrops-list .backdrop-card'));
+        if (backdropCards.length < 2) {
+            log('אין מספיק רקעים כדי לעבור לרקע הבא.');
+            return;
+        }
+
+        const currentCard = document.querySelector('#backdrops-list .backdrop-card.selected');
+        let currentIndex = -1;
+        if (currentCard) {
+            currentIndex = backdropCards.indexOf(currentCard);
+        }
+
+        // If no card is selected, try to find it by URL (less efficient fallback)
+        if (currentIndex === -1) {
+            const currentUrl = stageArea.style.backgroundImage.slice(5, -2); // Extract URL
+            currentIndex = backdropCards.findIndex(card => card.dataset.url === currentUrl);
+        }
+        
+        const nextIndex = (currentIndex + 1) % backdropCards.length;
+        const nextBackdropUrl = backdropCards[nextIndex].dataset.url;
+        
+        if (nextBackdropUrl) {
+            window.switchBackdrop(nextBackdropUrl);
+        }
+    };
+
+    window.switchToRandomBackdrop = () => {
+        const backdropCards = Array.from(document.querySelectorAll('#backdrops-list .backdrop-card'));
+        if (backdropCards.length === 0) {
+            log('אין רקעים לבחירה אקראית.');
+            return;
+        }
+        const randomIndex = Math.floor(Math.random() * backdropCards.length);
+        const randomBackdropUrl = backdropCards[randomIndex].dataset.url;
+        if (randomBackdropUrl) {
+            window.switchBackdrop(randomBackdropUrl);
         }
     };
     
@@ -574,8 +620,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'left-right':
                     // Normalize direction to [0, 360)
                     const normalizedDir = ((spriteData.direction % 360) + 360) % 360;
-                    // Flip when direction is pointing left-ish (in the range (90, 270))
-                    const isFlipped = normalizedDir > 90 && normalizedDir < 270;
+                    // Flip when direction is 180-359
+                    const isFlipped = normalizedDir >= 180 && normalizedDir <= 359;
                     rotationTransform = isFlipped ? 'scaleX(-1)' : 'scaleX(1)';
                     break;
                 case 'dont-rotate':
@@ -681,6 +727,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function createAndAttachSpriteCard(spriteData) {
+        const { id, name, imageUrl, isCustom } = spriteData;
+
+        const spriteCard = document.createElement('div');
+        spriteCard.classList.add('sprite-card');
+        spriteCard.dataset.spriteId = id;
+        spriteCard.innerHTML = `
+            <img src="${imageUrl}" alt="${name}">
+            <div class="delete-button">X</div>
+            <div class="duplicate-button" title="שכפל">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+            </div>
+            ${isCustom ? `
+                <div class="edit-button" title="ערוך דמות">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                        <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                    </svg>
+                </div>` : ''}
+        `;
+        spritesList.appendChild(spriteCard);
+
+        // Attach listeners
+        spriteCard.addEventListener('click', () => setActiveSprite(id));
+        spriteCard.querySelector('.delete-button').addEventListener('click', (e) => { e.stopPropagation(); deleteSprite(id); });
+        spriteCard.querySelector('.duplicate-button').addEventListener('click', (e) => { e.stopPropagation(); duplicateSprite(id); });
+        
+        if (isCustom && window.characterCreator) {
+            spriteCard.querySelector('.edit-button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.characterCreator.openForEdit(id);
+            });
+        }
+
+        return spriteCard;
+    }
+
     const createNewSprite = (name, imageUrl, initialX = 0, initialY = 0, isCustom = false, characterData = null, gifSpeed = 1.0) => {
         const id = `sprite-${Date.now()}`;
         const isGif = imageUrl.toLowerCase().endsWith('.gif') || imageUrl.startsWith('data:image/gif');
@@ -707,28 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         sprites[id] = spriteData;
 
-        const spriteCard = document.createElement('div');
-        spriteCard.classList.add('sprite-card');
-        spriteCard.dataset.spriteId = id;
-        spriteCard.innerHTML = `
-            <img src="${imageUrl}" alt="${name}">
-            <div class="delete-button">X</div>
-             ${isCustom ? `
-                <div class="edit-button" title="ערוך דמות">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                        <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-                    </svg>
-                </div>` : ''}
-        `;
-        spritesList.appendChild(spriteCard);
-        
-        if (isCustom && window.characterCreator) {
-            spriteCard.querySelector('.edit-button').addEventListener('click', (e) => {
-                e.stopPropagation();
-                window.characterCreator.openForEdit(id);
-            });
-        }
+        createAndAttachSpriteCard(spriteData);
 
         const spriteContainer = document.createElement('div');
         spriteContainer.id = `container-${id}`;
@@ -758,14 +822,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
         wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
-        
-        spriteCard.addEventListener('click', () => {
-            setActiveSprite(id);
-        });
-        spriteCard.querySelector('.delete-button').addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteSprite(id);
-        });
 
         setActiveSprite(id);
         updateSpriteAppearance(id);
@@ -796,6 +852,47 @@ document.addEventListener('DOMContentLoaded', () => {
         log(`הדמות ${id} נמחקה.`);
     };
     
+    const duplicateSprite = (sourceId) => {
+        const sourceSprite = sprites[sourceId];
+        if (!sourceSprite) return;
+
+        // 1. Find a unique name
+        let newName = sourceSprite.name;
+        const baseName = newName.replace(/\d+$/, ''); // Remove trailing numbers
+        let counter = 2;
+        const allNames = Object.values(sprites).map(s => s.name);
+        
+        do {
+            newName = `${baseName}${counter}`;
+            counter++;
+        } while (allNames.includes(newName));
+
+        // 2. Deep copy and modify data
+        const newId = `sprite-${Date.now()}`;
+        
+        // Exclude non-serializable animation property before cloning
+        const { animation, ...serializableSource } = sourceSprite;
+        const newData = JSON.parse(JSON.stringify(serializableSource));
+
+        newData.id = newId;
+        newData.name = newName;
+        newData.x += 20;
+        newData.y -= 20; // Offset up and to the right
+        newData.zIndex = nextZIndex++;
+        newData.animation = null; // Ensure animation is null for recreation
+
+        // 3. Create the new sprite using the copied data
+        loadSpriteFromData(newData);
+
+        // 4. Set the new sprite as active
+        setActiveSprite(newId);
+        
+        log(`הדמות '${sourceSprite.name}' שוכפלה ל-'${newName}'.`);
+        
+        // 5. Reset the run/stop buttons to the initial state.
+        stopAllScripts();
+    };
+
     const setActiveSprite = (spriteId) => {
         if ((scriptRunner && scriptRunner.isRunning) || activeSpriteId === spriteId) return;
 
@@ -817,8 +914,8 @@ document.addEventListener('DOMContentLoaded', () => {
         activeSpriteId = spriteId;
 
         // 4. Clear and load new workspace
-        workspace.clear();
         const newSprite = sprites[spriteId];
+        workspace.clear();
         if (newSprite && newSprite.workspaceXml) {
             try {
                 const newDom = Blockly.Xml.textToDom(newSprite.workspaceXml);
@@ -1560,40 +1657,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // Custom field for backdrop selection
     class FieldBackdrop extends Blockly.FieldDropdown {
         constructor() {
-            // We pass a function that will be called by Blockly when it needs the options.
             super(FieldBackdrop.generateOptions);
         }
 
         static generateOptions() {
             const backdropElements = document.querySelectorAll('#backdrops-list .backdrop-card');
-            if (!backdropElements || backdropElements.length === 0) {
-                return [['(אין רקעים)', 'NONE']];
-            }
+            const iconOptions = [];
             
-            const options = Array.from(backdropElements).map((card) => {
+            // Only show "Next" and "Random" if there are multiple backdrops to choose from.
+            if (backdropElements.length > 1) {
+                const nextIcon = 'https://codejredu.github.io/test/assets/blocklyicon/nextislide.svg';
+                const randomIcon = 'https://codejredu.github.io/test/assets/blocklyicon/cube.svg';
+
+                iconOptions.push(
+                    [{ src: nextIcon, width: 48, height: 36, alt: 'הרקע הבא' }, '__NEXT__'],
+                    [{ src: randomIcon, width: 48, height: 36, alt: 'רקע אקראי' }, '__RANDOM__']
+                );
+            }
+
+            const backdropOptions = Array.from(backdropElements).map((card) => {
                 const url = card.dataset.url;
-                const name = url.substring(url.lastIndexOf('/') + 1).replace(/\.(svg|png|jpg|jpeg)$/i, '');
+                const name = url.substring(url.lastIndexOf('/') + 1).replace(/\.(svg|png|jpg|jpeg|gif)$/i, '');
                 return [
                     {
                         src: url,
-                        width: 48, // Thumbnail width
-                        height: 36, // Thumbnail height
+                        width: 48,
+                        height: 36,
                         alt: name,
                     },
-                    url // The value for this option is the URL string
+                    url
                 ];
             });
             
-            return options.length > 0 ? options : [['(אין רקעים)', 'NONE']];
+            const finalOptions = [...iconOptions, ...backdropOptions];
+
+            if (finalOptions.length === 0) {
+                 return [['(אין רקעים)', 'NONE']];
+            }
+            
+            return finalOptions;
         }
 
-        // Override to show image in the block itself
+
         initView() {
             super.initView();
             this.imageElement_ = Blockly.utils.dom.createSvgElement('image', {
                 'height': '36px',
                 'width': '48px',
-                'y': -10, // Adjust vertical position
+                'y': -10,
                 'x': 5
             }, this.fieldGroup_);
             this.updateImageView_();
@@ -1606,9 +1717,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateImageView_() {
             if (this.value_ && this.imageElement_ && this.value_ !== 'NONE') {
-                this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', this.value_);
-                 if (this.textElement_) {
-                   this.textElement_.style.display = 'none';
+                 const options = this.getOptions(false);
+                 const selectedOption = options.find(opt => opt[1] === this.value_);
+                 if (selectedOption && typeof selectedOption[0] === 'object' && selectedOption[0].src) {
+                    this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', selectedOption[0].src);
+                    if (this.textElement_) {
+                       this.textElement_.style.display = 'none';
+                    }
                 }
             } else if (this.imageElement_) {
                 this.imageElement_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '');
@@ -1634,14 +1749,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
      Blockly.JavaScript['looks_switch_backdrop'] = function(block) {
         const backdropUrl = block.getFieldValue('BACKDROP');
+        if (backdropUrl === '__NEXT__') {
+            return `window.switchToNextBackdrop(); yield;`;
+        }
+        if (backdropUrl === '__RANDOM__') {
+            return `window.switchToRandomBackdrop(); yield;`;
+        }
         if (backdropUrl && backdropUrl !== 'NONE') {
             const safeUrl = backdropUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-            return `
-                window.switchBackdrop('${safeUrl}');
-                yield;
-            `;
+            return `window.switchBackdrop('${safeUrl}'); yield;`;
         }
-        return ''; // Do nothing if no backdrop is selected
+        return '';
     };
 
     Blockly.Blocks['looks_change_layer'] = {
@@ -2070,6 +2188,81 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    /**
+     * Handles highlighting sprite cards when a block is dragged over them.
+     * @param {MouseEvent} e The mouse move event.
+     */
+    function handleBlockDragHover(e) {
+        if (!isDraggingBlockForCopy) return;
+    
+        let currentlyHoveredId = null;
+    
+        document.querySelectorAll('.sprite-card').forEach(card => {
+            const cardId = card.dataset.spriteId;
+            if (cardId === sourceSpriteIdForCopy) {
+                card.classList.remove('drop-target-hover');
+                return; // Skip the source sprite
+            }
+    
+            const rect = card.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                card.classList.add('drop-target-hover');
+                currentlyHoveredId = cardId;
+            } else {
+                card.classList.remove('drop-target-hover');
+            }
+        });
+    
+        hoveredSpriteIdForDrop = currentlyHoveredId;
+    }
+
+    /**
+     * Handles copying the script when a block is dropped on a sprite card.
+     * @param {MouseEvent} e The mouse up event.
+     */
+    function handleBlockDrop(e) {
+        if (!isDraggingBlockForCopy) return;
+    
+        if (hoveredSpriteIdForDrop) {
+            const targetSprite = sprites[hoveredSpriteIdForDrop];
+            if (targetSprite) {
+                const tempWorkspace = new Blockly.Workspace();
+                try {
+                    // Load existing blocks
+                    if (targetSprite.workspaceXml) {
+                        const dom = Blockly.Xml.textToDom(targetSprite.workspaceXml);
+                        Blockly.Xml.domToWorkspace(dom, tempWorkspace);
+                    }
+    
+                    // Add the new block stack
+                    Blockly.Xml.domToBlock(draggedBlockXml, tempWorkspace);
+    
+                    // Save the combined workspace
+                    const newXmlDom = Blockly.Xml.workspaceToDom(tempWorkspace);
+                    targetSprite.workspaceXml = Blockly.Xml.domToText(newXmlDom);
+    
+                    log(`Script copied from ${sprites[sourceSpriteIdForCopy].name} to ${targetSprite.name}.`);
+                } catch(error) {
+                    console.error("Error copying script:", error);
+                } finally {
+                    tempWorkspace.dispose();
+                }
+            }
+        }
+    
+        // Cleanup
+        document.removeEventListener('mousemove', handleBlockDragHover);
+        isDraggingBlockForCopy = false;
+        draggedBlockXml = null;
+        sourceSpriteIdForCopy = null;
+        hoveredSpriteIdForDrop = null;
+    
+        document.querySelectorAll('.sprite-card.drop-target-hover').forEach(card => {
+            card.classList.remove('drop-target-hover');
+        });
+    }
+
     workspace.addChangeListener((event) => {
         if (event.type === Blockly.Events.BLOCK_MOVE) {
             const numberPad = document.getElementById('number-pad-container');
@@ -2078,6 +2271,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (event.blockId === fieldBlockId) {
                     positionNumberPad(numberPad.currentField);
                 }
+            }
+        }
+        
+        if (event.type === Blockly.Events.BLOCK_DRAG && event.isStart) {
+            const block = workspace.getBlockById(event.blockId);
+            // We only care about dragging top-level blocks (the start of a script)
+            if (block && !block.getParent()) {
+                isDraggingBlockForCopy = true;
+                sourceSpriteIdForCopy = activeSpriteId;
+                draggedBlockXml = Blockly.Xml.blockToDom(block);
+                
+                // Add listeners to the whole document to catch the drop anywhere
+                document.addEventListener('mousemove', handleBlockDragHover);
+                document.addEventListener('mouseup', handleBlockDrop, { once: true });
             }
         }
     });
@@ -2765,22 +2972,8 @@ document.addEventListener('DOMContentLoaded', () => {
         spriteData.zIndex = zIndex || nextZIndex++; // Use loaded zIndex or assign a new one
         sprites[id] = spriteData;
 
-        const spriteCard = document.createElement('div');
-        spriteCard.classList.add('sprite-card');
-        spriteCard.dataset.spriteId = id;
-        spriteCard.innerHTML = `
-            <img src="${imageUrl}" alt="${name}">
-            <div class="delete-button">X</div>
-             ${isCustom ? `
-                <div class="edit-button" title="ערוך דמות">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                        <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-                    </svg>
-                </div>` : ''}
-        `;
-        spritesList.appendChild(spriteCard);
-
+        createAndAttachSpriteCard(spriteData);
+        
         const spriteContainer = document.createElement('div');
         spriteContainer.id = `container-${id}`;
         spriteContainer.classList.add('sprite-container');
@@ -2804,16 +2997,6 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.addEventListener('click', (e) => { e.stopPropagation(); if (justDragged) return; handleSpriteClick(id); });
         wrapper.addEventListener('mousedown', (e) => startDrag(e, id));
         wrapper.addEventListener('touchstart', (e) => startDrag(e, id));
-        
-        spriteCard.addEventListener('click', () => setActiveSprite(id));
-        spriteCard.querySelector('.delete-button').addEventListener('click', (e) => { e.stopPropagation(); deleteSprite(id); });
-        if (isCustom && window.characterCreator) {
-            spriteCard.querySelector('.edit-button').addEventListener('click', (e) => {
-                e.stopPropagation();
-                window.characterCreator.openForEdit(id);
-            });
-        }
-
 
         updateSpriteAppearance(id);
     };
