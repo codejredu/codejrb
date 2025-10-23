@@ -1,3 +1,4 @@
+
 import { initCharacterCreator } from './Caracter.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -649,9 +650,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const updateGoToXYBlockInToolbox = (x, y) => {
+    const updateMotionBlocksInToolbox = (x, y) => {
         const toolbox = workspace?.getToolbox();
         if (!toolbox) return;
+
+        const selectedCategory = toolbox.getSelectedItem();
+        if (!selectedCategory || selectedCategory.name_ !== 'תנועה') {
+            return;
+        }
 
         const flyout = toolbox.getFlyout();
         if (!flyout || !flyout.isVisible()) {
@@ -662,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const blocks = flyoutWorkspace.getTopBlocks(false);
 
         for (const block of blocks) {
-            if (block.type === 'motion_go_to_xy') {
+            if (block.type === 'motion_go_to_xy' || block.type === 'motion_glide_to_xy') {
                 try {
                     const shadowX = block.getInput('X')?.connection?.targetBlock();
                     if (shadowX && shadowX.isShadow()) {
@@ -673,9 +679,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         shadowY.setFieldValue(Math.round(y), 'NUM');
                     }
                 } catch (e) {
-                    console.warn('Could not update toolbox block.', e);
+                    console.warn('Could not update toolbox motion block.', e);
                 }
-                break; 
             }
         }
     };
@@ -690,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSpriteAppearance(sprite.id);
         if (sprite.id === activeSpriteId) {
             updatePropertiesPanel();
-            updateGoToXYBlockInToolbox(sprite.x, sprite.y);
+            updateMotionBlocksInToolbox(sprite.x, sprite.y);
         }
     };
 
@@ -1474,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     Blockly.Blocks['looks_say_for_secs'] = {
         init: function() {
-            this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
+            this.appendValueInput("MESSAGE").setAlign(Blockly.ALIGN_RIGHT)
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 34, 34, { alt: "say icon", flipRtl: false }));
             this.appendValueInput("SECS").setCheck("Number").setAlign(Blockly.ALIGN_RIGHT);
             this.setInputsInline(true);
@@ -1494,9 +1499,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const spriteEl = document.getElementById(sprite.id);
                 if (spriteEl) {
                     const bubble = spriteEl.querySelector('.speech-bubble');
-                    bubble.textContent = ${message};
+                    const rawMessage = ${message};
+                    const finalMessage = typeof rawMessage === 'number' ? Math.round(rawMessage) : rawMessage;
+                    bubble.textContent = finalMessage;
                     bubble.classList.add('visible');
-                    log(sprite.name + ' אומרת: ' + ${message});
+                    log(sprite.name + ' אומרת: ' + finalMessage);
                     
                     const ${varName} = Date.now() + (${secs}) * 1000;
                     while (Date.now() < ${varName}) {
@@ -1513,7 +1520,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     Blockly.Blocks['looks_say'] = {
         init: function() {
-            this.appendValueInput("MESSAGE").setCheck("String").setAlign(Blockly.ALIGN_RIGHT)
+            this.appendValueInput("MESSAGE").setAlign(Blockly.ALIGN_RIGHT)
                 .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/say.png", 34, 34, { alt: "say icon", flipRtl: false }));
             this.setInputsInline(true);
             this.setPreviousStatement(true, null);
@@ -1529,9 +1536,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const spriteEl = document.getElementById(sprite.id);
                 if (spriteEl) {
                    const bubble = spriteEl.querySelector('.speech-bubble');
-                   bubble.textContent = ${message};
+                   const rawMessage = ${message};
+                   const finalMessage = typeof rawMessage === 'number' ? Math.round(rawMessage) : rawMessage;
+                   bubble.textContent = finalMessage;
                    bubble.classList.add('visible');
-                   log(sprite.name + ' אומרת: ' + ${message});
+                   log(sprite.name + ' אומרת: ' + finalMessage);
                 }
             }
         `;
@@ -1995,6 +2004,38 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    Blockly.Blocks['motion_xcor'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/xcor.svg", 35, 35, { alt: "x position", flipRtl: false }))
+                .appendField("x");
+            this.setOutput(true, "Number");
+            this.setColour("#4C97FF");
+            this.setTooltip("מחזיר את מיקום הדמות בציר X.");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['motion_xcor'] = function(block) {
+        const code = 'sprite ? Math.max(-240, Math.min(240, sprite.x)) : 0';
+        return [code, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    Blockly.Blocks['motion_ycor'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldImage("https://codejredu.github.io/test/assets/blocklyicon/ycor.svg", 35, 35, { alt: "y position", flipRtl: false }))
+                .appendField("y");
+            this.setOutput(true, "Number");
+            this.setColour("#4C97FF");
+            this.setTooltip("מחזיר את מיקום הדמות בציר Y.");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['motion_ycor'] = function(block) {
+        const code = 'sprite ? Math.max(-180, Math.min(180, sprite.y)) : 0';
+        return [code, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+
     Blockly.Blocks['operator_add'] = {
         init: function() {
             this.setOutput(true, "Number");
@@ -2009,7 +2050,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Blockly.JavaScript['operator_add'] = function(block) {
         const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_ADDITION) || '0';
         const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_ADDITION) || '0';
-        const code = `(${a} + ${b})`;
+        const code = `(Number(${a}) + Number(${b}))`;
         return [code, Blockly.JavaScript.ORDER_ADDITION];
     };
 
@@ -2027,7 +2068,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Blockly.JavaScript['operator_subtract'] = function(block) {
         const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
         const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_SUBTRACTION) || '0';
-        const code = `(${a} - ${b})`;
+        const code = `(Number(${a}) - Number(${b}))`;
         return [code, Blockly.JavaScript.ORDER_SUBTRACTION];
     };
 
@@ -2045,7 +2086,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Blockly.JavaScript['operator_multiply'] = function(block) {
         const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
         const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_MULTIPLICATION) || '0';
-        const code = `(${a} * ${b})`;
+        const code = `(Number(${a}) * Number(${b}))`;
         return [code, Blockly.JavaScript.ORDER_MULTIPLICATION];
     };
 
@@ -2063,7 +2104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Blockly.JavaScript['operator_divide'] = function(block) {
         const a = Blockly.JavaScript.valueToCode(block, 'A', Blockly.JavaScript.ORDER_DIVISION) || '0';
         const b = Blockly.JavaScript.valueToCode(block, 'B', Blockly.JavaScript.ORDER_DIVISION) || '1';
-        const code = `(${a} / ${b})`;
+        const code = `(Number(${a}) / Number(${b}))`;
         return [code, Blockly.JavaScript.ORDER_DIVISION];
     };
 
@@ -2082,7 +2123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Blockly.JavaScript['operator_random_number'] = function(block) {
         const from = block.getFieldValue('FROM');
         const to = block.getFieldValue('TO');
-        const code = `Math.floor(Math.random() * (${to} - ${from} + 1)) + ${from}`;
+        const code = `Math.floor(Math.random() * (Number(${to}) - Number(${from}) + 1)) + Number(${from})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
@@ -2300,7 +2341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let value;
         try {
             // Safely evaluate the expression
-            value = new Function('return ' + expression)();
+            value = new Function('sprite', 'return ' + expression)(getActiveSprite());
             // Round if it's a number with many decimals
             if (typeof value === 'number') {
                 value = Math.round(value * 1000) / 1000;
